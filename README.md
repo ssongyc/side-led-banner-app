@@ -153,7 +153,7 @@ side-led-banner-app/
 | [react-native-safe-area-context](https://github.com/th3rdwave/react-native-safe-area-context)   | ~5.6.0   | 노치/Safe Area 대응             |
 | [@react-navigation/native](https://reactnavigation.org/)                                        | ^7.1.8   | 네비게이션 & 테마 관리          |
 | [react-native-google-mobile-ads](https://docs.page/invertase/react-native-google-mobile-ads)    | ^16.3.3  | AdMob 배너/리워드 광고          |
-| [@amplitude/analytics-react-native](https://amplitude.com/docs/sdks/analytics/react-native/react-native-sdk) | ^1.8.0 | 익명 사용 이벤트 분석 |
+| [@amplitude/analytics-react-native](https://amplitude.com/docs/sdks/analytics/react-native/react-native-sdk) | ^1.8.0 | 사용 이벤트 분석 |
 
 ## V1.0.5 업데이트
 
@@ -169,22 +169,25 @@ side-led-banner-app/
 - Expo SDK 54 권장 패키지 버전으로 정리했습니다. `expo install --check --npm`는 통과하며, `expo doctor`는 AsyncStorage 중복 1건만 남습니다.
 - Amplitude를 `^1.8.0`으로 업데이트했습니다. 최신 정식 버전에서도 내부 `@react-native-async-storage/async-storage@1.24.0` 의존성이 남아 있어 중복 경고는 해소되지 않았습니다.
 - Android에서 사용하지 않는 `RECORD_AUDIO` 권한을 삭제했고, `expo-image-picker`가 생성할 수 있는 `CAMERA`/`RECORD_AUDIO` 권한은 `blockedPermissions`로 차단했습니다. 사용하지 않는 iOS 카메라 권한 문구도 제거했습니다.
-- Amplitude의 deviceId 기반 `setUserId` 연결을 제거하고, 앱 기능에는 영향을 주지 않는 프로덕션 콘솔 로그를 개발 모드로 제한했습니다.
+- Amplitude 초기화 후 deviceId를 `setUserId`로 전달하고, 앱 기능에는 영향을 주지 않는 프로덕션 콘솔 로그를 개발 모드로 제한했습니다.
 
-## Android APK 빌드 기록
+## Android 빌드 기록
 
-- Build ID: `35414299-1c89-4ed5-947a-b2c6ff15cb83`
-- Build profile: `preview`
-- Distribution: `INTERNAL`
-- App version: `1.0.5`
-- Android versionCode: `20`
+- AAB Build ID: `a257bda4-6332-4a14-a67a-89f78ed53948`
+- AAB profile / distribution: `production / STORE`
+- AAB artifact: `artifacts/LedPop-V1.0.5-production-build22.aab`
+- AAB SHA-256: `C0F0647EE907139A51E0D345E520DE2D3C4CF74D541E3D25634FFB0BE15226C0`
+- APK Build ID: `ce8ed722-75cb-422a-af04-4b2daa4fd97f`
+- APK profile / distribution: `preview / INTERNAL`
+- APK artifact: `artifacts/LedPop-V1.0.5-preview-build22.apk`
+- APK SHA-256: `73C36FF68C4AED2AEE0DD7C1F6F64813C3F697DE0A934040315FC43867D65292`
+- App version / Android versionCode: `1.0.5 / 22`
 - Package: `com.minkyokim.sideledbannerapp`
 - compileSdk / targetSdk: `36 / 36`
-- APK SHA-256: `3B8011975A48070DDD3349D133BE0FCE0EBA2C38ECBCDBA3B9C0B494CECA96C8`
 - Signing certificate SHA-256: `730173560958735bf237ca84ba4f35bbe76a6734986929eb65f6ced63d3fd893`
 - Manifest AdMob App ID: `ca-app-pub-3506417530430977~7354080715`
-- Build log: `artifacts/eas-build-35414299.log` (local build output, not committed)
-
+- Manifest check: `CAMERA` and `RECORD_AUDIO` are absent in the APK and the AAB-derived universal APK.
+- Google Play Billing check: no `com.android.vending.BILLING` permission or Billing Client dependency was found in source, lockfile, APK manifest, or AAB-derived manifest.
 Known build warnings:
 
 - `expo doctor` reported duplicate native module dependencies for `@react-native-async-storage/async-storage`.

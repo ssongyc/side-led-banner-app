@@ -121,6 +121,8 @@ export default function RootLayout() {
           await amplitude.init(key, undefined, {
             disableCookies: true,
           }).promise;
+          const deviceId = amplitude.getDeviceId();
+          if (deviceId) amplitude.setUserId(deviceId);
         } catch (e) {
           if (__DEV__) console.warn("[App] Amplitude init failed:", e);
         }
