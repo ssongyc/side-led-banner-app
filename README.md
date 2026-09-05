@@ -1,5 +1,7 @@
 # LED Banner App
 
+> 현재 메인 작업 저장소: https://github.com/ssongyc/side-led-banner-app
+
 사용자가 입력한 텍스트를 Banner 형태로 표시하는 앱 입니다.
 
 ## Features
@@ -22,7 +24,7 @@
 1. 프로젝트 클론
 
 ```bash
-git clone https://github.com/Minkyo-dev/side-led-banner-app.git
+git clone https://github.com/ssongyc/side-led-banner-app.git
 cd side-led-banner-app
 ```
 
