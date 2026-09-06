@@ -15,7 +15,10 @@ import {
   loadRemainingFonts,
   prefetchRemoteFonts,
 } from "@/utils/fontPreload";
-import { configureAndroidNavigationBarHidden } from "@/utils/SystemChrome";
+import {
+  addAndroidNavigationBarHiddenListener,
+  configureAndroidNavigationBarHidden,
+} from "@/utils/SystemChrome";
 import { initializeMobileAds } from "@/utils/initializeMobileAds";
 import { disableAppTextScaling } from "@/utils/TextScaling";
 import * as amplitude from "@amplitude/analytics-react-native";
@@ -83,6 +86,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     configureAndroidNavigationBarHidden();
+    return addAndroidNavigationBarHiddenListener();
   }, []);
 
   //최소 0.75초 스플래쉬 강제

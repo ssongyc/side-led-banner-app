@@ -356,7 +356,7 @@ export function useRewardedAd(onRewardEarned: () => void) {
     current.state = "showing";
     trace("current", "show_request");
     notifySubscribers();
-    current.ad.show();
+    current.ad.show({ immersiveModeEnabled: Platform.OS === "android" });
   }, []);
 
   return { loaded, failed, show };

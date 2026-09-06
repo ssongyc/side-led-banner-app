@@ -1,1 +1,1 @@
-export { default } from "@/components/RootLayout";
+export { default } from "@/components/RootLayoutEntry";

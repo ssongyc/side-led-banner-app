@@ -7,7 +7,7 @@
 ## 현재 상태
 
 - 현재 소스 버전: **V1.0.6**. Settings의 App Version은 `app.json`의 버전을 읽습니다.
-- 최근 생성 APK: **V1.0.6 / versionCode 22**, SDK 55 개발 빌드 `f42d9d4e-1a9d-44e2-9f73-c0875b153fc6`. 현재 커밋되지 않은 작업 트리 기준이며 실기기 설치까지만 확인했습니다.
+- 최근 생성 APK: **V1.0.6 / versionCode 22**, SDK 55 개발 빌드 `f42d9d4e-1a9d-44e2-9f73-c0875b153fc6`. 이 개발 클라이언트에서 현재 소스를 Metro로 실행해 주요 화면, 언어 저장, 실제 AdMob 리워드 흐름 및 Android 시스템 UI를 확인했습니다.
 - Upgrade to Pro는 구매 화면 UI만 구현되어 있습니다. 상품 조회, 결제, 복원 및 구매를 통한 Pro 권한 활성화는 미연동입니다.
 - 아래 빌드 기록은 생성된 산출물 기록이며 Google Play/App Store의 현재 배포 버전을 뜻하지 않습니다.
 
@@ -60,7 +60,7 @@ AdMob 등 네이티브 모듈이 있어 Expo Go만으로 전체 기능을 검증
 ```
 side-led-banner-app/
 ├── app/
-│   ├── _layout.tsx              # 루트 레이아웃 (테마, 네비게이션)
+│   ├── _layout.tsx              # 플랫폼별 루트 진입점 연결
 │   ├── index.tsx                # 메인 화면 (배너 편집기)
 │   ├── settings.tsx             # 앱 설정 화면
 │   ├── premium.tsx              # Upgrade to Pro 구매 화면 UI (결제 미연동)
@@ -90,7 +90,10 @@ side-led-banner-app/
 │   ├── ledBannerFullScreen.tsx       # 전체화면 LED 배너 모달
 │   ├── rewardAdModal.tsx             # 리워드 광고 모달
 │   ├── colorPicker.tsx               # 색상 선택 컴포넌트
-│   └── slider.tsx                    # 슬라이더 컴포넌트
+│   ├── slider.tsx                    # 슬라이더 컴포넌트
+│   ├── RootLayout.tsx                 # 공통 루트 레이아웃 (테마, 네비게이션)
+│   ├── RootLayoutEntry.tsx            # Android/iOS 루트 진입점
+│   └── RootLayoutEntry.web.tsx        # CanvasKit 초기화를 포함한 웹 루트 진입점
 ├── hooks/
 │   ├── useMarqueeAnimation.ts      # 마키 스크롤 애니메이션 로직
 │   ├── useBlinkOpacityStyle.ts     # 깜빡임(불투명도) 스타일 훅
@@ -159,15 +162,15 @@ side-led-banner-app/
 
 | 라이브러리                                                                                      | 버전     | 용도                            |
 | ----------------------------------------------------------------------------------------------- | -------- | ------------------------------- |
-| [Expo](https://expo.dev/)                                                                       | ~54.0.37 | React Native 개발 프레임워크    |
-| [expo-router](https://docs.expo.dev/router/introduction/)                                       | ~6.0.21  | 파일 기반 라우팅                |
-| [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/)                  | ~4.1.1   | 마키 스크롤 애니메이션          |
-| [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/)        | ~2.28.0  | 터치/제스처 처리                |
-| [expo-screen-orientation](https://docs.expo.dev/versions/latest/sdk/screen-orientation/)        | ~9.0.9   | 전체화면 시 가로/세로 전환 제어 |
-| [expo-linear-gradient](https://docs.expo.dev/versions/latest/sdk/linear-gradient/)              | ~15.0.8  | 프리셋 버튼 그라디언트          |
+| [Expo](https://expo.dev/)                                                                       | ^55.0.31 | React Native 개발 프레임워크    |
+| [expo-router](https://docs.expo.dev/router/introduction/)                                       | ~55.0.18 | 파일 기반 라우팅                |
+| [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/)                  | 4.2.1    | 마키 스크롤 애니메이션          |
+| [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/)        | ~2.30.0  | 터치/제스처 처리                |
+| [expo-screen-orientation](https://docs.expo.dev/versions/latest/sdk/screen-orientation/)        | ~55.0.20 | 전체화면 시 가로/세로 전환 제어 |
+| [expo-linear-gradient](https://docs.expo.dev/versions/latest/sdk/linear-gradient/)              | ~55.0.18 | 프리셋 버튼 그라디언트          |
 | [@miblanchard/react-native-slider](https://github.com/miblanchard/react-native-slider)          | ^2.6.0   | 속도/크기/블러 등 슬라이더 UI   |
 | [react-native-element-dropdown](https://github.com/hoaphantn7604/react-native-element-dropdown) | ^2.12.4  | 폰트 선택 드롭다운              |
-| [react-native-svg](https://github.com/software-mansion/react-native-svg)                        | 15.12.1  | SVG 아이콘 (재생/정지 버튼 등)  |
+| [react-native-svg](https://github.com/software-mansion/react-native-svg)                        | 15.15.3  | SVG 아이콘 (재생/정지 버튼 등)  |
 | [react-native-safe-area-context](https://github.com/th3rdwave/react-native-safe-area-context)   | ~5.6.0   | 노치/Safe Area 대응             |
 | [@react-navigation/native](https://reactnavigation.org/)                                        | ^7.1.8   | 네비게이션 & 테마 관리          |
 | [react-native-google-mobile-ads](https://docs.page/invertase/react-native-google-mobile-ads)    | ^16.3.3  | AdMob 배너/리워드 광고          |
@@ -191,7 +194,11 @@ side-led-banner-app/
 - Expo SDK 55.0.31, React Native 0.83.10, React 19.2.0 기준으로 호환 패키지를 정렬했습니다.
 - Android의 유효 compileSdk/targetSdk는 생성 APK에서 36/36으로 확인했습니다.
 - 웹에서는 AdMob과 원격 폰트의 플랫폼 경계를 분리하고 Skia CanvasKit 초기화 후 RuntimeEffect를 컴파일하도록 조정했습니다. TypeScript, ESLint 및 웹 번들/HTTP 실행 검사는 통과했습니다.
-- Android 개발 APK는 EAS에서 컴파일되고 실기기에 설치됐습니다. 기기 연결이 해제되어 앱 화면, 광고 노출, 내비게이션 바 진입/복귀는 아직 검증하지 못했습니다.
+- Expo Router가 `app/_layout.web.tsx`를 Android 라우트 컨텍스트에도 포함하면서 CanvasKit의 Node `fs` 참조가 Android 번들을 막는 문제를 확인했습니다. 라우트 디렉터리 밖의 `RootLayoutEntry(.web).tsx`로 플랫폼 경계를 옮겨 Android 번들과 웹 정적 export를 모두 통과시켰습니다.
+- Android 개발 APK는 EAS에서 컴파일되고 Samsung Galaxy Jumper 2 (`SM-M336K`)에 설치됐습니다. 현재 소스를 Metro로 실행해 메인/Settings/Upgrade to Pro 화면, 상단 안전 영역, `V1.0.6` 표시를 확인했습니다.
+- 앱 언어를 영어에서 한국어로 바꾸고 강제 종료/재실행한 뒤 한국어가 유지되는 것을 확인했으며, 테스트 후 영어로 복원하고 다시 재실행해 영어가 유지되는 것도 확인했습니다. 이 결과는 저장 경로의 실기기 동작 확인이며 Expo Doctor의 AsyncStorage 중복 경고를 제거하지는 않습니다.
+- 실제 AdMob 리워드 광고는 준비된 광고만 한 번 표시하고 다음 슬롯을 선로딩하는 흐름을 확인했습니다. Android 광고 표시에는 SDK의 `immersiveModeEnabled`를 사용하며 광고 `AdActivity` 진입과 앱 복귀 표본에서 내비게이션 바가 숨겨졌습니다.
+- 광고 CTA가 외부 Google Play (`com.android.vending`) 설치 화면을 열면 해당 외부 화면의 내비게이션 바는 표시됐습니다. 앱이나 광고 SDK가 소유하지 않는 화면이라 이 경로까지 절대 숨김을 보장할 수 없으며, 프로젝트의 “광고 중 한 프레임도 표시 금지” 요구는 이 외부 화면 경로에서는 충족되지 않습니다.
 - iOS 개발 빌드는 내부 배포에 적합한 자격 증명을 EAS가 찾지 못해 시작되지 않았습니다. 새 인증서나 기기 등록은 수행하지 않았습니다.
 - SDK 56은 React Native 0.85와 iOS 16.4 이상/Xcode 26.4를 요구합니다. 공식적으로 Reanimated/Worklets 사용 앱의 Hermes 메모리 회귀가 알려져 있어 이 프로젝트에는 적용하지 않았습니다.
 
@@ -200,13 +207,13 @@ side-led-banner-app/
 - 정적 성능 점검: 동일한 값의 설정/UI 업데이트는 기존 상태 객체를 유지하고, 고정 배경 팔레트 행 분할은 모듈 로드 시 한 번만 계산합니다. 폰트/애니메이션 로직은 변경하지 않았으며 실측 성능은 확인하지 않았습니다.
 
 - 정적 참조 확인 후 미사용 appModalIcon 상수 파일, 사진 시트/Sunny 목록 스타일, SliderThumb와 전용 스타일/타입, useSettingsContent 훅, 미사용 라벨 키 목록 및 시트 로케일 별칭을 삭제했습니다. 폰트 계산 코드와 번역 인계 도구는 유지했습니다.
-- Android 설정 및 Upgrade to Pro 화면에도 기기의 상단 안전 영역을 적용하고, 헤더 내부 10dp 여백을 유지합니다. 실기기 컷아웃 반영은 아직 미검증입니다.
+- Android 설정 및 Upgrade to Pro 화면에도 기기의 상단 안전 영역을 적용하고, 헤더 내부 10dp 여백을 유지합니다. `SM-M336K`에서 두 화면의 헤더가 상단 inset 아래에 배치되는 것을 확인했습니다.
 - 앱 설정과 패키지 버전을 1.0.6으로 변경했습니다. Settings의 App Version은 Expo 설정을 읽어 V1.0.6으로 표시합니다. Android versionCode는 이번 변경에서 올리지 않았습니다.
 - 설정 아이콘의 가로/세로 크기를 기존의 85%로 줄였습니다. 터치 영역은 유지합니다.
 - 밝은 배경의 뒤로가기 아이콘은 검정, 어두운 구매 화면의 아이콘은 흰색으로 표시합니다.
 - Upgrade to Pro의 가격 줄을 페이지 세로 중앙에 배치합니다. 화면 높이가 부족하면 스크롤하여 내용을 확인할 수 있습니다.
 - $6.99 CAD는 디자인 플레이스홀더입니다. 결제 담당자는 app/premium.tsx의 displayedPrice를 스토어에서 받은 현지화된 실제 가격에 연결해야 합니다. 현재 상품 조회 및 결제는 미연동입니다.
-- 위 V1.0.6 UI/정리 변경은 커밋 e75a4bb 기준 APK로 빌드했습니다. 실기기 검증은 아직 수행하지 않았습니다. 이후 보안 의존성과 타입 오류 수정은 별도 미빌드 상태입니다.
+- 위 V1.0.6 UI/정리 변경은 커밋 e75a4bb 기준 APK로 빌드했습니다. 이후 SDK 55 개발 클라이언트와 현재 소스를 사용한 실기기 검증 결과는 Expo SDK 55 업데이트 절에 기록했습니다.
 
 ## V1.0.5 변경 이력
 
@@ -255,8 +262,8 @@ side-led-banner-app/
 - 소스: 현재 커밋되지 않은 SDK 55 작업 트리. EAS 메타데이터의 Git SHA와 동일하다고 간주하면 안 됩니다.
 - 컴파일: EAS Build 성공. APK 검사에서 package `com.minkyokim.sideledbannerapp`, versionName/versionCode `1.0.6/22`, compileSdk/targetSdk `36/36`을 확인했습니다.
 - ABI: ARM64/ARMv7/x86/x86_64. APK Signature Scheme v2 검증 성공, 인증서 SHA-256 `730173560958735bf237ca84ba4f35bbe76a6734986929eb65f6ced63d3fd893`.
-- 실제 Android AdMob App ID와 배너/리워드 Unit ID가 설정되어 있습니다. 실제 광고 요청/노출은 검증하지 못했습니다.
-- 실기기 설치는 성공했습니다. 기기 연결이 해제되어 앱 화면과 런타임 동작 검증은 보류했습니다.
+- 실제 Android AdMob App ID와 배너/리워드 Unit ID가 설정되어 있습니다. 현재 소스를 Metro로 연결해 실제 리워드 광고의 로드, 표시, 보상, 닫기 및 다음 광고 선로딩을 확인했습니다.
+- 실기기 설치와 앱 실행은 성공했습니다. 현재 소스의 Android 번들, 주요 화면, 언어 저장/복원, 앱 및 광고 `AdActivity`의 내비게이션 바 숨김을 확인했습니다. 외부 Google Play 설치 화면의 시스템 UI는 앱에서 제어할 수 없습니다.
 
 ### 최근 APK: V1.0.6 / 22 (e75a4bb)
 
