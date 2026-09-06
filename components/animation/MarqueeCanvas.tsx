@@ -1,4 +1,4 @@
-import { DOT_MATRIX_TEXT_SOURCE } from "@/components/animation/dotMatrixTextShader";
+import { DOT_MATRIX_TEXT_SKSL } from "@/components/animation/dotMatrixTextShader";
 import { usePreviewPanelCanvas } from "@/hooks/usePreviewPanelCanvas";
 import { useTilePicture } from "@/hooks/useTilePicture";
 import {
@@ -67,7 +67,7 @@ function isNearWhiteColor(color: string): boolean {
   return s === "white";
 }
 
-const OUTLINE_RING_DOT_SOURCE = Skia.RuntimeEffect.Make(`
+const OUTLINE_RING_DOT_SKSL = `
   uniform shader content;
   uniform float dotSize;
   uniform float dotRadius;
@@ -132,7 +132,7 @@ const OUTLINE_RING_DOT_SOURCE = Skia.RuntimeEffect.Make(`
     }
     return half4(half3(outlineLuminance), mask);
   }
-`)!;
+`;
 
 export function MarqueeCanvas({
   canvas,
@@ -157,6 +157,16 @@ export function MarqueeCanvas({
   previewTextColor,
   backgroundColor,
 }: MarqueeCanvasProps) {
+  const dotMatrixTextSource = useMemo(() => {
+    const source = Skia.RuntimeEffect.Make(DOT_MATRIX_TEXT_SKSL);
+    if (!source) throw new Error("Failed to compile dot matrix text shader.");
+    return source;
+  }, []);
+  const outlineRingDotSource = useMemo(() => {
+    const source = Skia.RuntimeEffect.Make(OUTLINE_RING_DOT_SKSL);
+    if (!source) throw new Error("Failed to compile outline ring dot shader.");
+    return source;
+  }, []);
   const blob = canvas.skiaTextBlob;
   const strokeWidthPx = skiaStrokeWidthPx;
   const dropShadowBlur = Math.round((dropShadow / 100) * 5);
@@ -232,7 +242,7 @@ export function MarqueeCanvas({
       isPixelTextDots ? (
         <Paint>
           <RuntimeShader
-            source={DOT_MATRIX_TEXT_SOURCE}
+            source={dotMatrixTextSource}
             uniforms={{
               dotSize: pixelShaderSize,
               dotRadius: pixelDotRadius,
@@ -245,7 +255,13 @@ export function MarqueeCanvas({
           />
         </Paint>
       ) : undefined,
-    [isPixelTextDots, pixelShaderSize, pixelDotRadius, pixelTextShaderUniforms],
+    [
+      dotMatrixTextSource,
+      isPixelTextDots,
+      pixelShaderSize,
+      pixelDotRadius,
+      pixelTextShaderUniforms,
+    ],
   );
 
   const outlineDotShaderLayer = useMemo(
@@ -253,7 +269,7 @@ export function MarqueeCanvas({
       hasPixelOutlineDots ? (
         <Paint>
           <RuntimeShader
-            source={OUTLINE_RING_DOT_SOURCE}
+            source={outlineRingDotSource}
             uniforms={{
               dotSize: pixelShaderSize,
               dotRadius: pixelDotRadius,
@@ -268,6 +284,7 @@ export function MarqueeCanvas({
       ) : undefined,
     [
       hasPixelOutlineDots,
+      outlineRingDotSource,
       pixelShaderSize,
       pixelDotRadius,
       pixelOutlineRings,

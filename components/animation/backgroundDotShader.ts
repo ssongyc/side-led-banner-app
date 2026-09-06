@@ -1,5 +1,3 @@
-import { Skia } from "@shopify/react-native-skia";
-
 const LED_DOT_MASK_GLSL = `
   float ledDotMask(vec2 pos, vec2 cellCenter) {
     float d = distance(pos, cellCenter);
@@ -9,7 +7,7 @@ const LED_DOT_MASK_GLSL = `
 `;
 
 /** 단색·하트 등: 샘플 색 도트 + default(off) LED 도트 */
-export const DOT_MATRIX_BACKGROUND_SOURCE = Skia.RuntimeEffect.Make(`
+export const DOT_MATRIX_BACKGROUND_SKSL = `
   uniform shader content;
   uniform float dotSize;
   uniform float dotRadius;
@@ -41,13 +39,13 @@ export const DOT_MATRIX_BACKGROUND_SOURCE = Skia.RuntimeEffect.Make(`
     half3 rgb = unpremultiply(sampled);
     return half4(rgb * mask, mask);
   }
-`)!;
+`;
 
 /**
  * 갤러리 사진 배경: 셀마다 사진 색 도트만 — 도트 사이는 어두운 패널.
  * defaultLed 격자를 쓰면 사진 도트와 이중 격자(모아레)가 생김.
  */
-export const DOT_MATRIX_PHOTO_BACKGROUND_SOURCE = Skia.RuntimeEffect.Make(`
+export const DOT_MATRIX_PHOTO_BACKGROUND_SKSL = `
   uniform shader content;
   uniform float dotSize;
   uniform float dotRadius;
@@ -75,10 +73,10 @@ export const DOT_MATRIX_PHOTO_BACKGROUND_SOURCE = Skia.RuntimeEffect.Make(`
     half3 rgb = unpremultiply(sampled);
     return half4(rgb * mask, mask);
   }
-`)!;
+`;
 
 /** 정적 꺼진 LED 격자: layer 필터로 사용, content는 선언만 하고 무시 */
-export const DOT_MATRIX_STATIC_OFF_SOURCE = Skia.RuntimeEffect.Make(`
+export const DOT_MATRIX_STATIC_OFF_SKSL = `
   uniform shader content;
   uniform float dotSize;
   uniform float dotRadius;
@@ -98,7 +96,7 @@ export const DOT_MATRIX_STATIC_OFF_SOURCE = Skia.RuntimeEffect.Make(`
     }
     return half4(offLedR * mask, offLedG * mask, offLedB * mask, mask);
   }
-`)!;
+`;
 
 /** 꺼진 LED 고정 유니폼 — 배경색 무관하게 항상 같은 어두운 회색 소자 */
 export const OFF_LED_UNIFORMS = {

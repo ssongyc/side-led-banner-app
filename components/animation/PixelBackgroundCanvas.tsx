@@ -1,7 +1,7 @@
 import {
-  DOT_MATRIX_BACKGROUND_SOURCE,
-  DOT_MATRIX_PHOTO_BACKGROUND_SOURCE,
-  DOT_MATRIX_STATIC_OFF_SOURCE,
+  DOT_MATRIX_BACKGROUND_SKSL,
+  DOT_MATRIX_PHOTO_BACKGROUND_SKSL,
+  DOT_MATRIX_STATIC_OFF_SKSL,
   OFF_LED_UNIFORMS,
   resolveDefaultLedFromBackground,
 } from "@/components/animation/backgroundDotShader";
@@ -27,6 +27,7 @@ import {
   Paint,
   Rect,
   RuntimeShader,
+  Skia,
   useImage,
 } from "@shopify/react-native-skia";
 import React, { useMemo } from "react";
@@ -192,6 +193,21 @@ export function PixelBackgroundCanvas({
 }
 
 function usePixelDotShaderLayers(dotSize: number, backgroundColor: string) {
+  const backgroundSource = useMemo(() => {
+    const source = Skia.RuntimeEffect.Make(DOT_MATRIX_BACKGROUND_SKSL);
+    if (!source) throw new Error("Failed to compile dot matrix background shader.");
+    return source;
+  }, []);
+  const photoBackgroundSource = useMemo(() => {
+    const source = Skia.RuntimeEffect.Make(DOT_MATRIX_PHOTO_BACKGROUND_SKSL);
+    if (!source) throw new Error("Failed to compile photo background shader.");
+    return source;
+  }, []);
+  const staticOffSource = useMemo(() => {
+    const source = Skia.RuntimeEffect.Make(DOT_MATRIX_STATIC_OFF_SKSL);
+    if (!source) throw new Error("Failed to compile static off LED shader.");
+    return source;
+  }, []);
   const pixelDotUniforms = useMemo(() => pixelLedDotUniforms(dotSize), [dotSize]);
   const defaultLedUniforms = useMemo(
     () => resolveDefaultLedFromBackground(backgroundColor),
@@ -201,34 +217,34 @@ function usePixelDotShaderLayers(dotSize: number, backgroundColor: string) {
     () => (
       <Paint>
         <RuntimeShader
-          source={DOT_MATRIX_BACKGROUND_SOURCE}
+          source={backgroundSource}
           uniforms={{ ...pixelDotUniforms, ...defaultLedUniforms }}
         />
       </Paint>
     ),
-    [pixelDotUniforms, defaultLedUniforms],
+    [backgroundSource, pixelDotUniforms, defaultLedUniforms],
   );
   const photoBackgroundShaderLayer = useMemo(
     () => (
       <Paint>
         <RuntimeShader
-          source={DOT_MATRIX_PHOTO_BACKGROUND_SOURCE}
+          source={photoBackgroundSource}
           uniforms={pixelDotUniforms}
         />
       </Paint>
     ),
-    [pixelDotUniforms],
+    [photoBackgroundSource, pixelDotUniforms],
   );
   const staticOffLayer = useMemo(
     () => (
       <Paint>
         <RuntimeShader
-          source={DOT_MATRIX_STATIC_OFF_SOURCE}
+          source={staticOffSource}
           uniforms={{ ...pixelDotUniforms, ...OFF_LED_UNIFORMS }}
         />
       </Paint>
     ),
-    [pixelDotUniforms],
+    [staticOffSource, pixelDotUniforms],
   );
   return { backgroundShaderLayer, photoBackgroundShaderLayer, staticOffLayer };
 }

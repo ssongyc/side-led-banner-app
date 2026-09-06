@@ -1,7 +1,5 @@
-import { Skia } from "@shopify/react-native-skia";
-
 /** 말풍선 테두리 등 어두운 선만 도트화 (밝은 패널은 투명 → 아래 배경 레이어가 비침) */
-export const DOT_MATRIX_FRAME_SOURCE = Skia.RuntimeEffect.Make(`
+export const DOT_MATRIX_FRAME_SKSL = `
   uniform shader content;
   uniform float dotSize;
   uniform float dotRadius;
@@ -49,7 +47,7 @@ export const DOT_MATRIX_FRAME_SOURCE = Skia.RuntimeEffect.Make(`
 
     return half4(dotColor, mask);
   }
-`)!;
+`;
 
 
 export function resolveFramePixelDotSize(textDotSize: number): number {

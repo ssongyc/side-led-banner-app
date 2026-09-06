@@ -7,7 +7,6 @@
     "icon": "./assets/images/Logo_IOS.png",
     "scheme": "sideledbannerapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "icon": "./assets/images/LOGO_05_Final.png",
@@ -18,7 +17,6 @@
     },
     "android": {
       "icon": "./assets/images/LOGO_05_Final.png",
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.minkyokim.sideledbannerapp",
       "blockedPermissions": [
@@ -52,6 +50,12 @@
       ],
       "expo-font",
       "expo-localization",
+      [
+        "expo-navigation-bar",
+        {
+          "visibility": "hidden"
+        }
+      ],
       [
         "react-native-google-mobile-ads",
         {
@@ -105,7 +109,8 @@
         }
       ],
       "expo-tracking-transparency",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,

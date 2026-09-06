@@ -1,5 +1,5 @@
-import { DOT_MATRIX_FRAME_SOURCE, resolveFramePixelDotSize } from "@/components/animation/dotMatrixFrameShader";
-import { Group, Image, Paint, RuntimeShader, useImage } from "@shopify/react-native-skia";
+import { DOT_MATRIX_FRAME_SKSL, resolveFramePixelDotSize } from "@/components/animation/dotMatrixFrameShader";
+import { Group, Image, Paint, RuntimeShader, Skia, useImage } from "@shopify/react-native-skia";
 import React, { useMemo } from "react";
 
 type Props = {
@@ -21,6 +21,11 @@ export function PixelSpeechBubbleFrame({
   useWhiteDots = false,
 }: Props) {
   const image = useImage(source);
+  const frameSource = useMemo(() => {
+    const runtimeEffect = Skia.RuntimeEffect.Make(DOT_MATRIX_FRAME_SKSL);
+    if (!runtimeEffect) throw new Error("Failed to compile dot matrix frame shader.");
+    return runtimeEffect;
+  }, []);
 
   const layout = useMemo(
     () => ({
@@ -34,13 +39,14 @@ export function PixelSpeechBubbleFrame({
 
   const frameDotSize = resolveFramePixelDotSize(pixelShaderSize);
 
-  const dotColor: [number, number, number] = useWhiteDots ? [1, 1, 1] : [0, 0, 0];
-
-  const frameShaderLayer = useMemo(
-    () => (
+  const frameShaderLayer = useMemo(() => {
+    const dotColor: [number, number, number] = useWhiteDots
+      ? [1, 1, 1]
+      : [0, 0, 0];
+    return (
       <Paint>
         <RuntimeShader
-          source={DOT_MATRIX_FRAME_SOURCE}
+          source={frameSource}
           uniforms={{
             dotSize: frameDotSize,
             dotRadius: frameDotSize * 0.46,
@@ -49,9 +55,8 @@ export function PixelSpeechBubbleFrame({
           }}
         />
       </Paint>
-    ),
-    [frameDotSize, useWhiteDots],
-  );
+    );
+  }, [frameDotSize, frameSource, useWhiteDots]);
 
   if (!image) return null;
 

@@ -1,7 +1,5 @@
-import { Skia } from "@shopify/react-native-skia";
-
 /** 글자 LED 도트 (배경 off-LED 없음 — 전체 화면 배경 레이어가 담당) */
-export const DOT_MATRIX_TEXT_SOURCE = Skia.RuntimeEffect.Make(`
+export const DOT_MATRIX_TEXT_SKSL = `
   uniform shader content;
   uniform float dotSize;
   uniform float dotRadius;
@@ -119,4 +117,4 @@ export const DOT_MATRIX_TEXT_SOURCE = Skia.RuntimeEffect.Make(`
 
     return half4(bestRgb, mask);
   }
-`)!;
+`;

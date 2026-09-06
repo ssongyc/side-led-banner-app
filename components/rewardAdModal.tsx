@@ -19,6 +19,7 @@ import {
 import Animated, {
   cancelAnimation,
   Easing,
+  type SharedValue,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
@@ -84,6 +85,53 @@ const PARTICLE_DATA = Array.from({ length: N }, (_, i) => {
   };
 });
 
+type FireworkParticleProps = {
+  particle: (typeof PARTICLE_DATA)[number];
+  starPath: ReturnType<typeof createStarPath> | null;
+  progress: SharedValue<number>;
+  alpha: SharedValue<number>;
+  centerX: number;
+  centerY: number;
+};
+
+function FireworkParticle({
+  particle,
+  starPath,
+  progress,
+  alpha,
+  centerX,
+  centerY,
+}: FireworkParticleProps) {
+  const transform = useDerivedValue(() => {
+    const currentDist = particle.maxDistance * progress.value;
+    const x = centerX + Math.cos(particle.angle) * currentDist;
+    const y = centerY + Math.sin(particle.angle) * currentDist;
+    const rotation =
+      progress.value * particle.rotationSpeed * particle.spinDirection;
+
+    return [{ translateX: x }, { translateY: y }, { rotate: rotation }];
+  });
+  const opacity = useDerivedValue(
+    () => alpha.value * particle.baseOpacity,
+  );
+
+  return (
+    <Group transform={transform} opacity={opacity}>
+      {particle.type === "rect" ? (
+        <Rect
+          x={-particle.size / 2}
+          y={-particle.size / 2}
+          width={particle.size}
+          height={particle.size}
+          color={particle.color}
+        />
+      ) : (
+        <Path path={starPath!} color={particle.color} style="fill" />
+      )}
+    </Group>
+  );
+}
+
 function FireworksBurst({ visible }: { visible: boolean }) {
   const { width: W, height: H } = useWindowDimensions();
   const cx = W / 2;
@@ -122,41 +170,17 @@ function FireworksBurst({ visible }: { visible: boolean }) {
 
   return (
     <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
-      {PARTICLE_DATA.map((particle, index) => {
-        const transform = useDerivedValue(() => {
-          const currentDist = particle.maxDistance * progress.value;
-          const x = cx + Math.cos(particle.angle) * currentDist;
-          const y = cy + Math.sin(particle.angle) * currentDist;
-          const rotation =
-            progress.value * particle.rotationSpeed * particle.spinDirection;
-
-          return [{ translateX: x }, { translateY: y }, { rotate: rotation }];
-        });
-
-        const opacity = useDerivedValue(
-          () => alpha.value * particle.baseOpacity,
-        );
-
-        return (
-          <Group key={index} transform={transform} opacity={opacity}>
-            {particle.type === "rect" ? (
-              <Rect
-                x={-particle.size / 2}
-                y={-particle.size / 2}
-                width={particle.size}
-                height={particle.size}
-                color={particle.color}
-              />
-            ) : (
-              <Path
-                path={starPaths[index]!}
-                color={particle.color}
-                style="fill"
-              />
-            )}
-          </Group>
-        );
-      })}
+      {PARTICLE_DATA.map((particle, index) => (
+        <FireworkParticle
+          key={index}
+          particle={particle}
+          starPath={starPaths[index]}
+          progress={progress}
+          alpha={alpha}
+          centerX={cx}
+          centerY={cy}
+        />
+      ))}
     </Canvas>
   );
 }

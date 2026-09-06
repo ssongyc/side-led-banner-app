@@ -68,7 +68,7 @@ export default function Index() {
     if (!isPlaying) {
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     }
-  }, []);
+  }, [isPlaying]);
 
   const handlePlay = async () => {
     amplitude.track("Play_clicked", {

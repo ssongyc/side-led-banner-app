@@ -3,8 +3,6 @@ import { Platform } from "react-native";
 
 export function configureAndroidNavigationBarHidden() {
   if (Platform.OS !== "android") return;
-  void NavigationBar.setPositionAsync("absolute");
-  void NavigationBar.setBehaviorAsync("overlay-swipe");
   void NavigationBar.setVisibilityAsync("hidden");
 }
 

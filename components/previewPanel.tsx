@@ -101,7 +101,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
   } = useSettings();
   const { activePreset } = ui;
 
-  const { previewText, playOption } = config.content;
+  const { previewText } = config.content;
   const { textSelectedColor, gradientBackgroundPreset, dropShadow } =
     config.appearance;
   const { backgroundColor, backgroundImageUri, backgroundBlur } =

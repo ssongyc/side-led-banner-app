@@ -7,7 +7,7 @@
 ## 현재 상태
 
 - 현재 소스 버전: **V1.0.6**. Settings의 App Version은 `app.json`의 버전을 읽습니다.
-- 최근 생성 APK: **V1.0.6 / versionCode 22**, 소스 커밋 `e75a4bb`. 이후의 보안 의존성 및 키보드 툴바 오류 수정은 이 APK에 포함되지 않았습니다.
+- 최근 생성 APK: **V1.0.6 / versionCode 22**, SDK 55 개발 빌드 `f42d9d4e-1a9d-44e2-9f73-c0875b153fc6`. 현재 커밋되지 않은 작업 트리 기준이며 실기기 설치까지만 확인했습니다.
 - Upgrade to Pro는 구매 화면 UI만 구현되어 있습니다. 상품 조회, 결제, 복원 및 구매를 통한 Pro 권한 활성화는 미연동입니다.
 - 아래 빌드 기록은 생성된 산출물 기록이며 Google Play/App Store의 현재 배포 버전을 뜻하지 않습니다.
 
@@ -20,7 +20,7 @@
 
 ## 사전 요구사항
 
-- Node.js 20.19.4 이상 (현재 React Native 0.81.5의 `engines` 기준)
+- Node.js 20.19.x 이상 (Expo SDK 55 / React Native 0.83 기준)
 - npm (`package-lock.json` 기준으로 의존성 설치)
 - Expo CLI는 프로젝트의 `expo` 패키지를 통해 사용합니다. 별도 전역 설치는 필요하지 않습니다.
 - EAS 원격 빌드 시 EAS CLI와 `led-banner-app` Expo 프로젝트 접근 권한이 필요합니다.
@@ -183,8 +183,17 @@ side-led-banner-app/
 
 - 기존 의존성 범위 안에서 brace-expansion (1.1.18/2.1.4/5.0.9), fast-uri (3.1.7), js-yaml (3.15.2/4.3.2), nanoid (3.3.18), @humanfs/node (0.16.8), @xmldom/xmldom (0.8.15)을 갱신했습니다. 필요한 @humanfs/core 갱신과 @humanfs/types 추가도 포함합니다.
 - 변경은 package-lock.json과 로컬 설치 상태에 반영했습니다. 보안 갱신 단계에서는 직접 의존성 선언과 Expo/Router/Amplitude/AsyncStorage 버전을 유지했으며 강제 override는 추가하지 않았습니다.
-- 갱신 후 npm audit: 35건 (moderate 22, high 13)에서 29건 (moderate 20, high 9)으로 감소했습니다. 위 여섯 패키지는 재조회한 취약 패키지 목록에서 제외됐습니다. 결과는 조회 시점 기준입니다.
-- AsyncStorage 중복과 나머지 보안 경고는 남아 있습니다. 후속 타입 오류 수정 후 TypeScript 및 Expo 호환성 검사는 통과했습니다. 새 APK 빌드, 린트, 테스트 및 실기기 검증은 수행하지 않았습니다. 기존 APK에는 이번 의존성 업데이트가 포함되지 않습니다.
+- SDK 55 호환 의존성 정렬 후 npm audit는 19건(moderate 19, high/critical 0)입니다. 결과는 조회 시점 기준이며 강제 audit fix는 적용하지 않았습니다.
+- Expo Doctor는 19/20을 통과했습니다. 남은 항목은 앱 직접 설치본 2.2.0과 Amplitude 내부 1.24.0으로 인한 AsyncStorage 중복입니다.
+
+## Expo SDK 55 업데이트
+
+- Expo SDK 55.0.31, React Native 0.83.10, React 19.2.0 기준으로 호환 패키지를 정렬했습니다.
+- Android의 유효 compileSdk/targetSdk는 생성 APK에서 36/36으로 확인했습니다.
+- 웹에서는 AdMob과 원격 폰트의 플랫폼 경계를 분리하고 Skia CanvasKit 초기화 후 RuntimeEffect를 컴파일하도록 조정했습니다. TypeScript, ESLint 및 웹 번들/HTTP 실행 검사는 통과했습니다.
+- Android 개발 APK는 EAS에서 컴파일되고 실기기에 설치됐습니다. 기기 연결이 해제되어 앱 화면, 광고 노출, 내비게이션 바 진입/복귀는 아직 검증하지 못했습니다.
+- iOS 개발 빌드는 내부 배포에 적합한 자격 증명을 EAS가 찾지 못해 시작되지 않았습니다. 새 인증서나 기기 등록은 수행하지 않았습니다.
+- SDK 56은 React Native 0.85와 iOS 16.4 이상/Xcode 26.4를 요구합니다. 공식적으로 Reanimated/Worklets 사용 앱의 Hermes 메모리 회귀가 알려져 있어 이 프로젝트에는 적용하지 않았습니다.
 
 ## V1.0.6 업데이트
 
@@ -237,6 +246,18 @@ side-led-banner-app/
 
 `artifacts/` 파일은 Git에서 제외되어 있어 저장소를 클론해도 함께 내려오지 않습니다.
 
+### SDK 55 개발 APK: V1.0.6 / 22
+
+- EAS Build ID: `f42d9d4e-1a9d-44e2-9f73-c0875b153fc6`
+- 프로필/배포: `development / INTERNAL`
+- 파일: `artifacts/sdk55-development.apk` (320,698,124 bytes)
+- SHA-256: `983C88138B673509156BFB65D35E58DECA4A9FDB7FCA6168FDC7185AAD91B09C`
+- 소스: 현재 커밋되지 않은 SDK 55 작업 트리. EAS 메타데이터의 Git SHA와 동일하다고 간주하면 안 됩니다.
+- 컴파일: EAS Build 성공. APK 검사에서 package `com.minkyokim.sideledbannerapp`, versionName/versionCode `1.0.6/22`, compileSdk/targetSdk `36/36`을 확인했습니다.
+- ABI: ARM64/ARMv7/x86/x86_64. APK Signature Scheme v2 검증 성공, 인증서 SHA-256 `730173560958735bf237ca84ba4f35bbe76a6734986929eb65f6ced63d3fd893`.
+- 실제 Android AdMob App ID와 배너/리워드 Unit ID가 설정되어 있습니다. 실제 광고 요청/노출은 검증하지 못했습니다.
+- 실기기 설치는 성공했습니다. 기기 연결이 해제되어 앱 화면과 런타임 동작 검증은 보류했습니다.
+
 ### 최근 APK: V1.0.6 / 22 (e75a4bb)
 
 - EAS Build ID: a804d924-b8f4-4f05-8351-02c8917ef444
@@ -247,7 +268,7 @@ side-led-banner-app/
 - 컴파일: BUILD SUCCESSFUL in 19m 8s. 로그: artifacts/a804d924-log-0.txt
 - APK 검사: 기존 서명 일치, compileSdk/targetSdk 36/36, ARM64/ARMv7/x86/x86_64 포함, 실제 AdMob ID와 네이티브 모듈 포함. CAMERA/RECORD_AUDIO/BILLING 권한 없음.
 - 앱 R8 작업은 실행되지 않았습니다. 실기기 UI/광고, mapping 및 Play 등록 완료를 의미하지 않습니다.
-- 당시 expo doctor: 17/18 통과, AsyncStorage 중복 1건. 당시 audit: 35건. 후속 의존성 갱신으로 현재 lockfile은 29건이며, 해당 변경은 이 APK에 포함되지 않았습니다.
+- 당시 expo doctor: 17/18 통과, AsyncStorage 중복 1건. 당시 audit: 35건. 이후 의존성 갱신 결과는 위 SDK 55 업데이트 항목을 기준으로 하며, 해당 변경은 이 APK에 포함되지 않았습니다.
 
 ### 이전 APK: V1.0.5 / 22 (54c50af)
 
