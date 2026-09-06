@@ -7,7 +7,7 @@
 ## 현재 상태
 
 - 현재 소스 버전: **V1.0.6**. Settings의 App Version은 `app.json`의 버전을 읽습니다.
-- 최근 생성 APK: **V1.0.6 / versionCode 22**, SDK 55 개발 빌드 `dd08ca61-8e46-4fc4-8693-2fec85814589`. AsyncStorage 통합 후 Android 실기기에서 앱 실행, 언어 저장 및 Amplitude 식별 정보 유지를 확인했습니다. 이전 개발 빌드의 광고/시스템 UI 검증 범위는 아래 기록을 참고합니다.
+- 최근 생성 APK: **V1.0.6 / versionCode 22**, 내부 설치용 preview 빌드 `1ca3ebb0-c895-4d8a-8ef3-20f674eb7262`. JavaScript 번들이 내장되어 Metro 없이 실행합니다. 네비바 수정과 AsyncStorage 통합을 포함하며 이 APK의 실기기 실행은 미검증입니다. 이전 개발 빌드의 실기기 결과는 아래 기록과 구분합니다.
 - Upgrade to Pro는 구매 화면 UI만 구현되어 있습니다. 상품 조회, 결제, 복원 및 구매를 통한 Pro 권한 활성화는 미연동입니다.
 - 아래 빌드 기록은 생성된 산출물 기록이며 Google Play/App Store의 현재 배포 버전을 뜻하지 않습니다.
 
@@ -198,6 +198,36 @@ side-led-banner-app/
 - Amplitude 저장 레코드에서 재실행 전후 `deviceId` 유지와 `userId == deviceId`를 확인했습니다. 실제 ID 값은 기록하지 않습니다. 확인한 실행 로그에는 Android 크래시나 JavaScript 오류가 없었습니다.
 - iOS 실기기와 Amplitude 대시보드의 실제 이벤트 수신은 미검증입니다. Android 로컬 저장 검증만으로 서버 수신이나 iOS 호환성을 보장하지 않습니다.
 
+### 잔여 의존성 위험 및 업데이트 절차 (2026-09-07)
+
+- `npm audit --json` 재조회: moderate 19, high/critical 0. 종료 코드 1은 취약점이 남아 있음을 뜻합니다. 19개는 독립 취약점 19종이 아니라 두 advisory의 상위 의존성 전파를 포함한 패키지 항목 수입니다.
+- 현재 설치: Amplitude 1.8.0, Expo 55.0.31, Expo Router 55.0.18, Expo CLI 55.0.36. `npm ls`에서 AsyncStorage는 2.2.0 단일 설치입니다. Android 실기기 검증은 위 기록을 적용하며 iOS는 미검증입니다.
+
+| 원인 | 설치 경로 | 위험과 현재 판단 |
+| --- | --- | --- |
+| decode-uri-component 0.2.2 | expo-router 55.0.18 → query-string 7.1.3 → decode-uri-component; 별도 경로: @react-navigation/native 7.3.18 → core 7.21.13 → 같은 query-string | 조작된 인코딩 입력에 의한 CPU 과점유/응답 불능. 앱 실행 경로와 관련되므로 단순 개발 도구 경고로 취급하지 않습니다. |
+| uuid 7.0.3 | expo 55.0.31 → @expo/config-plugins 55.0.11 → xcode 3.0.1 → uuid | v3/v5/v6의 외부 출력 버퍼 경계 검사 문제. 확인한 xcode generateUuid는 버퍼 없는 uuid.v4()를 사용하므로 이 호출은 취약 조건에 해당하지 않습니다. iOS 프로젝트 생성 도구 경로이며 모든 호출의 안전을 보장하는 결론은 아닙니다. |
+
+- URL 계열 8항목: `decode-uri-component`, `query-string`, `@react-navigation/core`, `@react-navigation/native`, `@react-navigation/elements`, `@react-navigation/bottom-tabs`, `@react-navigation/native-stack`, `expo-router`.
+- uuid/도구 계열 11항목: `uuid`, `xcode`, `@expo/config-plugins`, `@expo/config`, `@expo/cli`, `@expo/local-build-cache-provider`, `@expo/metro-config`, `@expo/prebuild-config`, `expo`, `expo-splash-screen`, `react-native-google-mobile-ads`. AdMob 항목도 이 의존성 전파에 따른 것이며 광고 SDK 자체 취약점 발견을 뜻하지 않습니다.
+- 외부 URL 정적 확인: `sideledbannerapp` 스킴을 받는 Expo Router의 `getLinkingConfig`는 자체 fork `getStateFromPath`를 사용하고 해당 `parseQueryParams`는 URLSearchParams를 사용합니다. 이 수신 경로에서 취약 디코더 직접 호출은 확인하지 못했습니다. React Navigation core의 기본 getStateFromPath에는 query-string.parse 호출이 남아 있습니다. 이번 확인은 악성 입력 실기기 재현이나 모든 경로의 비도달 증명이 아닙니다.
+- 근거: [decode-uri-component advisory](https://github.com/advisories/GHSA-vcc3-ghjq-m6fr)는 0.5.0을 수정 버전으로 제시합니다. [uuid advisory](https://github.com/advisories/GHSA-w5hq-g745-h8pq)는 11.1.1/12.0.1/13.0.1 수정 계열을 제시합니다. 자식만 강제 교체하지 않고 부모 패키지의 호환 의존성 채택을 확인합니다.
+- audit 제안에는 Expo 46.0.21, Router 5.1.11, AdMob 13.6.1로의 다운그레이드와 SDK 범위를 벗어난 splash-screen 변경이 포함됩니다. `npm audit fix --force`로 적용하지 않습니다.
+
+#### 패키지를 업데이트할 때마다 수행
+
+1. Amplitude, Expo Router 또는 Expo/내부 CLI 업데이트 작업에서 이 절을 다시 확인합니다. CLI는 Expo SDK와 맞는 버전으로 갱신하며 독립 강제 고정하지 않습니다.
+2. 후보 버전의 dependencies, 공식 변경 이력, SDK 호환성을 확인합니다. `npm view @amplitude/analytics-react-native@latest version dependencies --json`으로 조회한 최신 1.8.0도 AsyncStorage `^1.17.11`을 요구하므로 현재 override 제거 조건은 충족되지 않았습니다.
+3. 업데이트 후 `npm ls @react-native-async-storage/async-storage query-string decode-uri-component xcode uuid --all`과 `npm audit --json`을 확인합니다. 수치뿐 아니라 경로, advisory 범위, 실제 호출의 변화를 이 절에 기록합니다.
+4. 승인된 업데이트 검증에서 Expo Doctor, Expo 권장 의존성 검사, TypeScript/ESLint 및 Android/iOS 개발 빌드와 실기기 저장/라우팅 검증을 수행합니다. 기기가 없거나 iOS 빌드가 막히면 해당 결과를 미검증으로 남깁니다.
+
+#### 임시 override 제거 조건
+
+- AsyncStorage override는 이 패키지 하나에만 적용합니다. 새 부모 의존성이 Expo 호환 AsyncStorage 단일 버전을 정상적으로 허용하면 해당 override를 제거하고 정상 설치로 lockfile을 갱신합니다.
+- override 없는 `npm ci`와 `npm ls`에서 중복/invalid가 없어야 하고 Expo Doctor가 통과해야 합니다. 언어·프리셋 저장, 재시작 후 Amplitude deviceId 유지 및 userId 일치, Android/iOS 호환성 검증을 기록한 뒤 제거를 확정합니다. ID/API 키 값은 문서에 남기지 않습니다.
+- 보안 경고는 별도 조건입니다. Router/query-string 및 Expo/config-plugins/xcode가 수정된 디코더/uuid를 채택하고 설치 트리와 audit에서 해소를 확인한 항목만 해결로 표시합니다. AsyncStorage override 제거가 npm 19건까지 해결한다는 뜻은 아닙니다.
+- 이 절은 업데이트 작업 시 수행할 유지보수 절차입니다. 백그라운드 자동 감시나 자동 의존성 변경은 구성하지 않았습니다.
+
 ## Expo SDK 55 업데이트
 
 - Expo SDK 55.0.31, React Native 0.83.10, React 19.2.0 기준으로 호환 패키지를 정렬했습니다.
@@ -212,6 +242,9 @@ side-led-banner-app/
 - SDK 56은 React Native 0.85와 iOS 16.4 이상/Xcode 26.4를 요구합니다. 공식적으로 Reanimated/Worklets 사용 앱의 Hermes 메모리 회귀가 알려져 있어 이 프로젝트에는 적용하지 않았습니다.
 
 ## V1.0.6 업데이트
+
+- Android 사용자 스와이프로 표시된 내비게이션 바를 즉시 다시 숨기던 가시성 리스너를 앱 루트와 LED 전체 화면에서 제거했습니다. 앱/전체 화면 진입 시 숨김은 유지합니다. 이후 표시 시간은 OS 동작에 따르며 수정 후 실기기 제스처 동작은 미검증입니다.
+- 리워드 광고의 Android `immersiveModeEnabled` 설정은 유지했습니다. 이 변경 이후 광고 진입/재생/종료/복귀 전체의 내비게이션 바 노출 여부는 다시 검증해야 합니다.
 
 - 정적 성능 점검: 동일한 값의 설정/UI 업데이트는 기존 상태 객체를 유지하고, 고정 배경 팔레트 행 분할은 모듈 로드 시 한 번만 계산합니다. 폰트/애니메이션 로직은 변경하지 않았으며 실측 성능은 확인하지 않았습니다.
 
@@ -261,6 +294,20 @@ side-led-banner-app/
 ## Android 빌드 기록
 
 `artifacts/` 파일은 Git에서 제외되어 있어 저장소를 클론해도 함께 내려오지 않습니다.
+
+### 내부 설치용 APK: V1.0.6 / 22 (네비바 수정 포함)
+
+- EAS Build ID: `1ca3ebb0-c895-4d8a-8ef3-20f674eb7262`, 프로필/배포: `preview / INTERNAL`.
+- 파일: `artifacts/LedPop-V1.0.6-preview-1ca3ebb0.apk` (267,796,078 bytes). 검증 기록: `artifacts/LedPop-V1.0.6-preview-1ca3ebb0-verification.md`.
+- SHA-256: `2683A8D1C8A73DC28C6F5071264242A337E51D020E47F91F55809D1E9924F75C`.
+- `compile-ok`: Gradle `BUILD SUCCESSFUL in 30m 55s`, 전체 기록 단계 성공, 오류 수준 로그 0건. TypeScript 및 EAS Expo Doctor 20/20 통과. npm moderate 19건과 라이브러리 deprecated API 경고는 남아 있습니다.
+- 빌드 소스: `ff0919d5dff041180ca3fdbf563e01c777a78cf3`와 당시 미커밋 네비바 리스너 제거 및 README 변경. EAS Git SHA만으로 업로드 소스를 식별할 수 없습니다.
+- APK 검사: package `com.minkyokim.sideledbannerapp`, versionName/versionCode `1.0.6/22`, minSdk `24`, compileSdk/targetSdk `36/36`, ABI ARM64/ARMv7/x86/x86_64, debuggable 표시 없음.
+- APK v2 서명 검증 통과. 기존 인증서 SHA-256 `730173560958735bf237ca84ba4f35bbe76a6734986929eb65f6ced63d3fd893`와 일치합니다.
+- Manifest의 실제 AdMob App ID, 내장 JavaScript의 실제 배너/리워드 Unit ID와 immersive 옵션, DEX의 네이티브 리워드 모듈을 확인했습니다. 실제 광고 노출/보상은 이 APK에서 미검증입니다.
+- `assets/index.android.bundle` 내장 확인. `zipalign -c -P 16 4` 통과는 ZIP 정렬 확인이며 네이티브 ELF 및 16KB 실기기 호환성 전체 검증은 아닙니다.
+- 앱 R8 minify 작업은 실행되지 않았고 앱 mapping은 생성되지 않았습니다. AAB 및 Play mapping 등록 검증을 의미하지 않습니다.
+- 새 APK 설치/실행, 네비바 스와이프 및 광고 전체 흐름은 미검증입니다. 구매 UI는 미연동 상태입니다. Google Play에는 업로드하지 않았습니다.
 
 ### AsyncStorage 통합 개발 APK: V1.0.6 / 22 (2026-09-07)
 

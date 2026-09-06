@@ -16,7 +16,6 @@ import {
   prefetchRemoteFonts,
 } from "@/utils/fontPreload";
 import {
-  addAndroidNavigationBarHiddenListener,
   configureAndroidNavigationBarHidden,
 } from "@/utils/SystemChrome";
 import { initializeMobileAds } from "@/utils/initializeMobileAds";
@@ -86,7 +85,6 @@ export default function RootLayout() {
 
   useEffect(() => {
     configureAndroidNavigationBarHidden();
-    return addAndroidNavigationBarHiddenListener();
   }, []);
 
   //최소 0.75초 스플래쉬 강제

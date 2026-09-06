@@ -17,7 +17,6 @@ import { useTextMetrics } from "@/hooks/useTextMetrics";
 import { resolveBubbleCanvasOpts } from "@/utils/skiaBubbleTextLayout";
 import { getSizingPolicy } from "@/utils/textSizing";
 import {
-    addAndroidNavigationBarHiddenListener,
     hideAndroidNavigationBar,
 } from "@/utils/SystemChrome";
 import { Image } from "expo-image";
@@ -52,7 +51,6 @@ export const LedBannerFullScreen = ({
   useEffect(() => {
     if (!visible) return;
     hideAndroidNavigationBar();
-    return addAndroidNavigationBarHiddenListener();
   }, [visible]);
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
