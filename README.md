@@ -48,6 +48,7 @@ side-led-banner-app/
 │   ├── _layout.tsx              # 루트 레이아웃 (테마, 네비게이션)
 │   ├── index.tsx                # 메인 화면 (배너 편집기)
 │   ├── settings.tsx             # 앱 설정 화면
+│   ├── premium.tsx              # Upgrade to Pro 구매 화면 UI (결제 미연동)
 │   ├── sunnyList.tsx            # Sunny 앱/게임 목록 화면
 │   └── openSourceInfo.tsx       # 오픈소스 정보 화면
 ├── components/
@@ -172,6 +173,23 @@ side-led-banner-app/
 - Amplitude를 `^1.8.0`으로 업데이트했습니다. 최신 정식 버전에서도 내부 `@react-native-async-storage/async-storage@1.24.0` 의존성이 남아 있어 중복 경고는 해소되지 않았습니다.
 - Android에서 사용하지 않는 `RECORD_AUDIO` 권한을 삭제했고, `expo-image-picker`가 생성할 수 있는 `CAMERA`/`RECORD_AUDIO` 권한은 `blockedPermissions`로 차단했습니다. 사용하지 않는 iOS 카메라 권한 문구도 제거했습니다.
 - Amplitude 초기화 후 deviceId를 `setUserId`로 전달하고, 앱 기능에는 영향을 주지 않는 프로덕션 콘솔 로그를 개발 모드로 제한했습니다.
+
+## 설정 및 구매 화면 업데이트 (2026-09-06)
+
+- 메인 화면의 설정 아이콘과 설정/크레딧/오픈소스 정보/Sunny 목록/구매 화면의 뒤로가기 아이콘을 제공된 PNG 에셋으로 교체했습니다.
+- 설정 화면은 iOS에서 상단 safe-area inset을 적용하며, 구매 화면에도 iOS 상단 및 하단 safe area를 적용했습니다. 실기기 노치 배치는 아직 확인하지 않았습니다.
+- Language 위에 Upgrade to Pro 항목을 추가하고 /premium 화면으로 연결했습니다.
+- 구매 화면에 검정 배경, 커피잔 아이콘, LED POP Premium 상품 설명, 보라색 가격 영역, 구매 복원 문구, Sunny 로고와 Terms/Privacy 링크를 추가했습니다.
+- 새 문구는 한국어, 영어, 일본어, 중국어 번체/간체, 프랑스어, 스페인어로 등록했습니다. 새 화면의 Text에는 allowFontScaling={false}를 적용했습니다.
+- 추가 에셋: icon_arrow_back_DT_xxhdpi.png, icon_config_DT_xxhdpi.png, icon_donation_DT_xxhdpi.png, SIL_logo_setting_mini_white_text.png (assets/images/).
+
+### 결제 담당자 인계
+
+- 현재 구현은 구매 화면 UI입니다. 가격 영역과 구매 복원 문구에는 결제/복원 동작이 연결되어 있지 않습니다. 이 화면으로 구매하거나 Pro 권한을 활성화할 수 없습니다.
+- $6.99 CAD는 제공된 디자인의 고정 표시이며 스토어에서 조회한 실제 가격이 아닙니다. 결제 연동 시 스토어 상품의 현지화된 가격으로 연결해야 합니다.
+- 상품 조회, 결제, 구매 복원, 구매 검증 및 Pro 권한 반영은 결제 담당자가 구현할 예정입니다. 외부 호출은 기존 utils/ApiClient.ts 경계 정책을 따라야 합니다.
+- 이 변경에서는 앱 버전과 Android versionCode를 변경하지 않았습니다. 컴파일, 린트, 테스트 및 실기기 화면/결제 검증은 수행하지 않았습니다.
+- 아래 Android 빌드 기록은 기존 빌드 기록이며 이번 UI 변경을 포함한 새 APK/AAB를 뜻하지 않습니다.
 
 ## Android 빌드 기록
 

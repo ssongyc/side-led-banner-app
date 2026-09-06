@@ -24,6 +24,10 @@ export const settingsStyles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "flex-start",
   },
+  backIcon: {
+    width: moderateScale(24),
+    height: moderateScale(24),
+  },
   titleRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -48,6 +52,91 @@ export const settingsStyles = StyleSheet.create({
     fontSize: moderateScale(16),
     color: "#787878",
     fontWeight: "400",
+  },
+  premiumHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 15,
+    paddingTop: 10,
+    paddingBottom: 34,
+    gap: 8,
+  },
+  premiumHeaderIcon: {
+    width: moderateScale(24),
+    height: moderateScale(24),
+  },
+  premiumTitleText: {
+    ...uiThemeFontStyle,
+    fontSize: moderateScale(19),
+    fontWeight: "700",
+    color: "#F2EAF8",
+  },
+  premiumContent: {
+    flex: 1,
+    paddingHorizontal: 22,
+  },
+  premiumCard: {
+    overflow: "hidden",
+    borderRadius: 13,
+    backgroundColor: "#2A2A2A",
+  },
+  premiumCardBody: {
+    flexDirection: "row",
+    minHeight: moderateScale(126),
+  },
+  premiumIconPane: {
+    width: "30%",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#292929",
+  },
+  premiumDonationIcon: {
+    width: moderateScale(86),
+    height: moderateScale(86),
+  },
+  premiumTextPane: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    backgroundColor: "#494949",
+  },
+  premiumProductTitle: {
+    ...uiThemeFontStyle,
+    fontSize: moderateScale(18),
+    lineHeight: moderateScale(22),
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  premiumProductDescription: {
+    ...uiThemeFontStyle,
+    marginTop: 22,
+    fontSize: moderateScale(16),
+    lineHeight: moderateScale(18),
+    fontWeight: "500",
+    color: "#FFFFFF",
+  },
+  premiumPriceBar: {
+    minHeight: moderateScale(50),
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#7156B3",
+  },
+  premiumPriceText: {
+    ...uiThemeFontStyle,
+    fontSize: moderateScale(14),
+    fontWeight: "700",
+    color: "#DCD1F2",
+  },
+  premiumRestoreArea: {
+    alignItems: "center",
+    paddingBottom: 32,
+  },
+  premiumRestoreText: {
+    ...uiThemeFontStyle,
+    fontSize: moderateScale(13),
+    fontWeight: "700",
+    color: "#CFC4DF",
   },
 });
 

@@ -33,6 +33,11 @@ export type TextSectionLabelKey =
   | "tabEffects"
   /** 설정*/
   | "settingsTitle"
+  | "upgradeToPremium"
+  | "premiumProductTitle"
+  | "premiumProductDescription"
+  | "premiumPrice"
+  | "restorePreviousPurchase"
   | "sunnyGames"
   | "instagram"
   | "twitter"
@@ -243,6 +248,51 @@ const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
     zhSC: "设置",
     fr: "Paramètres",
     es: "Ajustes",
+  },
+  upgradeToPremium: {
+    ko: "Pro로 업그레이드",
+    en: "Upgrade to Pro",
+    ja: "Pro にアップグレード",
+    zhTC: "升級至 Pro",
+    zhSC: "升级到 Pro",
+    fr: "Passer à Pro",
+    es: "Actualizar a Pro",
+  },
+  premiumProductTitle: {
+    ko: "LED POP Premium",
+    en: "LED POP Premium",
+    ja: "LED POP Premium",
+    zhTC: "LED POP Premium",
+    zhSC: "LED POP Premium",
+    fr: "LED POP Premium",
+    es: "LED POP Premium",
+  },
+  premiumProductDescription: {
+    ko: "광고 없이 LED POP 전체 버전을 즐기세요.",
+    en: "Enjoy the full version of LED POP without ads.",
+    ja: "広告なしで LED POP のフルバージョンをお楽しみください。",
+    zhTC: "享受沒有廣告的 LED POP 完整版。",
+    zhSC: "享受没有广告的 LED POP 完整版。",
+    fr: "Profitez de la version complète de LED POP sans publicités.",
+    es: "Disfruta la versión completa de LED POP sin anuncios.",
+  },
+  premiumPrice: {
+    ko: "$6.99 CAD",
+    en: "$6.99 CAD",
+    ja: "$6.99 CAD",
+    zhTC: "$6.99 CAD",
+    zhSC: "$6.99 CAD",
+    fr: "$6.99 CAD",
+    es: "$6.99 CAD",
+  },
+  restorePreviousPurchase: {
+    ko: "이전 구매 복원",
+    en: "Restore the Previous Purchase",
+    ja: "以前の購入を復元",
+    zhTC: "恢復先前購買",
+    zhSC: "恢复之前购买",
+    fr: "Restaurer l’achat précédent",
+    es: "Restaurar la compra anterior",
   },
   sunnyGames: {
     ko: "Sunny의 게임 및 앱",

@@ -206,7 +206,7 @@ export default function Index() {
             accessibilityLabel={textSectionLabel("settingsTitle")}
           >
             <Image
-              source={require("@/assets/images/settings.png")}
+              source={require("@/assets/images/icon_config_DT_xxhdpi.png")}
               style={[
                 btnStyles.playBarSettingsImage,
                 { width: playBarSizes.icon, height: playBarSizes.icon },

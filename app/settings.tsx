@@ -48,6 +48,7 @@ export default function SettingsScreen() {
     rewardAdLabel,
     resolvedAppLocale,
   } = useSettingsRest();
+  const rootPaddingTop = Platform.OS === "ios" ? insets.top : 0;
 
   const languageDropdownItems = useMemo(
     () => [
@@ -107,7 +108,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[base.container, { backgroundColor: "#FFFFFF", paddingTop: insets.top }]}>
+    <View style={[base.container, { backgroundColor: "#FFFFFF", paddingTop: rootPaddingTop }]}>
       <View style={settingsStyles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -115,10 +116,10 @@ export default function SettingsScreen() {
           accessibilityLabel="Back"
           hitSlop={10}
         >
-<Ionicons
-            name={Platform.OS === "ios" ? "chevron-back" : "arrow-back"}
-            size={24}
-            color="black"
+          <Image
+            source={require("@/assets/images/icon_arrow_back_DT_xxhdpi.png")}
+            style={settingsStyles.backIcon}
+            resizeMode="contain"
           />
         </TouchableOpacity>
         <View style={settingsStyles.titleRow}>
@@ -136,6 +137,10 @@ export default function SettingsScreen() {
           { paddingBottom: 40 },
         ]}
       >
+        <NavigationRow
+          label={textSectionLabel("upgradeToPremium")}
+          onPress={() => router.push("/premium" as Href)}
+        />
         <View style={base.settingsRow}>
           <Text style={base.settingsRowLabel} allowFontScaling={false}>
             {textSectionLabel("language")}

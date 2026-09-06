@@ -4,11 +4,10 @@ import {
 } from "@/constants/settingsStyles";
 import { styles as base } from "@/constants/styles";
 import { useSettingsRest } from "@/contexts/settingsContext";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-  Platform,
+  Image,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -43,10 +42,10 @@ export default function CreditsScreen() {
           accessibilityLabel="Back"
           hitSlop={10}
         >
-          <Ionicons
-            name={Platform.OS === "ios" ? "chevron-back" : "arrow-back"}
-            size={24}
-            color="black"
+          <Image
+            source={require("@/assets/images/icon_arrow_back_DT_xxhdpi.png")}
+            style={settingsStyles.backIcon}
+            resizeMode="contain"
           />
         </TouchableOpacity>
         <Text style={settingsStyles.titleText} allowFontScaling={false}>

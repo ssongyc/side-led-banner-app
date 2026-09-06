@@ -647,6 +647,26 @@ export const settingsFooterStyles = StyleSheet.create({
     fontSize: moderateScale(11),
     color: "#CCCCCC",
   },
+  containerDark: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 14,
+    paddingBottom: 14,
+    paddingHorizontal: 20,
+    gap: 12,
+    backgroundColor: "#3F3F3F",
+  },
+  linkTextDark: {
+    fontSize: moderateScale(12),
+    color: "#E8E3EC",
+    fontWeight: "500",
+  },
+  separatorDark: {
+    fontSize: moderateScale(11),
+    color: "#AFA9B8",
+  },
 });
 
 export function resolveDropdownMaxHeight(
