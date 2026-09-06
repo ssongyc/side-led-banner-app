@@ -209,7 +209,7 @@ export default function Index() {
               source={require("@/assets/images/icon_config_DT_xxhdpi.png")}
               style={[
                 btnStyles.playBarSettingsImage,
-                { width: playBarSizes.icon, height: playBarSizes.icon },
+                { width: playBarSizes.icon * 0.85, height: playBarSizes.icon * 0.85 },
               ]}
               contentFit="contain"
             />

@@ -56,7 +56,6 @@ export const SliderComponent = ({
           )
         }
         minimumTrackTintColor="#FF6E00"
-        // renderThumbComponent={() => <SliderThumb />}
       />
       <TouchableOpacity
         style={styles.sliderButton}

@@ -19,6 +19,16 @@ const LOCK_ICON = require("@/assets/images/icon_lock_type2.png");
 const COLS = 9;
 const ROW1_SWATCHES = COLS - 1;
 
+// The palette is fixed; build its display rows once per module load.
+const colors = backgroundColorPalette;
+const row1 = colors.slice(0, ROW1_SWATCHES);
+const tail = colors.slice(ROW1_SWATCHES);
+const moreRows: string[][] = [];
+for (let i = 0; i < tail.length; i += COLS) {
+  moreRows.push(tail.slice(i, i + COLS));
+}
+
+
 
 export const BackgroundSection = () => {
   const { config, updateConfig, textSectionLabel, isProActive, openRewardAdModal } = useSettingsRest();
@@ -55,13 +65,6 @@ export const BackgroundSection = () => {
     });
   }, [updateConfig]);
 
-  const colors = backgroundColorPalette;
-  const row1 = colors.slice(0, ROW1_SWATCHES);
-  const tail = colors.slice(ROW1_SWATCHES);
-  const moreRows: string[][] = [];
-  for (let i = 0; i < tail.length; i += COLS) {
-    moreRows.push(tail.slice(i, i + COLS));
-  }
 
 
   const hasBgPhoto = backgroundImageUri != null && backgroundImageUri !== "";

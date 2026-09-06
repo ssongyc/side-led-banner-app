@@ -48,25 +48,6 @@ export type TextSectionLabelKey =
   | "privacy"
   | "appVersion";
 
-/** TEXT*/
-export const TEXT_TAB_BODY_LABEL_KEYS = [
-  "font",
-  "speed",
-  "size",
-  "letterSpacing",
-  "lineSpacing",
-  "viewMode",
-  "color",
-  "outline",
-  "dropShadow",
-] as const satisfies readonly TextSectionLabelKey[];
-
-/** BACKGROUND  */
-export const BACKGROUND_TAB_BODY_LABEL_KEYS = [
-  "backgroundColor",
-  "blur",
-] as const satisfies readonly TextSectionLabelKey[];
-
 const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
   language: {
     ko: "언어",

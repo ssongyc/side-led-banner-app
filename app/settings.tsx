@@ -48,7 +48,7 @@ export default function SettingsScreen() {
     rewardAdLabel,
     resolvedAppLocale,
   } = useSettingsRest();
-  const rootPaddingTop = Platform.OS === "ios" ? insets.top : 0;
+  const rootPaddingTop = Platform.OS === "web" ? 0 : insets.top;
 
   const languageDropdownItems = useMemo(
     () => [

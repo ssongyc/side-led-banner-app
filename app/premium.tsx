@@ -1,10 +1,11 @@
+import { moderateScale } from "@/constants/scale";
 import { settingsStyles } from "@/constants/settingsStyles";
 import { settingsFooterStyles, styles as base } from "@/constants/styles";
 import { useSettingsRest } from "@/contexts/settingsContext";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React from "react";
-import { Image, Linking, Platform, Text, TouchableOpacity, View } from "react-native";
+import React, { useState } from "react";
+import { Image, Linking, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SUNNY_LINKS = {
@@ -17,10 +18,20 @@ const SUNNY_LINKS = {
 
 export default function PremiumScreen() {
   const router = useRouter();
+  const [pageHeight, setPageHeight] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [cardHeight, setCardHeight] = useState(0);
   const insets = useSafeAreaInsets();
   const { textSectionLabel } = useSettingsRest();
-  const rootPaddingTop = Platform.OS === "ios" ? insets.top : 0;
+  const rootPaddingTop = Platform.OS === "web" ? 0 : insets.top;
   const footerPaddingBottom = Platform.OS === "ios" ? Math.max(14, insets.bottom + 8) : 14;
+
+  // Design placeholder. Replace with the store product localized price when IAP is connected.
+  const displayedPrice = textSectionLabel("premiumPrice");
+  const cardTopSpacing = Math.max(
+    0,
+    pageHeight / 2 - rootPaddingTop - headerHeight - cardHeight + moderateScale(50) / 2,
+  );
 
   const openUrl = async (url: string) => {
     try {
@@ -31,91 +42,102 @@ export default function PremiumScreen() {
   };
 
   return (
-    <View style={[base.container, { backgroundColor: "#000000", paddingTop: rootPaddingTop }]}>
+    <View
+      style={[base.container, { backgroundColor: "#000000", paddingTop: rootPaddingTop }]}
+      onLayout={({ nativeEvent }) => setPageHeight(nativeEvent.layout.height)}
+    >
       {Platform.OS === "ios" ? <StatusBar style="light" /> : null}
-      <View style={settingsStyles.premiumHeader}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={settingsStyles.backButton}
-          accessibilityLabel="Back"
-          hitSlop={10}
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View
+          style={settingsStyles.premiumHeader}
+          onLayout={({ nativeEvent }) => setHeaderHeight(nativeEvent.layout.height)}
         >
-          <Image
-            source={require("@/assets/images/icon_arrow_back_DT_xxhdpi.png")}
-            style={settingsStyles.backIcon}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-        <Image
-          source={require("@/assets/images/icon_donation_DT_xxhdpi.png")}
-          style={settingsStyles.premiumHeaderIcon}
-          resizeMode="contain"
-        />
-        <Text style={settingsStyles.premiumTitleText} allowFontScaling={false}>
-          {textSectionLabel("upgradeToPremium")}
-        </Text>
-      </View>
-
-      <View style={settingsStyles.premiumContent}>
-        <View style={settingsStyles.premiumCard}>
-          <View style={settingsStyles.premiumCardBody}>
-            <View style={settingsStyles.premiumIconPane}>
-              <Image
-                source={require("@/assets/images/icon_donation_DT_xxhdpi.png")}
-                style={settingsStyles.premiumDonationIcon}
-                resizeMode="contain"
-              />
-            </View>
-            <View style={settingsStyles.premiumTextPane}>
-              <Text style={settingsStyles.premiumProductTitle} allowFontScaling={false}>
-                {textSectionLabel("premiumProductTitle")}
-              </Text>
-              <Text style={settingsStyles.premiumProductDescription} allowFontScaling={false}>
-                {textSectionLabel("premiumProductDescription")}
-              </Text>
-            </View>
-          </View>
-          <View style={settingsStyles.premiumPriceBar}>
-            <Text style={settingsStyles.premiumPriceText} allowFontScaling={false}>
-              {textSectionLabel("premiumPrice")}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={settingsStyles.premiumRestoreArea}>
-        <Text style={settingsStyles.premiumRestoreText} allowFontScaling={false}>
-          {textSectionLabel("restorePreviousPurchase")}
-        </Text>
-      </View>
-
-      <View style={[settingsFooterStyles.containerDark, { paddingBottom: footerPaddingBottom }]}>
-        <TouchableOpacity onPress={() => openUrl(SUNNY_LINKS.homepage)} activeOpacity={0.7}>
-          <Image
-            source={require("@/assets/images/SIL_logo_setting_mini_white_text.png")}
-            style={settingsFooterStyles.logo}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-
-        <View style={settingsFooterStyles.linksRow}>
-          <TouchableOpacity onPress={() => openUrl(SUNNY_LINKS.terms)}>
-            <Text style={settingsFooterStyles.linkTextDark} allowFontScaling={false}>
-              {textSectionLabel("terms")}
-            </Text>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={settingsStyles.backButton}
+            accessibilityLabel="Back"
+            hitSlop={10}
+          >
+            <Image
+              source={require("@/assets/images/icon_arrow_back_DT_xxhdpi.png")}
+              style={[settingsStyles.backIcon, settingsStyles.backIconDark]}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
-
-          <Text style={settingsFooterStyles.separatorDark} allowFontScaling={false}>
-            |
+          <Image
+            source={require("@/assets/images/icon_donation_DT_xxhdpi.png")}
+            style={settingsStyles.premiumHeaderIcon}
+            resizeMode="contain"
+          />
+          <Text style={settingsStyles.premiumTitleText} allowFontScaling={false}>
+            {textSectionLabel("upgradeToPremium")}
           </Text>
-
-          <TouchableOpacity onPress={() => openUrl(SUNNY_LINKS.privacy)}>
-            <Text style={settingsFooterStyles.linkTextDark} allowFontScaling={false}>
-              {textSectionLabel("privacy")}
-            </Text>
-          </TouchableOpacity>
         </View>
-      </View>
+
+        <View style={[settingsStyles.premiumContent, { paddingTop: cardTopSpacing, paddingBottom: 24 }]}>
+          <View
+            style={settingsStyles.premiumCard}
+            onLayout={({ nativeEvent }) => setCardHeight(nativeEvent.layout.height)}
+          >
+            <View style={settingsStyles.premiumCardBody}>
+              <View style={settingsStyles.premiumIconPane}>
+                <Image
+                  source={require("@/assets/images/icon_donation_DT_xxhdpi.png")}
+                  style={settingsStyles.premiumDonationIcon}
+                  resizeMode="contain"
+                />
+              </View>
+              <View style={settingsStyles.premiumTextPane}>
+                <Text style={settingsStyles.premiumProductTitle} allowFontScaling={false}>
+                  {textSectionLabel("premiumProductTitle")}
+                </Text>
+                <Text style={settingsStyles.premiumProductDescription} allowFontScaling={false}>
+                  {textSectionLabel("premiumProductDescription")}
+                </Text>
+              </View>
+            </View>
+            <View style={settingsStyles.premiumPriceBar}>
+              <Text style={settingsStyles.premiumPriceText} allowFontScaling={false}>
+                {displayedPrice}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={settingsStyles.premiumRestoreArea}>
+          <Text style={settingsStyles.premiumRestoreText} allowFontScaling={false}>
+            {textSectionLabel("restorePreviousPurchase")}
+          </Text>
+        </View>
+
+        <View style={[settingsFooterStyles.containerDark, { paddingBottom: footerPaddingBottom }]}>
+          <TouchableOpacity onPress={() => openUrl(SUNNY_LINKS.homepage)} activeOpacity={0.7}>
+            <Image
+              source={require("@/assets/images/SIL_logo_setting_mini_white_text.png")}
+              style={settingsFooterStyles.logo}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+
+          <View style={settingsFooterStyles.linksRow}>
+            <TouchableOpacity onPress={() => openUrl(SUNNY_LINKS.terms)}>
+              <Text style={settingsFooterStyles.linkTextDark} allowFontScaling={false}>
+                {textSectionLabel("terms")}
+              </Text>
+            </TouchableOpacity>
+
+            <Text style={settingsFooterStyles.separatorDark} allowFontScaling={false}>
+              |
+            </Text>
+
+            <TouchableOpacity onPress={() => openUrl(SUNNY_LINKS.privacy)}>
+              <Text style={settingsFooterStyles.linkTextDark} allowFontScaling={false}>
+                {textSectionLabel("privacy")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }

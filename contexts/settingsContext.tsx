@@ -445,14 +445,6 @@ export const useSettingsRest = () => {
   return ctx;
 };
 
-/** content만 필요한 컴포넌트가 구독하게 */
-export const useSettingsContent = () => {
-  const ctx = useContext(ContentContext);
-  if (!ctx)
-    throw new Error("useSettingsContent must be used within SettingsProvider");
-  return ctx;
-};
-
 /**
  * 기존 호환용 통합 훅 — rest + content를 모두 구독하므로, previewText가 바뀔 때도
  * appearance/background만 바뀔 때도 재렌더됩니다. content가 실제로 필요한 컴포넌트에서만 사용해주세요.
@@ -713,16 +705,27 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       group: K,
       updates: Partial<BannerConfig[K]>,
     ) => {
-      setConfig((prev) => ({
-        ...prev,
-        [group]: { ...prev[group], ...updates },
-      }));
+      setConfig((prev) => {
+        const keys = Object.keys(updates) as (keyof BannerConfig[K])[];
+        if (keys.every((key) =>
+          Object.prototype.hasOwnProperty.call(prev[group], key) &&
+          Object.is(prev[group][key], updates[key]),
+        )) return prev;
+        return { ...prev, [group]: { ...prev[group], ...updates } };
+      });
     },
     [],
   );
 
   const updateUI = useCallback((updates: Partial<UIState>) => {
-    setUI((prev) => ({ ...prev, ...updates }));
+    setUI((prev) => {
+      const keys = Object.keys(updates) as (keyof UIState)[];
+      if (keys.every((key) =>
+        Object.prototype.hasOwnProperty.call(prev, key) &&
+        Object.is(prev[key], updates[key]),
+      )) return prev;
+      return { ...prev, ...updates };
+    });
   }, []);
 
   //Preset 불러올 시 pro mode에 따른  적용

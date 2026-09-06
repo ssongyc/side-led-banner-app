@@ -27,6 +27,10 @@ export const settingsStyles = StyleSheet.create({
   backIcon: {
     width: moderateScale(24),
     height: moderateScale(24),
+    tintColor: "#000000",
+  },
+  backIconDark: {
+    tintColor: "#FFFFFF",
   },
   titleRow: {
     flexDirection: "row",
@@ -70,12 +74,15 @@ export const settingsStyles = StyleSheet.create({
     fontSize: moderateScale(19),
     fontWeight: "700",
     color: "#F2EAF8",
+    flexShrink: 1,
   },
   premiumContent: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
     paddingHorizontal: 22,
   },
   premiumCard: {
+    flexShrink: 0,
     overflow: "hidden",
     borderRadius: 13,
     backgroundColor: "#2A2A2A",
@@ -117,7 +124,7 @@ export const settingsStyles = StyleSheet.create({
     color: "#FFFFFF",
   },
   premiumPriceBar: {
-    minHeight: moderateScale(50),
+    height: moderateScale(50),
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#7156B3",
@@ -196,51 +203,5 @@ export const creditsStyles = StyleSheet.create({
     fontSize: moderateScale(13),
     fontWeight: "400",
     color: "#9A9A9A",
-  },
-});
-
-const SUNNY_LIST_THUMBNAIL_SIZE = moderateScale(44);
-
-export const sunnyListStyles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#DDDDDD",
-    gap: 14,
-  },
-  thumbnail: {
-    width: SUNNY_LIST_THUMBNAIL_SIZE,
-    height: SUNNY_LIST_THUMBNAIL_SIZE,
-    borderRadius: 10,
-    backgroundColor: "#E7E7E7",
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  thumbnailImage: {
-    width: "100%",
-    height: "100%",
-  },
-  thumbnailPlaceholderText: {
-    ...uiThemeFontStyle,
-    fontSize: moderateScale(20),
-    fontWeight: "700",
-    color: "#9A9A9A",
-  },
-  appName: {
-    ...uiThemeFontStyle,
-    flex: 1,
-    fontSize: moderateScale(16),
-    fontWeight: "500",
-    color: "black",
-  },
-  linkText: {
-    ...uiThemeFontStyle,
-    fontSize: moderateScale(15),
-    color: "#9A9A9A",
-    fontWeight: "500",
   },
 });

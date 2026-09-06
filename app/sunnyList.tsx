@@ -203,6 +203,7 @@ export default function SunnyListScreen() {
           <Image
             source={require("@/assets/images/icon_arrow_back_DT_xxhdpi.png")}
             style={settingsStyles.backIcon}
+            tintColor="#000000"
             contentFit="contain"
           />
         </TouchableOpacity>

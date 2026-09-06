@@ -27,9 +27,6 @@ export const SETTINGS_SHEET_LOCALE_ORDER: readonly AppLocaleKey[] = [
   "es",
 ];
 
-/** 스프레드시트 열 순서와 동일 (`APP_LOCALE_KEYS`와 같음)*/
-export const SHEET_LOCALE_KEYS = APP_LOCALE_KEYS;
-
 export type SheetLocaleKey = AppLocaleKey;
 
 /** 실제 값 추출 시작하는 인덱스 */
