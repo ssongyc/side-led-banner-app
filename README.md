@@ -7,7 +7,7 @@
 ## 현재 상태
 
 - 현재 소스 버전: **V1.0.6**. Settings의 App Version은 `app.json`의 버전을 읽습니다.
-- 최근 생성 APK: **V1.0.6 / versionCode 22**, SDK 55 개발 빌드 `f42d9d4e-1a9d-44e2-9f73-c0875b153fc6`. 이 개발 클라이언트에서 현재 소스를 Metro로 실행해 주요 화면, 언어 저장, 실제 AdMob 리워드 흐름 및 Android 시스템 UI를 확인했습니다.
+- 최근 생성 APK: **V1.0.6 / versionCode 22**, SDK 55 개발 빌드 `dd08ca61-8e46-4fc4-8693-2fec85814589`. AsyncStorage 통합 후 Android 실기기에서 앱 실행, 언어 저장 및 Amplitude 식별 정보 유지를 확인했습니다. 이전 개발 빌드의 광고/시스템 UI 검증 범위는 아래 기록을 참고합니다.
 - Upgrade to Pro는 구매 화면 UI만 구현되어 있습니다. 상품 조회, 결제, 복원 및 구매를 통한 Pro 권한 활성화는 미연동입니다.
 - 아래 빌드 기록은 생성된 산출물 기록이며 Google Play/App Store의 현재 배포 버전을 뜻하지 않습니다.
 
@@ -187,7 +187,16 @@ side-led-banner-app/
 - 기존 의존성 범위 안에서 brace-expansion (1.1.18/2.1.4/5.0.9), fast-uri (3.1.7), js-yaml (3.15.2/4.3.2), nanoid (3.3.18), @humanfs/node (0.16.8), @xmldom/xmldom (0.8.15)을 갱신했습니다. 필요한 @humanfs/core 갱신과 @humanfs/types 추가도 포함합니다.
 - 변경은 package-lock.json과 로컬 설치 상태에 반영했습니다. 보안 갱신 단계에서는 직접 의존성 선언과 Expo/Router/Amplitude/AsyncStorage 버전을 유지했으며 강제 override는 추가하지 않았습니다.
 - SDK 55 호환 의존성 정렬 후 npm audit는 19건(moderate 19, high/critical 0)입니다. 결과는 조회 시점 기준이며 강제 audit fix는 적용하지 않았습니다.
-- Expo Doctor는 19/20을 통과했습니다. 남은 항목은 앱 직접 설치본 2.2.0과 Amplitude 내부 1.24.0으로 인한 AsyncStorage 중복입니다.
+- AsyncStorage 통합 후 Expo Doctor는 20/20을 통과했습니다. 남은 npm audit 경고는 moderate 19건이며 high/critical은 0건입니다. 아래 결과는 2026-09-07 검증 기준입니다.
+
+### AsyncStorage 통합 및 Amplitude 검증 (2026-09-07)
+
+- `package.json`의 npm `overrides`로 `@react-native-async-storage/async-storage`를 `2.2.0`으로 통일했습니다. Amplitude 1.8.0의 내부 의존성도 동일한 설치본을 사용합니다. 상위 라이브러리 의존성 선언을 재정의하는 조치이며 라이브러리 자체 업데이트로 해결된 것은 아닙니다.
+- `package-lock.json` 변경 없이 `npm ci` 후 중복 설치 제거를 확인했습니다. Expo Doctor 20/20, TypeScript, ESLint, Expo 권장 의존성 검사를 통과했습니다. npm audit moderate 19건은 별도 잔여 항목입니다.
+- Amplitude는 LED POP 프로젝트의 활성 API 키를 사용합니다. EAS development/preview/production 설정 일치를 확인했으며 키 값은 문서에 기록하지 않습니다. 로컬 `.env`가 없는 검증 환경에서는 Metro 프로세스의 환경 변수로 전달했습니다.
+- Samsung `SM-M336K`에서 개발 APK 설치 및 현재 소스 실행을 확인했습니다. 한국어 설정의 재시작 유지를 확인한 뒤 영어로 복구했고 영어도 재실행 후 유지됐습니다. 기존 프리셋 저장 데이터가 남아 있는 것도 확인했습니다.
+- Amplitude 저장 레코드에서 재실행 전후 `deviceId` 유지와 `userId == deviceId`를 확인했습니다. 실제 ID 값은 기록하지 않습니다. 확인한 실행 로그에는 Android 크래시나 JavaScript 오류가 없었습니다.
+- iOS 실기기와 Amplitude 대시보드의 실제 이벤트 수신은 미검증입니다. Android 로컬 저장 검증만으로 서버 수신이나 iOS 호환성을 보장하지 않습니다.
 
 ## Expo SDK 55 업데이트
 
@@ -196,7 +205,7 @@ side-led-banner-app/
 - 웹에서는 AdMob과 원격 폰트의 플랫폼 경계를 분리하고 Skia CanvasKit 초기화 후 RuntimeEffect를 컴파일하도록 조정했습니다. TypeScript, ESLint 및 웹 번들/HTTP 실행 검사는 통과했습니다.
 - Expo Router가 `app/_layout.web.tsx`를 Android 라우트 컨텍스트에도 포함하면서 CanvasKit의 Node `fs` 참조가 Android 번들을 막는 문제를 확인했습니다. 라우트 디렉터리 밖의 `RootLayoutEntry(.web).tsx`로 플랫폼 경계를 옮겨 Android 번들과 웹 정적 export를 모두 통과시켰습니다.
 - Android 개발 APK는 EAS에서 컴파일되고 Samsung Galaxy Jumper 2 (`SM-M336K`)에 설치됐습니다. 현재 소스를 Metro로 실행해 메인/Settings/Upgrade to Pro 화면, 상단 안전 영역, `V1.0.6` 표시를 확인했습니다.
-- 앱 언어를 영어에서 한국어로 바꾸고 강제 종료/재실행한 뒤 한국어가 유지되는 것을 확인했으며, 테스트 후 영어로 복원하고 다시 재실행해 영어가 유지되는 것도 확인했습니다. 이 결과는 저장 경로의 실기기 동작 확인이며 Expo Doctor의 AsyncStorage 중복 경고를 제거하지는 않습니다.
+- 앱 언어를 영어에서 한국어로 바꾸고 강제 종료/재실행한 뒤 한국어가 유지되는 것을 확인했으며, 테스트 후 영어로 복원하고 다시 재실행해 영어가 유지되는 것도 확인했습니다. 당시 남았던 AsyncStorage 중복은 이후 위의 통합 작업으로 제거했고 Android 저장 동작을 다시 확인했습니다.
 - 실제 AdMob 리워드 광고는 준비된 광고만 한 번 표시하고 다음 슬롯을 선로딩하는 흐름을 확인했습니다. Android 광고 표시에는 SDK의 `immersiveModeEnabled`를 사용하며 광고 `AdActivity` 진입과 앱 복귀 표본에서 내비게이션 바가 숨겨졌습니다.
 - 광고 CTA가 외부 Google Play (`com.android.vending`) 설치 화면을 열면 해당 외부 화면의 내비게이션 바는 표시됐습니다. 앱이나 광고 SDK가 소유하지 않는 화면이라 이 경로까지 절대 숨김을 보장할 수 없으며, 프로젝트의 “광고 중 한 프레임도 표시 금지” 요구는 이 외부 화면 경로에서는 충족되지 않습니다.
 - iOS 개발 빌드는 내부 배포에 적합한 자격 증명을 EAS가 찾지 못해 시작되지 않았습니다. 새 인증서나 기기 등록은 수행하지 않았습니다.
@@ -253,13 +262,24 @@ side-led-banner-app/
 
 `artifacts/` 파일은 Git에서 제외되어 있어 저장소를 클론해도 함께 내려오지 않습니다.
 
+### AsyncStorage 통합 개발 APK: V1.0.6 / 22 (2026-09-07)
+
+- EAS Build ID: `dd08ca61-8e46-4fc4-8693-2fec85814589`, 프로필/배포: `development / INTERNAL`.
+- 파일: `artifacts/sdk55-asyncstorage-dedup-development.apk` (320,698,124 bytes).
+- SHA-256: `983C88138B673509156BFB65D35E58DECA4A9FDB7FCA6168FDC7185AAD91B09C`.
+- `compile-ok`: EAS 빌드 성공, 빌드 내 Expo Doctor 20/20 통과. 빌드 로그에서 override가 포함된 package.json과 npm ci 실행을 확인했습니다.
+- APK 검사: package `com.minkyokim.sideledbannerapp`, versionName/versionCode `1.0.6/22`, compileSdk/targetSdk `36/36`, APK v2 서명 검증 성공. 기존 Android 서명 자격 증명을 사용했습니다.
+- 빌드 당시 override는 미커밋 상태였으므로 EAS 메타데이터 Git SHA `c9726dc...`만으로 업로드 소스를 재현할 수 없습니다. 실제 아카이브에는 로컬 override 변경이 포함됐습니다.
+- APK 크기와 해시는 아래 이전 개발 APK와 같습니다. 현재 JavaScript 소스는 Metro로 제공해 검증했으며 APK 해시만으로 이 소스 변경의 포함 여부를 판단하면 안 됩니다. 스토어 제출용 릴리스 빌드는 아닙니다.
+- Android 실기기 결과와 미검증 범위는 위 AsyncStorage 통합 및 Amplitude 검증 절에 기록했습니다.
+
 ### SDK 55 개발 APK: V1.0.6 / 22
 
 - EAS Build ID: `f42d9d4e-1a9d-44e2-9f73-c0875b153fc6`
 - 프로필/배포: `development / INTERNAL`
 - 파일: `artifacts/sdk55-development.apk` (320,698,124 bytes)
 - SHA-256: `983C88138B673509156BFB65D35E58DECA4A9FDB7FCA6168FDC7185AAD91B09C`
-- 소스: 현재 커밋되지 않은 SDK 55 작업 트리. EAS 메타데이터의 Git SHA와 동일하다고 간주하면 안 됩니다.
+- 소스: 빌드 당시 커밋되지 않은 SDK 55 작업 트리. EAS 메타데이터의 Git SHA와 동일하다고 간주하면 안 됩니다.
 - 컴파일: EAS Build 성공. APK 검사에서 package `com.minkyokim.sideledbannerapp`, versionName/versionCode `1.0.6/22`, compileSdk/targetSdk `36/36`을 확인했습니다.
 - ABI: ARM64/ARMv7/x86/x86_64. APK Signature Scheme v2 검증 성공, 인증서 SHA-256 `730173560958735bf237ca84ba4f35bbe76a6734986929eb65f6ced63d3fd893`.
 - 실제 Android AdMob App ID와 배너/리워드 Unit ID가 설정되어 있습니다. 현재 소스를 Metro로 연결해 실제 리워드 광고의 로드, 표시, 보상, 닫기 및 다음 광고 선로딩을 확인했습니다.
