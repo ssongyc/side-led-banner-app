@@ -198,7 +198,7 @@ export const LedBannerFullScreen = ({
       onRequestClose={onClose}
     >
       <StatusBar hidden />
-      <View style={styles.root} onLayout={onStageLayout}>
+      <View style={styles.root} onLayout={onStageLayout} onTouchStart={hideAndroidNavigationBar}>
         <View style={styles.layerPassThrough} pointerEvents="box-none">
           <View
             collapsable={false}

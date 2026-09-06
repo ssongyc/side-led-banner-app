@@ -1,5 +1,6 @@
 import { uiThemeFontStyle } from "@/constants/appFonts";
 import { useSettingsRest } from "@/contexts/settingsContext";
+import { hideAndroidNavigationBar } from "@/utils/SystemChrome";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Modal,
@@ -66,7 +67,7 @@ function SheetFetchDebugPanelInner() {
         transparent
         onRequestClose={() => setOpen(false)}
       >
-        <View style={styles.backdrop}>
+        <View style={styles.backdrop} onTouchStart={hideAndroidNavigationBar}>
           <View style={styles.sheet}>
             <View style={styles.toolbar}>
               <Pressable onPress={() => setOpen(false)} hitSlop={12}>

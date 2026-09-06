@@ -20,7 +20,7 @@
 
 ## 사전 요구사항
 
-- Node.js 20.19.x 이상 (Expo SDK 55 / React Native 0.83 기준)
+- Node.js 20.19.4 이상 (설치된 React Native 0.83.10의 engines 요구사항 기준)
 - npm (`package-lock.json` 기준으로 의존성 설치)
 - Expo CLI는 프로젝트의 `expo` 패키지를 통해 사용합니다. 별도 전역 설치는 필요하지 않습니다.
 - EAS 원격 빌드 시 EAS CLI와 `led-banner-app` Expo 프로젝트 접근 권한이 필요합니다.
@@ -52,6 +52,10 @@ npm start
 ```
 
 AdMob 등 네이티브 모듈이 있어 Expo Go만으로 전체 기능을 검증할 수 없습니다. 해당 모듈이 포함된 개발 빌드를 사용합니다. 웹 미리보기 역시 실기기 광고·노치·시스템 UI 검증을 대신하지 않습니다.
+
+실제 앱 진입점은 `package.json`의 `expo-router/entry`와 `app/_layout.tsx`입니다. 루트 `index.js`는 사용하지 않습니다. `development` APK는 Metro에서 개발 코드를 받으며 `preview` APK와 `production` AAB는 코드를 내장합니다. EAS 환경 변수는 로컬 Metro에 자동 전달되지 않으므로 로컬 환경 설정도 필요합니다.
+
+`npm run reset-project`는 초기 템플릿 재설정용입니다. 앱 소스 디렉터리를 이동/삭제할 수 있으므로 실행 오류 해결이나 일반 개발 준비에 사용하지 않습니다.
 
 ## 프로젝트 구조
 
@@ -176,11 +180,13 @@ side-led-banner-app/
 | [react-native-google-mobile-ads](https://docs.page/invertase/react-native-google-mobile-ads)    | ^16.3.3  | AdMob 배너/리워드 광고          |
 | [@amplitude/analytics-react-native](https://amplitude.com/docs/sdks/analytics/react-native/react-native-sdk) | ^1.8.0 | 사용 이벤트 분석 |
 
-## 타입 및 호환성 오류 수정
+## SDK 54 당시 타입 및 호환성 오류 수정 기록
 
-- 설치된 react-native-keyboard-controller 1.18.5 API에 맞춰 KeyboardToolbar.Content/Done 대신 content/doneText 속성을 사용합니다. 실행 취소/다시 실행 콜백과 체크 표시를 유지하고 닫기는 라이브러리 기본 버튼이 처리합니다.
+다음은 SDK 55 이전 기록입니다. 현재 선언은 keyboard-controller 1.20.7, expo-file-system ~55.0.26이며 아래 과거 버전을 다시 설치하지 않습니다.
+
+- 당시 react-native-keyboard-controller 1.18.5 API에 맞춰 KeyboardToolbar.Content/Done 대신 content/doneText 속성을 사용합니다. 실행 취소/다시 실행 콜백과 체크 표시를 유지하고 닫기는 라이브러리 기본 버튼이 처리합니다.
 - expo-file-system ~19.0.24를 직접 의존성으로 선언했습니다. 실제 설치 버전은 기존 Expo 내부 버전과 동일한 19.0.24이며, 원격 폰트 로더 코드는 변경하지 않았습니다.
-- 수정 후 tsc --noEmit 통과 (오류 0건), expo install --check --npm 통과. 아래 의존성 업데이트 이후 수행한 검사 결과입니다. APK 빌드 및 실기기 키보드/다운로드 동작 검증은 아직 수행하지 않았습니다.
+- 당시 tsc --noEmit 및 expo install --check --npm 검사를 통과했습니다. 이후 APK 컴파일 결과는 아래 빌드 기록을 따릅니다. 키보드/다운로드 동작의 별도 실기기 검증은 기록되어 있지 않습니다.
 
 ## 보안 의존성 업데이트
 
@@ -239,11 +245,15 @@ side-led-banner-app/
 - 실제 AdMob 리워드 광고는 준비된 광고만 한 번 표시하고 다음 슬롯을 선로딩하는 흐름을 확인했습니다. Android 광고 표시에는 SDK의 `immersiveModeEnabled`를 사용하며 광고 `AdActivity` 진입과 앱 복귀 표본에서 내비게이션 바가 숨겨졌습니다.
 - 광고 CTA가 외부 Google Play (`com.android.vending`) 설치 화면을 열면 해당 외부 화면의 내비게이션 바는 표시됐습니다. 앱이나 광고 SDK가 소유하지 않는 화면이라 이 경로까지 절대 숨김을 보장할 수 없으며, 프로젝트의 “광고 중 한 프레임도 표시 금지” 요구는 이 외부 화면 경로에서는 충족되지 않습니다.
 - iOS 개발 빌드는 내부 배포에 적합한 자격 증명을 EAS가 찾지 못해 시작되지 않았습니다. 새 인증서나 기기 등록은 수행하지 않았습니다.
-- SDK 56은 React Native 0.85와 iOS 16.4 이상/Xcode 26.4를 요구합니다. 공식적으로 Reanimated/Worklets 사용 앱의 Hermes 메모리 회귀가 알려져 있어 이 프로젝트에는 적용하지 않았습니다.
+- SDK 56은 이전 조사 당시 React Native 0.85, iOS 16.4 이상/Xcode 26.4 요구사항과 Reanimated/Worklets 앱의 Hermes 메모리 회귀를 이유로 적용하지 않았습니다. 이는 당시 판단이며 다음 업데이트 검토에서 공식 요구사항과 수정 여부를 다시 확인해야 합니다.
 
 ## V1.0.6 업데이트
 
-- Android 사용자 스와이프로 표시된 내비게이션 바를 즉시 다시 숨기던 가시성 리스너를 앱 루트와 LED 전체 화면에서 제거했습니다. 앱/전체 화면 진입 시 숨김은 유지합니다. 이후 표시 시간은 OS 동작에 따르며 수정 후 실기기 제스처 동작은 미검증입니다.
+- 최근 정적 참조 점검으로 루트 `index.js`, `assets/firworkAnim.json`, `assets/images/settings.png`, `assets/images/icon.png`를 삭제했습니다. 합계 412,299 bytes는 소스 파일 크기이며 APK 용량 감소 실측값이 아닙니다. 이 정리는 최근 APK 빌드 이후 작업이므로 기존 APK에는 반영되지 않았습니다. 사용 중인 API와 폰트 코드는 유지했습니다.
+
+- Android 사용자 스와이프로 표시된 내비게이션 바를 즉시 다시 숨기던 가시성 리스너를 앱 루트와 LED 전체 화면에서 제거했습니다. 앱/전체 화면 진입 시 숨김은 유지하며 사용자 스와이프에 반응해 즉시 다시 숨기는 리스너는 사용하지 않습니다.
+- 앱 콘텐츠의 `onTouchStart`에서 기존 `hideAndroidNavigationBar`를 호출하도록 루트 `SafeAreaProvider`, LED 전체 화면 모달, 개발용 시트 디버그 모달에 연결했습니다. 터치 응답권을 가져오거나 이벤트 전파를 중단하는 코드는 추가하지 않았습니다. Google Play 설치 패널 등 외부 앱 창에는 적용되지 않습니다.
+- 터치 시 숨김 변경은 `1ca3ebb0` APK 생성 이후 작업이므로 해당 APK에는 포함되지 않았습니다. 정적 변경 검토만 수행했으며 수정 후 버튼/스크롤, 하단 스와이프, 전체 화면 및 광고 복귀의 실기기 동작과 새 빌드는 미검증입니다.
 - 리워드 광고의 Android `immersiveModeEnabled` 설정은 유지했습니다. 이 변경 이후 광고 진입/재생/종료/복귀 전체의 내비게이션 바 노출 여부는 다시 검증해야 합니다.
 
 - 정적 성능 점검: 동일한 값의 설정/UI 업데이트는 기존 상태 객체를 유지하고, 고정 배경 팔레트 행 분할은 모듈 로드 시 한 번만 계산합니다. 폰트/애니메이션 로직은 변경하지 않았으며 실측 성능은 확인하지 않았습니다.
@@ -255,7 +265,7 @@ side-led-banner-app/
 - 밝은 배경의 뒤로가기 아이콘은 검정, 어두운 구매 화면의 아이콘은 흰색으로 표시합니다.
 - Upgrade to Pro의 가격 줄을 페이지 세로 중앙에 배치합니다. 화면 높이가 부족하면 스크롤하여 내용을 확인할 수 있습니다.
 - $6.99 CAD는 디자인 플레이스홀더입니다. 결제 담당자는 app/premium.tsx의 displayedPrice를 스토어에서 받은 현지화된 실제 가격에 연결해야 합니다. 현재 상품 조회 및 결제는 미연동입니다.
-- 위 V1.0.6 UI/정리 변경은 커밋 e75a4bb 기준 APK로 빌드했습니다. 이후 SDK 55 개발 클라이언트와 현재 소스를 사용한 실기기 검증 결과는 Expo SDK 55 업데이트 절에 기록했습니다.
+- 초기 V1.0.6 아이콘/안전 영역/가격 위치 변경은 e75a4bb APK에 포함됐습니다. 이후 SDK 55, 네비바 리스너 제거 및 최근 파일 삭제는 각각 별도 작업이며 아래 Build ID별 포함 범위를 따릅니다.
 
 ## V1.0.5 변경 이력
 
@@ -289,11 +299,18 @@ side-led-banner-app/
 - 현재 구현은 구매 화면 UI입니다. 가격 영역과 구매 복원 문구에는 결제/복원 동작이 연결되어 있지 않습니다. 이 화면으로 구매하거나 Pro 권한을 활성화할 수 없습니다.
 - $6.99 CAD는 제공된 디자인의 고정 표시이며 스토어에서 조회한 실제 가격이 아닙니다. 결제 연동 시 스토어 상품의 현지화된 가격으로 연결해야 합니다.
 - 상품 조회, 결제, 구매 복원, 구매 검증 및 Pro 권한 반영은 결제 담당자가 구현할 예정입니다. 외부 호출은 기존 utils/ApiClient.ts 경계 정책을 따라야 합니다.
-- 최초 UI 구현은 V1.0.5 APK `54c50af`에 포함되어 컴파일됐습니다. 이후 V1.0.6에서 변경한 아이콘 크기/색상, Android 안전 영역, 가격 위치 및 미사용 코드 정리는 e75a4bb APK에 포함됩니다. 실기기 화면과 결제 동작은 검증하지 않았습니다.
+- 최초 UI 구현은 V1.0.5 APK `54c50af`에 포함되어 컴파일됐습니다. 이후 V1.0.6에서 변경한 아이콘 크기/색상, Android 안전 영역, 가격 위치 및 미사용 코드 정리는 e75a4bb APK에 포함됩니다. 이후 SDK 55 개발 빌드에서 주요 화면을 확인했지만 결제 기능은 여전히 미연동입니다. 검증 범위는 각 빌드 기록을 따릅니다.
 
 ## Android 빌드 기록
 
 `artifacts/` 파일은 Git에서 제외되어 있어 저장소를 클론해도 함께 내려오지 않습니다.
+
+### 광고 종료 패널 실기기 확인 (2026-09-07)
+
+- Samsung `SM-M336K`의 ADB 창 정보에서 LED POP `com.google.android.gms.ads.AdActivity`가 전면일 때 navigationBars `visible=false`를 확인했습니다.
+- 이후 `com.android.vending/com.google.android.finsky.transparentmainactivity.HsdpAlias`가 전면으로 전환되면서 navigationBars `visible=true`로 바뀌었습니다. `mControlTarget`도 Google Play 창이었습니다. 광고 종료 패널에서 네비바가 보이지 않아야 한다는 요구는 이 경로에서 미충족입니다.
+- LED POP에서 열린 패널이지만 Google Play가 별도 소유하는 창입니다. LED POP의 가시성 리스너를 복구해 이 창을 제어할 수 있다고 가정하지 않습니다.
+- 이번 확인은 창 상태 표본이며 한 프레임 단위 전체 흐름, 광고 보상, 일반 화면의 사용자 스와이프 검증은 아닙니다. 당시 설치 파일 해시를 기기에서 대조하지 않았으므로 특정 Build ID의 완전한 실기기 검증으로 간주하지 않습니다.
 
 ### 내부 설치용 APK: V1.0.6 / 22 (네비바 수정 포함)
 
@@ -307,7 +324,7 @@ side-led-banner-app/
 - Manifest의 실제 AdMob App ID, 내장 JavaScript의 실제 배너/리워드 Unit ID와 immersive 옵션, DEX의 네이티브 리워드 모듈을 확인했습니다. 실제 광고 노출/보상은 이 APK에서 미검증입니다.
 - `assets/index.android.bundle` 내장 확인. `zipalign -c -P 16 4` 통과는 ZIP 정렬 확인이며 네이티브 ELF 및 16KB 실기기 호환성 전체 검증은 아닙니다.
 - 앱 R8 minify 작업은 실행되지 않았고 앱 mapping은 생성되지 않았습니다. AAB 및 Play mapping 등록 검증을 의미하지 않습니다.
-- 새 APK 설치/실행, 네비바 스와이프 및 광고 전체 흐름은 미검증입니다. 구매 UI는 미연동 상태입니다. Google Play에는 업로드하지 않았습니다.
+- 빌드 완료 시 APK 실기기 검증은 수행하지 않았습니다. 이후 광고 창 상태 표본은 위 절에 별도 기록했으며 이 APK와의 해시 대조 및 네비바 스와이프/광고 전체 흐름 검증은 남아 있습니다. 구매 UI는 미연동이며 Google Play에는 업로드하지 않았습니다.
 
 ### AsyncStorage 통합 개발 APK: V1.0.6 / 22 (2026-09-07)
 
@@ -332,7 +349,7 @@ side-led-banner-app/
 - 실제 Android AdMob App ID와 배너/리워드 Unit ID가 설정되어 있습니다. 현재 소스를 Metro로 연결해 실제 리워드 광고의 로드, 표시, 보상, 닫기 및 다음 광고 선로딩을 확인했습니다.
 - 실기기 설치와 앱 실행은 성공했습니다. 현재 소스의 Android 번들, 주요 화면, 언어 저장/복원, 앱 및 광고 `AdActivity`의 내비게이션 바 숨김을 확인했습니다. 외부 Google Play 설치 화면의 시스템 UI는 앱에서 제어할 수 없습니다.
 
-### 최근 APK: V1.0.6 / 22 (e75a4bb)
+### 이전 APK: V1.0.6 / 22 (e75a4bb)
 
 - EAS Build ID: a804d924-b8f4-4f05-8351-02c8917ef444
 - 프로필/배포: preview / INTERNAL

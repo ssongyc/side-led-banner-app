@@ -17,6 +17,7 @@ import {
 } from "@/utils/fontPreload";
 import {
   configureAndroidNavigationBarHidden,
+  hideAndroidNavigationBar,
 } from "@/utils/SystemChrome";
 import { initializeMobileAds } from "@/utils/initializeMobileAds";
 import { disableAppTextScaling } from "@/utils/TextScaling";
@@ -147,7 +148,7 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       {/* 배너 스크롤/깜빡임은 앱의 핵심 기능이므로 iOS '동작 줄이기' 설정을 따르지 않음 */}
       <ReducedMotionConfig mode={ReduceMotion.Never} />
-      <SafeAreaProvider>
+      <SafeAreaProvider onTouchStart={hideAndroidNavigationBar}>
       <SettingsProvider>
         <KeyboardProvider>
         {isReady ? (
