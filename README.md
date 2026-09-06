@@ -7,7 +7,7 @@
 ## 현재 상태
 
 - 현재 소스 버전: **V1.0.6**. Settings의 App Version은 `app.json`의 버전을 읽습니다.
-- 최근 생성 APK: **V1.0.5 / versionCode 22**, 소스 커밋 `54c50af`. V1.0.6 변경은 이 APK에 포함되지 않았습니다.
+- 최근 생성 APK: **V1.0.6 / versionCode 22**, 소스 커밋 `e75a4bb`. 이후의 보안 의존성 및 키보드 툴바 오류 수정은 이 APK에 포함되지 않았습니다.
 - Upgrade to Pro는 구매 화면 UI만 구현되어 있습니다. 상품 조회, 결제, 복원 및 구매를 통한 Pro 권한 활성화는 미연동입니다.
 - 아래 빌드 기록은 생성된 산출물 기록이며 Google Play/App Store의 현재 배포 버전을 뜻하지 않습니다.
 
@@ -173,6 +173,19 @@ side-led-banner-app/
 | [react-native-google-mobile-ads](https://docs.page/invertase/react-native-google-mobile-ads)    | ^16.3.3  | AdMob 배너/리워드 광고          |
 | [@amplitude/analytics-react-native](https://amplitude.com/docs/sdks/analytics/react-native/react-native-sdk) | ^1.8.0 | 사용 이벤트 분석 |
 
+## 타입 및 호환성 오류 수정
+
+- 설치된 react-native-keyboard-controller 1.18.5 API에 맞춰 KeyboardToolbar.Content/Done 대신 content/doneText 속성을 사용합니다. 실행 취소/다시 실행 콜백과 체크 표시를 유지하고 닫기는 라이브러리 기본 버튼이 처리합니다.
+- expo-file-system ~19.0.24를 직접 의존성으로 선언했습니다. 실제 설치 버전은 기존 Expo 내부 버전과 동일한 19.0.24이며, 원격 폰트 로더 코드는 변경하지 않았습니다.
+- 수정 후 tsc --noEmit 통과 (오류 0건), expo install --check --npm 통과. 아래 의존성 업데이트 이후 수행한 검사 결과입니다. APK 빌드 및 실기기 키보드/다운로드 동작 검증은 아직 수행하지 않았습니다.
+
+## 보안 의존성 업데이트
+
+- 기존 의존성 범위 안에서 brace-expansion (1.1.18/2.1.4/5.0.9), fast-uri (3.1.7), js-yaml (3.15.2/4.3.2), nanoid (3.3.18), @humanfs/node (0.16.8), @xmldom/xmldom (0.8.15)을 갱신했습니다. 필요한 @humanfs/core 갱신과 @humanfs/types 추가도 포함합니다.
+- 변경은 package-lock.json과 로컬 설치 상태에 반영했습니다. 보안 갱신 단계에서는 직접 의존성 선언과 Expo/Router/Amplitude/AsyncStorage 버전을 유지했으며 강제 override는 추가하지 않았습니다.
+- 갱신 후 npm audit: 35건 (moderate 22, high 13)에서 29건 (moderate 20, high 9)으로 감소했습니다. 위 여섯 패키지는 재조회한 취약 패키지 목록에서 제외됐습니다. 결과는 조회 시점 기준입니다.
+- AsyncStorage 중복과 나머지 보안 경고는 남아 있습니다. 후속 타입 오류 수정 후 TypeScript 및 Expo 호환성 검사는 통과했습니다. 새 APK 빌드, 린트, 테스트 및 실기기 검증은 수행하지 않았습니다. 기존 APK에는 이번 의존성 업데이트가 포함되지 않습니다.
+
 ## V1.0.6 업데이트
 
 - 정적 성능 점검: 동일한 값의 설정/UI 업데이트는 기존 상태 객체를 유지하고, 고정 배경 팔레트 행 분할은 모듈 로드 시 한 번만 계산합니다. 폰트/애니메이션 로직은 변경하지 않았으며 실측 성능은 확인하지 않았습니다.
@@ -184,7 +197,7 @@ side-led-banner-app/
 - 밝은 배경의 뒤로가기 아이콘은 검정, 어두운 구매 화면의 아이콘은 흰색으로 표시합니다.
 - Upgrade to Pro의 가격 줄을 페이지 세로 중앙에 배치합니다. 화면 높이가 부족하면 스크롤하여 내용을 확인할 수 있습니다.
 - $6.99 CAD는 디자인 플레이스홀더입니다. 결제 담당자는 app/premium.tsx의 displayedPrice를 스토어에서 받은 현지화된 실제 가격에 연결해야 합니다. 현재 상품 조회 및 결제는 미연동입니다.
-- 이 소스 변경에 대한 새 APK 빌드 및 실기기 검증은 아직 수행하지 않았습니다.
+- 위 V1.0.6 UI/정리 변경은 커밋 e75a4bb 기준 APK로 빌드했습니다. 실기기 검증은 아직 수행하지 않았습니다. 이후 보안 의존성과 타입 오류 수정은 별도 미빌드 상태입니다.
 
 ## V1.0.5 변경 이력
 
@@ -218,13 +231,25 @@ side-led-banner-app/
 - 현재 구현은 구매 화면 UI입니다. 가격 영역과 구매 복원 문구에는 결제/복원 동작이 연결되어 있지 않습니다. 이 화면으로 구매하거나 Pro 권한을 활성화할 수 없습니다.
 - $6.99 CAD는 제공된 디자인의 고정 표시이며 스토어에서 조회한 실제 가격이 아닙니다. 결제 연동 시 스토어 상품의 현지화된 가격으로 연결해야 합니다.
 - 상품 조회, 결제, 구매 복원, 구매 검증 및 Pro 권한 반영은 결제 담당자가 구현할 예정입니다. 외부 호출은 기존 utils/ApiClient.ts 경계 정책을 따라야 합니다.
-- 최초 UI 구현은 V1.0.5 APK `54c50af`에 포함되어 컴파일됐습니다. 이후 V1.0.6에서 변경한 아이콘 크기/색상, Android 안전 영역, 가격 위치 및 미사용 코드 정리는 아직 빌드하지 않았습니다. 실기기 화면과 결제 동작은 검증하지 않았습니다.
+- 최초 UI 구현은 V1.0.5 APK `54c50af`에 포함되어 컴파일됐습니다. 이후 V1.0.6에서 변경한 아이콘 크기/색상, Android 안전 영역, 가격 위치 및 미사용 코드 정리는 e75a4bb APK에 포함됩니다. 실기기 화면과 결제 동작은 검증하지 않았습니다.
 
 ## Android 빌드 기록
 
 `artifacts/` 파일은 Git에서 제외되어 있어 저장소를 클론해도 함께 내려오지 않습니다.
 
-### 최근 APK: V1.0.5 / 22 (54c50af)
+### 최근 APK: V1.0.6 / 22 (e75a4bb)
+
+- EAS Build ID: a804d924-b8f4-4f05-8351-02c8917ef444
+- 프로필/배포: preview / INTERNAL
+- 파일: artifacts/LedPop-V1.0.6-build22-e75a4bb.apk (274.28 MiB)
+- SHA-256: 923249F22B8AE54B512017B90F1CB37DF7144125D4D0D62E55AD2F5550068392
+- 소스: e75a4bb1304e5e1a5931516a7cb3b883c05fce9f
+- 컴파일: BUILD SUCCESSFUL in 19m 8s. 로그: artifacts/a804d924-log-0.txt
+- APK 검사: 기존 서명 일치, compileSdk/targetSdk 36/36, ARM64/ARMv7/x86/x86_64 포함, 실제 AdMob ID와 네이티브 모듈 포함. CAMERA/RECORD_AUDIO/BILLING 권한 없음.
+- 앱 R8 작업은 실행되지 않았습니다. 실기기 UI/광고, mapping 및 Play 등록 완료를 의미하지 않습니다.
+- 당시 expo doctor: 17/18 통과, AsyncStorage 중복 1건. 당시 audit: 35건. 후속 의존성 갱신으로 현재 lockfile은 29건이며, 해당 변경은 이 APK에 포함되지 않았습니다.
+
+### 이전 APK: V1.0.5 / 22 (54c50af)
 
 - EAS Build ID: `f6484ea9-c439-40fb-87b8-2cd20289a8a7`
 - 프로필/배포: `preview / INTERNAL`

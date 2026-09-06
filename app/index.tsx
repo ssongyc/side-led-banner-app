@@ -26,13 +26,11 @@ import { KeyboardAvoidingView, KeyboardToolbar } from "react-native-keyboard-con
 import { initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
 
 
-function DismissButton(props: any) {
+function DismissLabel() {
   const isDark = useColorScheme() === "dark";
   const color = isDark ? "#ffffff" : "#000000";
   return (
-    <TouchableOpacity onPress={props.onPress} style={props.style}>
-      <Text allowFontScaling={false} style={[styles.accessoryClose, { color }]}>✔</Text>
-    </TouchableOpacity>
+    <Text allowFontScaling={false} style={[styles.accessoryClose, { color }]}>✔</Text>
   );
 }
 
@@ -270,8 +268,9 @@ export default function Index() {
         ) : null}
       </KeyboardAvoidingView>
       {Platform.OS === "android" && (
-        <KeyboardToolbar>
-          <KeyboardToolbar.Content>
+        <KeyboardToolbar
+          doneText={<DismissLabel />}
+          content={
             <View style={toolbarStyles.cursorNavContainer}>
               <TouchableOpacity
                 onPress={() => undoRef.current?.()}
@@ -292,9 +291,8 @@ export default function Index() {
                 <Text allowFontScaling={false} style={[toolbarStyles.cursorNavText, { color: toolbarBtn, opacity: canRedo ? 1 : 0.3 }]}>↪</Text>
               </TouchableOpacity>
             </View>
-          </KeyboardToolbar.Content>
-          <KeyboardToolbar.Done button={DismissButton} />
-        </KeyboardToolbar>
+          }
+        />
       )}
     </View>
   );
