@@ -1,19 +1,24 @@
 import { uiThemeFontStyle } from "@/constants/appFonts";
 import { moderateScale } from "@/constants/scale";
-import { StyleSheet } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
+
+const screen = Dimensions.get("screen");
+const HEADER_TITLE_FONT_SIZE = Math.min(screen.width, screen.height) >= 600 ? 28 : 22;
 
 export const settingsStyles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 15,
+    paddingLeft: 10,
+    paddingRight: 15,
     paddingTop: 10,
     paddingBottom: 18,
   },
   headerInline: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 15,
+    paddingLeft: 10,
+    paddingRight: 15,
     paddingTop: 10,
     paddingBottom: 18,
     gap: 8,
@@ -34,13 +39,15 @@ export const settingsStyles = StyleSheet.create({
   },
   titleRow: {
     flexDirection: "row",
+    flexShrink: 1,
     alignItems: "center",
     gap: 8,
     marginLeft: 4,
   },
   titleText: {
     ...uiThemeFontStyle,
-    fontSize: moderateScale(22),
+    fontSize: HEADER_TITLE_FONT_SIZE,
+    flexShrink: 1,
     fontWeight: "700",
     color: "black",
   },
@@ -60,7 +67,8 @@ export const settingsStyles = StyleSheet.create({
   premiumHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 15,
+    paddingLeft: 10,
+    paddingRight: 15,
     paddingTop: 10,
     paddingBottom: 34,
     gap: 8,
@@ -71,7 +79,7 @@ export const settingsStyles = StyleSheet.create({
   },
   premiumTitleText: {
     ...uiThemeFontStyle,
-    fontSize: moderateScale(19),
+    fontSize: HEADER_TITLE_FONT_SIZE,
     fontWeight: "700",
     color: "#F2EAF8",
     flexShrink: 1,

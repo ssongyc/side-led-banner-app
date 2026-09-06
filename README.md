@@ -7,7 +7,7 @@
 ## 현재 상태
 
 - 현재 소스 버전: **V1.0.6**. Settings의 App Version은 `app.json`의 버전을 읽습니다.
-- 최근 생성 APK: **V1.0.6 / versionCode 22**, 내부 설치용 preview 빌드 `1ca3ebb0-c895-4d8a-8ef3-20f674eb7262`. JavaScript 번들이 내장되어 Metro 없이 실행합니다. 네비바 수정과 AsyncStorage 통합을 포함하며 이 APK의 실기기 실행은 미검증입니다. 이전 개발 빌드의 실기기 결과는 아래 기록과 구분합니다.
+- 최근 생성 APK: **V1.0.6 / versionCode 22**, 내부 설치용 preview 빌드 `eb8f5b17-3e90-43db-bbe5-2d369e362249`. JavaScript 번들이 내장되어 Metro 없이 실행합니다. 사용자 실기기 테스트에서 네비바 스와이프 표시, 콘텐츠 터치 숨김과 버튼/스크롤, 전체 화면 및 광고 복귀 후 동작이 모두 통과했습니다. 이후 헤더 여백/폰트 변경은 이 APK에 포함되지 않았습니다.
 - Upgrade to Pro는 구매 화면 UI만 구현되어 있습니다. 상품 조회, 결제, 복원 및 구매를 통한 Pro 권한 활성화는 미연동입니다.
 - 아래 빌드 기록은 생성된 산출물 기록이며 Google Play/App Store의 현재 배포 버전을 뜻하지 않습니다.
 
@@ -249,11 +249,14 @@ side-led-banner-app/
 
 ## V1.0.6 업데이트
 
-- 최근 정적 참조 점검으로 루트 `index.js`, `assets/firworkAnim.json`, `assets/images/settings.png`, `assets/images/icon.png`를 삭제했습니다. 합계 412,299 bytes는 소스 파일 크기이며 APK 용량 감소 실측값이 아닙니다. 이 정리는 최근 APK 빌드 이후 작업이므로 기존 APK에는 반영되지 않았습니다. 사용 중인 API와 폰트 코드는 유지했습니다.
+- Settings, Open Source Info, Credits, Sunny's Games and Apps, Upgrade to Pro의 Back 헤더 왼쪽 여백을 15에서 10으로 통일했습니다. 오른쪽 여백은 15로 유지합니다.
+- 위 다섯 화면의 헤더 제목은 스마트폰 22, 태블릿 28로 통일했습니다. `Dimensions.get("screen")`의 짧은 변이 600 이상이면 태블릿으로 분류하며, 제목에는 `moderateScale()`을 적용하지 않습니다. 시스템 글자 크기 영향을 받지 않고 긴 제목은 줄바꿈을 허용합니다. 메뉴/본문 폰트와 폰트 파일은 변경하지 않았습니다.
+- 헤더 변경은 소스 정적 검토만 수행했습니다. 새 빌드, 린트, 테스트 및 실기기 검증은 수행하지 않았습니다. 앱 버전은 V1.0.6으로 유지합니다.
+- 최근 정적 참조 점검으로 루트 `index.js`, `assets/firworkAnim.json`, `assets/images/settings.png`, `assets/images/icon.png`를 삭제했습니다. 합계 412,299 bytes는 소스 파일 크기이며 APK 용량 감소 실측값이 아닙니다. 이 정리는 `eb8f5b17` APK에 포함됐으며 이전 `1ca3ebb0` APK에는 포함되지 않았습니다. 사용 중인 API와 폰트 코드는 유지했습니다.
 
 - Android 사용자 스와이프로 표시된 내비게이션 바를 즉시 다시 숨기던 가시성 리스너를 앱 루트와 LED 전체 화면에서 제거했습니다. 앱/전체 화면 진입 시 숨김은 유지하며 사용자 스와이프에 반응해 즉시 다시 숨기는 리스너는 사용하지 않습니다.
 - 앱 콘텐츠의 `onTouchStart`에서 기존 `hideAndroidNavigationBar`를 호출하도록 루트 `SafeAreaProvider`, LED 전체 화면 모달, 개발용 시트 디버그 모달에 연결했습니다. 터치 응답권을 가져오거나 이벤트 전파를 중단하는 코드는 추가하지 않았습니다. Google Play 설치 패널 등 외부 앱 창에는 적용되지 않습니다.
-- 터치 시 숨김 변경은 `1ca3ebb0` APK 생성 이후 작업이므로 해당 APK에는 포함되지 않았습니다. 정적 변경 검토만 수행했으며 수정 후 버튼/스크롤, 하단 스와이프, 전체 화면 및 광고 복귀의 실기기 동작과 새 빌드는 미검증입니다.
+- 터치 시 숨김 변경은 `eb8f5b17` APK에 포함됐습니다. 사용자가 하단 스와이프 표시, 콘텐츠 터치 숨김과 버튼/스크롤 정상 동작, 전체 화면 및 광고 복귀 후 동일 동작의 세 항목 모두 실기기 테스트 통과를 보고했습니다. 이는 사용자 보고이며 별도 프레임 단위 계측이나 모든 내비게이션 모드 검증을 뜻하지 않습니다.
 - 리워드 광고의 Android `immersiveModeEnabled` 설정은 유지했습니다. 이 변경 이후 광고 진입/재생/종료/복귀 전체의 내비게이션 바 노출 여부는 다시 검증해야 합니다.
 
 - 정적 성능 점검: 동일한 값의 설정/UI 업데이트는 기존 상태 객체를 유지하고, 고정 배경 팔레트 행 분할은 모듈 로드 시 한 번만 계산합니다. 폰트/애니메이션 로직은 변경하지 않았으며 실측 성능은 확인하지 않았습니다.
@@ -312,7 +315,17 @@ side-led-banner-app/
 - LED POP에서 열린 패널이지만 Google Play가 별도 소유하는 창입니다. LED POP의 가시성 리스너를 복구해 이 창을 제어할 수 있다고 가정하지 않습니다.
 - 이번 확인은 창 상태 표본이며 한 프레임 단위 전체 흐름, 광고 보상, 일반 화면의 사용자 스와이프 검증은 아닙니다. 당시 설치 파일 해시를 기기에서 대조하지 않았으므로 특정 Build ID의 완전한 실기기 검증으로 간주하지 않습니다.
 
-### 내부 설치용 APK: V1.0.6 / 22 (네비바 수정 포함)
+### 내부 설치용 APK: V1.0.6 / 22 (콘텐츠 터치 숨김, 2026-09-07)
+
+- EAS Build ID: `eb8f5b17-3e90-43db-bbe5-2d369e362249`, `preview / INTERNAL`, 소스 커밋 `0dd6b0b1c9b2844b36e8afbad682b1343f304559`.
+- 파일: `artifacts/LedPop-V1.0.6-preview-0dd6b0b-eb8f5b17.apk`, 267,796,126 bytes. SHA-256: `D703AD2691036F21391540182D198A306B97486065C0421502CB2F1CB09005E4`.
+- `compile-ok`: Gradle `BUILD SUCCESSFUL in 25m 3s`, 최종 업로드 완료. TypeScript 및 EAS Expo Doctor 20/20 통과. npm moderate 19건은 남아 있습니다.
+- APK의 package `com.minkyokim.sideledbannerapp`, 버전 `1.0.6/22`, minSdk 24, compileSdk/targetSdk 36/36, ARM64/ARMv7/x86/x86_64, 기존 인증서의 v2 서명 검증을 확인했습니다.
+- 실제 AdMob App ID/광고 Unit ID, 네이티브 리워드 모듈, 내장 JS 번들을 확인했습니다. Metro 없이 실행합니다. ZIP 정렬 검증 통과는 네이티브 ELF/16KB 실기기 호환성 전체 검증을 뜻하지 않습니다.
+- 사용자 실기기 확인: 하단 스와이프 표시, 앱 콘텐츠 터치 숨김과 버튼/스크롤, 전체 화면 및 광고 복귀 후 동작 모두 통과. 외부 Google Play 창 제어 제한 및 프레임 단위 무노출 검증은 이 결과와 구분합니다.
+- 이후 Back 여백 10 및 헤더 폰트 22/28 변경은 미포함입니다. AAB 생성, Play 업로드 및 mapping 등록은 수행하지 않았습니다. R8 app minify 작업 및 app mapping은 이 빌드에서 확인되지 않았습니다.
+
+### 이전 내부 설치용 APK: V1.0.6 / 22 (네비바 수정 포함)
 
 - EAS Build ID: `1ca3ebb0-c895-4d8a-8ef3-20f674eb7262`, 프로필/배포: `preview / INTERNAL`.
 - 파일: `artifacts/LedPop-V1.0.6-preview-1ca3ebb0.apk` (267,796,078 bytes). 검증 기록: `artifacts/LedPop-V1.0.6-preview-1ca3ebb0-verification.md`.
