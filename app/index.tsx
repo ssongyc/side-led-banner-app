@@ -3,6 +3,7 @@ import {
   OneLinePlayButton,
 } from "@/assets/svg/playOptionButton";
 import { PlayResumeButton } from "@/assets/svg/playResumeButton";
+import { usePremium } from "@/contexts/premiumContext";
 import { ProDebugFab } from "@/components/dev/proDebugFab";
 import { RewardAdDebugFab } from "@/components/dev/rewardAdDebugFab";
 import { SheetFetchDebugPanel } from "@/components/dev/sheetFetchDebugPanel";
@@ -35,6 +36,7 @@ function DismissLabel() {
 }
 
 export default function Index() {
+  const { isPremium } = usePremium();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -247,13 +249,13 @@ export default function Index() {
           {activeTab === "EFFECT" && <EffectSection />}
         </View>
         
-        <RewardAdModal
+        {!isPremium && <RewardAdModal
           visible={rewardAdVisible}
           onClose={() => updateUI({ rewardAdVisible: false })}
           adReady={rewardAdLoaded}
           adFailed={rewardAdFailed}
           onWatchAd={showRewardedAd}
-        />
+        />}
         {/* fullscreen LED banner modal */}
         <LedBannerFullScreen
           visible={isPlaying}

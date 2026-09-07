@@ -1,10 +1,13 @@
+import { usePremium } from "@/contexts/premiumContext";
+import { premiumLabel } from "@/language/premiumLabels";
+import { buyPremium, restorePremium, refreshPremium } from "@/utils/ApiClient";
 import { moderateScale } from "@/constants/scale";
 import { settingsStyles } from "@/constants/settingsStyles";
 import { settingsFooterStyles, styles as base } from "@/constants/styles";
 import { useSettingsRest } from "@/contexts/settingsContext";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Image, Linking, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -22,12 +25,19 @@ export default function PremiumScreen() {
   const [headerHeight, setHeaderHeight] = useState(0);
   const [cardHeight, setCardHeight] = useState(0);
   const insets = useSafeAreaInsets();
-  const { textSectionLabel } = useSettingsRest();
+  const { textSectionLabel, resolvedAppLocale } = useSettingsRest();
+  const premium = usePremium();
+  const label = (key: Parameters<typeof premiumLabel>[0]) => premiumLabel(key, resolvedAppLocale);
+  const busy = premium.operation !== "idle";
+  const canBuy = !busy && premium.entitlement === "free" && premium.product !== null && premium.notice !== "pending";
+  useEffect(() => { void refreshPremium(); }, []);
   const rootPaddingTop = Platform.OS === "web" ? 0 : insets.top;
   const footerPaddingBottom = Platform.OS === "ios" ? Math.max(14, insets.bottom + 8) : 14;
 
-  // Design placeholder. Replace with the store product localized price when IAP is connected.
-  const displayedPrice = textSectionLabel("premiumPrice");
+  const displayedPrice = premium.isPremium ? label("owned") :
+    busy ? label(premium.operation === "idle" ? "loading" : premium.operation) :
+    premium.notice === "pending" ? label("pending") :
+    premium.product?.displayPrice ?? label("unavailable");
   const cardTopSpacing = Math.max(
     0,
     pageHeight / 2 - rootPaddingTop - headerHeight - cardHeight + moderateScale(50) / 2,
@@ -96,18 +106,41 @@ export default function PremiumScreen() {
                 </Text>
               </View>
             </View>
-            <View style={settingsStyles.premiumPriceBar}>
-              <Text style={settingsStyles.premiumPriceText} allowFontScaling={false}>
+            <TouchableOpacity
+              style={[settingsStyles.premiumPriceBar, { opacity: canBuy || premium.isPremium ? 1 : 0.55 }]}
+              onPress={() => { void buyPremium(); }}
+              disabled={!canBuy}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !canBuy, busy }}
+            >
+              <Text style={[settingsStyles.premiumPriceText, { textAlign: "center", paddingHorizontal: 12 }]} allowFontScaling={false}>
                 {displayedPrice}
               </Text>
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
 
         <View style={settingsStyles.premiumRestoreArea}>
+          {premium.notice && (
+            <Text allowFontScaling={false} accessibilityLiveRegion="polite"
+              style={{ color: "#ffffff", textAlign: "center", marginBottom: 18, paddingHorizontal: 20 }}>
+              {label(premium.notice)}
+            </Text>
+          )}
+          {(premium.notice === "unavailable" || premium.notice === "error" ||
+            premium.notice === "verificationFailed" || premium.notice === "pending") && (
+            <TouchableOpacity onPress={() => { void refreshPremium(); }} disabled={busy}
+              accessibilityRole="button" style={{ padding: 12, opacity: busy ? 0.5 : 1 }}>
+              <Text allowFontScaling={false} style={{ color: "#ffffff", textAlign: "center" }}>{label("retry")}</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity onPress={() => { void restorePremium(); }} disabled={busy || Platform.OS === "web"}
+            accessibilityRole="button" accessibilityState={{ disabled: busy || Platform.OS === "web", busy }}
+            style={{ paddingVertical: 12, opacity: busy ? 0.5 : 1 }}>
           <Text style={settingsStyles.premiumRestoreText} allowFontScaling={false}>
             {textSectionLabel("restorePreviousPurchase")}
           </Text>
+          </TouchableOpacity>
         </View>
 
         <View style={[settingsFooterStyles.containerDark, { paddingBottom: footerPaddingBottom }]}>

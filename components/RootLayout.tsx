@@ -5,9 +5,10 @@ import {
   getFontAssetIds,
   getSkiaFontAssets,
 } from "@/constants/appFonts";
+import { PremiumLifecycle, usePremium } from "@/contexts/premiumContext";
 import { SettingsProvider } from "@/contexts/settingsContext";
 import { preloadSkiaTypefaces } from "@/hooks/useCachedSkiaFont";
-import { loadRewardedAd } from "@/hooks/useRewardedAd";
+import { loadRewardedAd, suspendRewardedAds } from "@/hooks/useRewardedAd";
 import { deviceLocaleToAppLocale } from "@/language/deviceLocale";
 import {
   collectPriorityFontIds,
@@ -44,6 +45,25 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 disableAppTextScaling();
 
 SplashScreen.preventAutoHideAsync();
+
+function PremiumAwareAds() {
+  const { adsAllowed } = usePremium();
+  useEffect(() => {
+    if (!adsAllowed) {
+      suspendRewardedAds();
+      return;
+    }
+    let cancelled = false;
+    void initializeMobileAds()
+      .then(() => { if (!cancelled) loadRewardedAd(); })
+      .catch((error) => { if (__DEV__) console.warn("[App] MobileAds init failed:", error); });
+    return () => {
+      cancelled = true;
+      suspendRewardedAds();
+    };
+  }, [adsAllowed]);
+  return null;
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -102,18 +122,6 @@ export default function RootLayout() {
   const isReady = fontsLoaded && minTimeElapsed;
 
   useEffect(() => {
-    const initializeAds = async () => {
-      try {
-        await initializeMobileAds();
-        loadRewardedAd();
-      } catch (e) {
-        if (__DEV__) console.warn("[App] MobileAds init failed:", e);
-      }
-    };
-    initializeAds();
-  }, []);
-
-  useEffect(() => {
     if (!isReady) return;
 
     const task = InteractionManager.runAfterInteractions(() => {
@@ -149,6 +157,8 @@ export default function RootLayout() {
       {/* 배너 스크롤/깜빡임은 앱의 핵심 기능이므로 iOS '동작 줄이기' 설정을 따르지 않음 */}
       <ReducedMotionConfig mode={ReduceMotion.Never} />
       <SafeAreaProvider onTouchStart={hideAndroidNavigationBar}>
+      <PremiumLifecycle>
+      <PremiumAwareAds />
       <SettingsProvider>
         <KeyboardProvider>
         {isReady ? (
@@ -178,6 +188,7 @@ export default function RootLayout() {
         </KeyboardProvider>
         <StatusBar hidden={Platform.OS === "android"} />
       </SettingsProvider>
+      </PremiumLifecycle>
       </SafeAreaProvider>
     </ThemeProvider>
   );

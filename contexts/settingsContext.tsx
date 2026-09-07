@@ -38,6 +38,7 @@ import type { RewardAdLabelKey } from "@/language/rewardAdLabels";
 import { tRewardAdLabel } from "@/language/rewardAdLabels";
 import type { TextSectionLabelKey } from "@/language/textSectionLabels";
 import { tTextSectionLabel } from "@/language/textSectionLabels";
+import { usePremium } from "@/contexts/premiumContext";
 import { readAppLanguage, writeAppLanguage } from "@/utils/appLanguageStorage";
 import { ensureLocaleFontsLoaded } from "@/utils/fontPreload";
 import {
@@ -465,6 +466,7 @@ export const useSettings = (): SettingsContextValue => {
 };
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
+  const { isPremium, entitlement } = usePremium();
   /**스프레드 시트 데이터 */
   const {
     data: sheetData,
@@ -729,27 +731,33 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   //Preset 불러올 시 pro mode에 따른  적용
-  const isProActive = ui.proMode !== null && Date.now() < ui.proMode;
+  const isProActive = isPremium || (ui.proMode !== null && Date.now() < ui.proMode);
   const prevIsProActiveRef = useRef(isProActive);
   useEffect(() => {
     const prev = prevIsProActiveRef.current;
-    prevIsProActiveRef.current = isProActive;
+    // A failed ownership query must not erase the last Pro configuration.
+    if (entitlement !== "unknown" || isProActive) prevIsProActiveRef.current = isProActive;
     isProActiveRef.current = isProActive;
-    if (prev && !isProActive) {
+    if (prev && !isProActive && entitlement === "free") {
       setConfig((current) => nonProSanitize(current));
       if (activePresetRef.current >= 1) {
         loadPreset(0);
       }
     }
-  }, [isProActive]);
+  }, [isProActive, entitlement]);
 
   const activatePro = useCallback(() => {
     setUI((prev) => ({ ...prev, proMode: Date.now() + 2 * 60 * 60 * 1000 }));
   }, []);
 
   const openRewardAdModal = useCallback(() => {
+    if (isPremium) return;
     setUI((prev) => ({ ...prev, rewardAdVisible: true }));
-  }, []);
+  }, [isPremium]);
+
+  useEffect(() => {
+    if (isPremium) updateUI({ rewardAdVisible: false });
+  }, [isPremium, updateUI]);
 
   useEffect(() => {
     if (ui.proMode === null) return;

@@ -110,7 +110,9 @@
       ],
       "expo-tracking-transparency",
       "expo-web-browser",
-      "expo-image"
+      "expo-image",
+      "expo-iap",
+      "./plugins/withPremiumIap"
     ],
     "experiments": {
       "typedRoutes": true,

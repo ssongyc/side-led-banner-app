@@ -1,3 +1,4 @@
+import { getPremiumSnapshot } from "@/utils/ApiClient";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
 import {
@@ -177,6 +178,7 @@ function createRewardedAd(slotName: SlotName): RewardedAd {
 }
 
 function requestSlotLoad(slotName: SlotName) {
+  if (getPremiumSnapshot().entitlement !== "free") return;
   const slot = slots[slotName];
   const ad = slot.ad ?? createRewardedAd(slotName);
   slot.attempt += 1;
@@ -262,7 +264,23 @@ function loadNextSlotOnce() {
   requestSlotLoad("next");
 }
 
+export function isRewardedAdShowing() {
+  return slots.current.state === "showing";
+}
+
+export function suspendRewardedAds() {
+  disposeSlot("current");
+  disposeSlot("next");
+  terminalLoadFailed = false;
+  openedCurrentAd = false;
+  earnedRewardCurrentAd = false;
+  rewardGrantedCurrentAd = false;
+  nextLoadRequestedForCurrentShow = false;
+  notifySubscribers();
+}
+
 export function loadRewardedAd() {
+  if (getPremiumSnapshot().entitlement !== "free") return;
   const configError = getRewardedAdConfigurationError();
   if (configError) {
     terminalLoadFailed = true;
@@ -295,7 +313,7 @@ export function loadRewardedAd() {
 }
 
 function getLoadedState() {
-  return slots.current.state === "loaded";
+  return getPremiumSnapshot().entitlement === "free" && slots.current.state === "loaded";
 }
 
 function getFailedState() {
@@ -325,6 +343,7 @@ export function useRewardedAd(onRewardEarned: () => void) {
   }, []);
 
   const show = useCallback(() => {
+    if (getPremiumSnapshot().entitlement !== "free") return;
     const configError = getRewardedAdConfigurationError();
     if (configError) {
       terminalLoadFailed = true;

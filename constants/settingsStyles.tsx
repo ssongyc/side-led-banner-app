@@ -132,7 +132,8 @@ export const settingsStyles = StyleSheet.create({
     color: "#FFFFFF",
   },
   premiumPriceBar: {
-    height: moderateScale(50),
+    minHeight: moderateScale(50),
+    paddingVertical: 10,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#7156B3",

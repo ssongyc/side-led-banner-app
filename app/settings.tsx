@@ -1,3 +1,4 @@
+import { usePremium } from "@/contexts/premiumContext";
 import BannerAdComponent from "@/components/admob/bannerAd";
 import type { AppLocaleKey } from "@/constants/language";
 import { settingsStyles } from "@/constants/settingsStyles";
@@ -36,6 +37,7 @@ const SUNNY_LINKS = {
 } as const;
 
 export default function SettingsScreen() {
+  const { adsAllowed } = usePremium();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { height: windowH } = useWindowDimensions();
@@ -98,8 +100,8 @@ export default function SettingsScreen() {
   );
 
   useEffect(() => {
-    loadRewardedAd();
-  }, []);
+    if (adsAllowed) loadRewardedAd();
+  }, [adsAllowed]);
 
   const openUrl = (url: string) => {
     void Linking.openURL(url).catch((error) => {
@@ -252,10 +254,10 @@ export default function SettingsScreen() {
         onTermsPress={() => openUrl(SUNNY_LINKS.terms)}
         onPrivacyPress={() => openUrl(SUNNY_LINKS.privacy)}
       />
-      <BannerAdComponent
+      {adsAllowed && <BannerAdComponent
         style={{ height: 60, marginBottom: 12 }}
         unavailableLabel={rewardAdLabel("rewardAdUnavailable")}
-      />
+      />}
     </View>
   );
 }
