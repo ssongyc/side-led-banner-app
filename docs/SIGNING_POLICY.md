@@ -8,13 +8,13 @@
 - Certificate expiry: 2053-11-01. Existing alias: 88995a0e2459ad11a9ee33f8f161d791.
 - These private files must never be committed or printed. The external directory has restricted Windows access permissions. No replacement key or debug signing is permitted.
 
-## Internal APK build
+## Historical internal APK build (2026-09-08)
 
 The authorized 2026-09-08 local build uses an isolated source snapshot now archived at C:/dev/Led Banner/artifacts/local-builds/20260908-expo57. It includes main 227d57b and the current StyleSheet/Kotlin compiler fixes. Version 1.0.6/22 is an internal installation build, not a store submission or version increment.
 
-Run scripts/build-local-apk.ps1 with the explicit BuildRoot. It verifies the exact external keystore and public certificate, generates Android only in a fresh snapshot, replaces release debug signing with the verified external key, and passes passwords through process environment variables. ResumeNative is only for this inspected existing native output; it never deletes or regenerates it. A successful Gradle command still requires independent APK signature, manifest, ABI, embedded bundle, advertising, Billing and alignment verification before delivery.
+That historical invocation used scripts/build-local-apk.ps1 with its then-configured BuildRoot. The current fixed-path workflow is documented below. The wrapper verifies the exact external keystore and public certificate, generates Android only in a fresh snapshot, replaces release debug signing with the verified external key, and passes passwords through process environment variables. ResumeNative is only for this inspected existing native output; it never deletes or regenerates it. A successful Gradle command still requires independent APK signature, manifest, ABI, embedded bundle, advertising, Billing and alignment verification before delivery.
 
-Native android/ios folders in the source checkout are generated SDK 55 output and are not used by this isolated build. Existing preview R8 configuration is unchanged (not enabled); an unoptimized internal APK is not evidence of production optimization or Play deobfuscation readiness. No AAB or Play upload is authorized by this procedure.
+Native android/ios folders in the source checkout are generated SDK 55 output and are not used by this isolated build. That historical internal APK had R8 disabled; it is not evidence of production optimization or Play deobfuscation readiness. The later explicit APK/AAB request authorizes the Store APK and AAB workflow below. No procedure in this document authorizes a Play upload.
 
 ## Project folder consolidation (2026-09-08)
 
@@ -70,4 +70,8 @@ References: https://developer.android.com/build/kotlin-support and https://r8.go
 
 ### Local Gradle class metadata memory
 
-The optimized build exhausted the 512 MiB Gradle metaspace limit and stalled during failure shutdown. The local wrapper retains the 2 GiB heap and two-worker limit, increases only MaxMetaspaceSize to 1024 MiB, and retains stack traces in the complete build log. This build-process setting does not alter app runtime memory or clear native caches.
+The optimized build reached the 512 MiB Gradle metaspace limit and stalled during failure shutdown; the original task exception was not emitted before shutdown. The local wrapper retains the 2 GiB heap and two-worker limit, increases only MaxMetaspaceSize to 1024 MiB, and retains stack traces in the complete build log. This build-process setting does not alter app runtime memory or clear native caches.
+
+The final retry resumes the user-approved e58e9aa snapshot after verifying all 292 recorded file hashes, using artifacts/resume-submission-e58e9aa.ps1 with the corrected JVM limits. It deliberately skips source synchronization and native regeneration because the user requested preservation and exclusion of a concurrent RootLayout splash change. The snapshot source-inputs.json and exact retry wrapper are retained with the artifacts; later documentation/build-wrapper commits are not represented as the app source revision.
+
+Final retry: compile-ok in 12m 40s, 120 executed / 1047 up-to-date. APK/AAB signer, SDK/Billing, 16KB alignment and exact R8 8.13.23 mapping checks passed. See [release report](ANDROID_RELEASE_1.0.6_23.md) for exact hashes, retained warnings and unperformed runtime/Play verification.

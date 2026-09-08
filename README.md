@@ -7,7 +7,15 @@
 - 작업 지침: [AGENTS.md](AGENTS.md), 서명·빌드: [SIGNING_POLICY.md](docs/SIGNING_POLICY.md), 이전 기록: [BUILD_HISTORY.md](docs/BUILD_HISTORY.md)
 - 컴파일·린트·테스트·커밋·푸시·배포는 사용자가 요청할 때만 실행합니다. 이 문서의 명령과 절차 자체는 실행 승인이 아닙니다.
 
-## 현재 소스와 APK의 차이 (2026-09-08)
+## 최신 생성 APK·AAB — 1.0.6 (23), 2026-09-09
+
+**compile-ok**: 확정 앱 소스 e58e9aa, 최종 Gradle 12m 40s (120 executed / 1047 up-to-date). 기존 인증서, SDK 36, Billing 9.1.0, 4개 ABI, 16KB 정렬 및 AAB 동일 빌드 R8 8.13.23 매핑 검증을 통과했습니다.
+
+- [APK](artifacts/releases/LEDPOP-1.0.6-23-e58e9aa/app-release.apk), [AAB](artifacts/releases/LEDPOP-1.0.6-23-e58e9aa/app-release.aab), [검증·해시·제한 보고서](docs/ANDROID_RELEASE_1.0.6_23.md).
+- 별도 RootLayout 스플래시 수정은 사용자 선택에 따라 보존하되 빌드에서 제외했습니다. 성능 후속 수정과 Pro 화면 제외는 포함됩니다.
+- 새 최적화 APK 실기기 QA·Play 업로드/검수·versionCode 중복 확인·Play 매핑 등록은 미실행입니다. 외부 Google Play 광고 종료 창의 내비게이션 바 노출은 미해결입니다.
+
+## 소스 변경과 이전 APK 비교
 
 현재 소스는 Expo **57.0.20**, React Native **0.86.3**, React **19.2.3**, 앱 버전 **1.0.6**입니다. Settings의 App Version은 Expo 앱 설정을 읽습니다. 소스 버전·APK의 versionCode·스토어 배포 버전은 별개입니다.
 
@@ -25,15 +33,15 @@
 | EffectSection의 텍스트·그라데이션·배경 UI 분리 | 소스 반영·실행 검증 전 | 미포함 |
 | 리워드 상태 정리·APK 자동 준비·캐시 사용 | 소스 반영 | 미포함·자동화 실행 및 시간 미측정 |
 
-**최신 APK는 아래 edaf82b 기준 빌드입니다.** 위 표의 비교 대상은 이전 85a61d6 APK이며, 최신 APK에는 표의 소스 변경이 포함됩니다. compile-ok는 각 빌드에만 적용됩니다. Expo 57 Android 실기기 UI·광고는 아래 QA 보고서 범위에서 확인했으며, 결제 및 iOS 빌드는 미검증입니다. 과거 SDK 55 기기 확인 결과를 현재 버전의 결과로 간주하지 않습니다.
+위 표는 과거 85a61d6 APK와의 비교 기록입니다. 아래 edaf82b APK에는 표의 소스 변경이 포함됩니다. 제출용 빌드의 소스·검증 결과는 별도 릴리스 기록을 기준으로 확인합니다. compile-ok는 각 빌드에만 적용됩니다. Expo 57 Android 실기기 UI·광고는 아래 QA 보고서 범위에서 확인했으며, 결제 및 iOS 빌드는 미검증입니다. 과거 SDK 55 기기 확인 결과를 현재 버전의 결과로 간주하지 않습니다.
 
 SM-M336K(Android 16)에서 미리보기·전체 화면 성능 및 주요 기능 QA를 수행했습니다. [실측·QA 보고서](docs/QA_PERFORMANCE_20260908.md)를 참고하세요. 숨은 미리보기 중복 프레임 생성과 광고 종료 Google Play 시트의 시스템 바 노출을 확인했습니다. 후속 소스에는 숨은 화면 애니메이션 중단·진행 상태 보존과 Android 호스트 복귀 시 바 숨김 재적용을 반영했습니다. 새 APK 비교 측정은 미실행이며 외부 Google Play 창의 바 노출은 미해결입니다. React 렌더 횟수는 미측정입니다. Amplitude는 빌드 폴더의 키 일치만 확인했으며 실제 이벤트 수신은 미확인입니다. 자세한 상태는 [PERFORMANCE_BASELINE.md](docs/PERFORMANCE_BASELINE.md)에 기록했습니다.
 
-## 최신 생성 APK — edaf82b 기준 (2026-09-08)
+## 이전 내부 APK — edaf82b 기준 (2026-09-08)
 
 - **compile-ok**: BUILD SUCCESSFUL in **7m 5s**, 1188 tasks 중 83 executed / 1105 up-to-date. 이전 전체 빌드 40m 57s 대비 약 83% 단축. Gradle 구간 비교이며 준비·검증 시간은 별도입니다.
 - [APK 다운로드](artifacts/LedPop-V1.0.6-edaf82b.apk): 286783382 bytes, SHA-256 `126bbddd5bbb4a91b8022ba1f654241e1a391557bee700f703306e4fa3696aff`.
-- 앱 소스 main edaf82b22d0d97a01e879eec9dc027d043f811c6. 빌드 준비 스크립트의 SDK 메타데이터 경로만 로컬에서 수정했습니다. 존재하지 않는 SDK 루트 packages.xml 대신 설치 패키지별 source.properties를 읽습니다. 해당 수정은 미커밋이며 앱 기능 변경은 없습니다.
+- 앱 소스 main edaf82b22d0d97a01e879eec9dc027d043f811c6. 빌드 준비 스크립트의 SDK 메타데이터 경로만 로컬에서 수정했습니다. 존재하지 않는 SDK 루트 packages.xml 대신 설치 패키지별 source.properties를 읽습니다. 해당 수정은 이후 675f492에 커밋했으며 앱 기능 변경은 없습니다.
 - 의존성 설치·네이티브 재생성 없이 고정 artifacts/b 재사용. 내부 버전 1.0.6 / versionCode 22, package com.minkyokim.sideledbannerapp, minSdk 24 / compileSdk 36 / targetSdk 36, ARM64·ARMv7·x86·x86_64 확인.
 - 기존 인증서 SHA-256 730173560958735BF237CA84BA4F35BBE76A6734986929EB65F6CED63D3FD893와 APK v2 서명 일치, zipalign -P 16 통과. debuggable·CAMERA·RECORD_AUDIO 없음. ZIP 정렬 검증은 모든 기기의 실행 검증을 의미하지 않습니다.
 - 매니페스트와 billing.properties에서 Billing 9.1.0 확인. AdMob App ID와 production 광고 Unit ID, IAP·구매 검증·리워드 모듈 포함 확인. [공식 Billing 지원 일정](https://developer.android.com/google/play/billing/deprecation-faq)과 [릴리스 노트](https://developer.android.com/google/play/billing/release-notes) 재확인.

@@ -27,3 +27,7 @@ The supplied Amplitude screenshot identifies LED POP project 818873. The API key
 - React Native DevTools: https://reactnative.dev/docs/react-native-devtools
 - Build-mode limitations: https://reactnative.dev/docs/debugging
 - Android memory inspection: https://developer.android.com/topic/performance/memory/guide/tools-overview
+
+## 후속 빌드 — 2026-09-09
+
+성능 수정이 포함된 e58e9aa / 1.0.6 (23) APK·AAB 컴파일과 독립 아티팩트 검증을 완료했습니다. [릴리스 보고서](ANDROID_RELEASE_1.0.6_23.md)를 참조하세요. 새 최적화 APK의 기기 설치·성능 재측정은 미실행이며, 위 실측값은 기존 edaf82b / 22 결과로 유지합니다. 외부 Google Play 창 시스템 바 문제는 미해결입니다.

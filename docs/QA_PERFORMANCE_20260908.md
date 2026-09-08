@@ -92,3 +92,7 @@ PSS는 dumpsys의 보고값으로 그래픽/스왑 등 집계 차이가 있어 R
 ## 제출 빌드 전 컴파일 점검
 
 Expo 57의 useIsFocused는 expo-router에서 가져오도록 정정했습니다. 별도 React Navigation 패키지의 포커스 컨텍스트와 혼용하지 않습니다. tsconfig에서 확인된 생성 산출물 artifacts와 의존성 node_modules를 제외한 뒤 현재 소스의 TypeScript --noEmit 컴파일이 통과했습니다. 기기 성능 재측정 결과는 아닙니다.
+
+## 후속 빌드 — 2026-09-09
+
+성능 수정이 포함된 e58e9aa / 1.0.6 (23) APK·AAB 컴파일과 독립 아티팩트 검증을 완료했습니다. [릴리스 보고서](ANDROID_RELEASE_1.0.6_23.md)를 참조하세요. 새 최적화 APK의 기기 설치·성능 재측정은 미실행이며, 위 실측값은 기존 edaf82b / 22 결과로 유지합니다. 외부 Google Play 창 시스템 바 문제는 미해결입니다.
