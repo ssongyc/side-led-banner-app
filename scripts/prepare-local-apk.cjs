@@ -79,7 +79,7 @@ if (!previousFiles) {
   }
 }
 dependencyNames.push(...previousFiles.filter(n => n.startsWith('patches/')));
-const nativeNames = [...new Set(['app.json', ...dependencyNames, ...files.filter(nativeFile), ...previousFiles.filter(nativeFile)])].sort();
+const nativeNames = [...new Set(['app.json', 'advertising.config.json', ...dependencyNames, ...files.filter(nativeFile), ...previousFiles.filter(nativeFile)])].sort();
 // Config/plugin changes conservatively invalidate native output. Dynamic config may read any asset.
 if (files.some(n => n.startsWith('app.config.'))) nativeNames.push(...files.filter(n => n.startsWith('assets/')));
 function digest(names, fromSource) {
@@ -107,10 +107,11 @@ const toolchainHash = hash(JSON.stringify([
     return [file, hash(fs.readFileSync(file))];
   }),
 ]));
-const nativeHash = hash(digest(nativeNames, true) + environmentHash + toolchainHash);
+const nativeHash = hash(digest(nativeNames, true) + environmentHash + toolchainHash + (process.env.LEDPOP_AD_PROFILE ?? "production"));
 const previousDependencyHash = state?.dependencyHash ?? (bootstrap ? digest(dependencyNames, false) : null);
 const previousNativeHash = state?.nativeHash ?? (bootstrap ? hash(digest(nativeNames, false) + environmentHash + toolchainHash) : null);
 const plan = {
+  adProfile: process.env.LEDPOP_AD_PROFILE ?? "production",
   revision: git(['rev-parse', 'HEAD']).trim(),
   dirty: git(['status', '--porcelain', '-z']).length > 0,
   versionCode, dependencyHash, nativeHash,
@@ -136,5 +137,5 @@ for (const name of previousFiles) {
 fs.writeFileSync(statePath, JSON.stringify({ files, dependencyHash: previousDependencyHash, nativeHash: previousNativeHash }, null, 2));
 fs.writeFileSync(planPath, JSON.stringify(plan, null, 2));
 fs.writeFileSync(path.join(target, 'source-revision.txt'), plan.revision + '\n');
-fs.writeFileSync(path.join(target, 'source-inputs.json'), JSON.stringify({ revision: plan.revision, dirty: plan.dirty, versionCode, files: Object.fromEntries([...contents].map(([n, b]) => [n, hash(b)])) }, null, 2));
+fs.writeFileSync(path.join(target, 'source-inputs.json'), JSON.stringify({ adProfile: plan.adProfile, revision: plan.revision, dirty: plan.dirty, versionCode, files: Object.fromEntries([...contents].map(([n, b]) => [n, hash(b)])) }, null, 2));
 console.log(JSON.stringify({ changed: plan.changed.length, removed: plan.removed.length, installRequired: plan.installRequired, nativeRequired: plan.nativeRequired, versionCode }));

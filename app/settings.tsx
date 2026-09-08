@@ -50,6 +50,7 @@ export default function SettingsScreen() {
     rewardAdLabel,
     resolvedAppLocale,
   } = useSettingsRest();
+  const compactHeight = windowH - insets.top - insets.bottom < 480;
   const rootPaddingTop = Platform.OS === "web" ? 0 : insets.top;
 
   const languageDropdownItems = useMemo(
@@ -109,8 +110,18 @@ export default function SettingsScreen() {
     });
   };
 
+  const footer = (
+    <SettingsFooter
+        onLogoPress={() => openUrl(SUNNY_LINKS.homepage)}
+        termsLabel={textSectionLabel("terms")}
+        privacyLabel={textSectionLabel("privacy")}
+        onTermsPress={() => openUrl(SUNNY_LINKS.terms)}
+        onPrivacyPress={() => openUrl(SUNNY_LINKS.privacy)}
+      />
+  );
+
   return (
-    <View style={[base.container, { backgroundColor: "#FFFFFF", paddingTop: rootPaddingTop }]}>
+    <View style={[base.container, { backgroundColor: "#FFFFFF", paddingTop: rootPaddingTop, paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right }]}>
       <View style={settingsStyles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -241,17 +252,12 @@ export default function SettingsScreen() {
             V{appVersion}
           </Text>
         </View>
+        {compactHeight && footer}
       </ScrollView>
 
-      <SettingsFooter
-        onLogoPress={() => openUrl(SUNNY_LINKS.homepage)}
-        termsLabel={textSectionLabel("terms")}
-        privacyLabel={textSectionLabel("privacy")}
-        onTermsPress={() => openUrl(SUNNY_LINKS.terms)}
-        onPrivacyPress={() => openUrl(SUNNY_LINKS.privacy)}
-      />
-      {adsAllowed && <BannerAdComponent
-        style={{ height: 60, marginBottom: 12 }}
+      {!compactHeight && footer}
+      {(Platform.OS === "web" || adsAllowed) && <BannerAdComponent
+        style={{ alignSelf: "stretch", marginBottom: 12 }}
         unavailableLabel={rewardAdLabel("rewardAdUnavailable")}
       />}
     </View>

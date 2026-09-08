@@ -7,21 +7,33 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "environment": "development"
+      "environment": "development",
+      "env": {
+        "LEDPOP_AD_PROFILE": "test",
+        "EXPO_PUBLIC_WEB_AD_DIAGNOSTICS": "0"
+      }
     },
     "preview": {
       "distribution": "internal",
-      "environment": "preview"
+      "environment": "preview",
+      "env": {
+        "LEDPOP_AD_PROFILE": "test",
+        "EXPO_PUBLIC_WEB_AD_DIAGNOSTICS": "0"
+      }
     },
     "production": {
       "autoIncrement": true,
-      "environment": "production"
+      "environment": "production",
+      "env": {
+        "LEDPOP_AD_PROFILE": "production",
+        "EXPO_PUBLIC_WEB_AD_DIAGNOSTICS": "0"
+      }
     }
   },
   "submit": {
     "production": {
       "ios": {
-        "ascAppId": "6749168042"  
+        "ascAppId": "6749168042"
       }
     }
   }

@@ -2,9 +2,13 @@ param(
  [string]$BuildRoot=(Join-Path $PSScriptRoot '../artifacts/b'),
  [switch]$ResumeNative,
  [switch]$IncludeBundle,
+ [ValidateSet("production", "test")][string]$AdProfile="production",
  [Nullable[int]]$VersionCode
 )
 $ErrorActionPreference='Stop'
+if($IncludeBundle -and $AdProfile -ne 'production'){throw 'Store AAB requires production ads'}
+if($env:EXPO_PUBLIC_WEB_AD_DIAGNOSTICS -eq '1'){throw 'Web diagnostics cannot be included in native builds'}
+
 $resolved=[IO.Path]::GetFullPath($BuildRoot).TrimEnd('\')
 $shortRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../artifacts/b')).TrimEnd('\')
 if($resolved -ne $shortRoot){throw 'Use the fixed artifacts/b build root'}
@@ -27,6 +31,8 @@ $env:JAVA_HOME='C:/Program Files/Android/Android Studio/jbr'
 $env:ANDROID_HOME='C:/Users/ssong/AppData/Local/Android/Sdk'
 $env:CI='1'
 try {
+ $previousAdProfile=$env:LEDPOP_AD_PROFILE
+ $env:LEDPOP_AD_PROFILE=$AdProfile
  $check=& "$env:JAVA_HOME/bin/keytool.exe" -list -v -keystore $key.keystorePath -alias $key.keyAlias -storepass:env LEDPOP_STORE_PASSWORD 2>&1
  if($LASTEXITCODE -ne 0 -or (($check -join '') -replace ':','') -notmatch $expected){throw 'Keystore fingerprint verification failed'}
  $cert=[Security.Cryptography.X509Certificates.X509Certificate2]::CreateFromPem([IO.File]::ReadAllText((Join-Path $signing 'upload_certificate.pem')))
@@ -152,10 +158,11 @@ try {
     if($embeddedHash -ne (Get-FileHash -LiteralPath $mapping -Algorithm SHA256).Hash){throw 'AAB mapping differs from same-build mapping'}
    } finally {$zip.Dispose()}
   }
-  @{ aabSha256=$aabHash; mappingSha256=(Get-FileHash -LiteralPath $mapping -Algorithm SHA256).Hash; elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=(Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash; revision=$plan.revision; dirty=$plan.dirty; versionCode=$plan.versionCode } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
+  @{ adProfile=$AdProfile; aabSha256=$aabHash; mappingSha256=(Get-FileHash -LiteralPath $mapping -Algorithm SHA256).Hash; elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=(Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash; revision=$plan.revision; dirty=$plan.dirty; versionCode=$plan.versionCode } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
   Write-Output ('Gradle '+($tasks -join ', ')+' completed; independent artifact verification still required. Record: '+$record)
  } finally { Pop-Location }
 } finally {
+ $env:LEDPOP_AD_PROFILE=$previousAdProfile
  if($null -ne $buildLock){$buildLock.Dispose()}
  foreach($name in @('LEDPOP_STORE_PASSWORD','LEDPOP_KEY_PASSWORD','LEDPOP_KEY_ALIAS','LEDPOP_KEYSTORE')){Remove-Item "Env:$name" -ErrorAction SilentlyContinue}
 }

@@ -1,3 +1,4 @@
+import AdDiagnostics from "@/components/dev/AdDiagnostics";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {
   MultipleLinePlayButton,
@@ -5,7 +6,6 @@ import {
 } from "@/assets/svg/playOptionButton";
 import { PlayResumeButton } from "@/assets/svg/playResumeButton";
 import { usePremium } from "@/contexts/premiumContext";
-import { ProDebugFab } from "@/components/dev/proDebugFab";
 import { RewardAdDebugFab } from "@/components/dev/rewardAdDebugFab";
 import { SheetFetchDebugPanel } from "@/components/dev/sheetFetchDebugPanel";
 import { LedBannerFullScreen } from "@/components/ledBannerFullScreen";
@@ -258,6 +258,7 @@ export default function Index() {
           {activeTab === "EFFECT" && <EffectSection />}
         </View>
         
+        <AdDiagnostics />
         {!isPremium && <RewardAdModal
           visible={rewardAdVisible}
           onClose={() => updateUI({ rewardAdVisible: false })}
@@ -277,7 +278,6 @@ export default function Index() {
         {__DEV__ ? (
           <>
             <RewardAdDebugFab onOpen={openRewardAdModal} />
-            <ProDebugFab />
             <SheetFetchDebugPanel />
           </>
         ) : null}

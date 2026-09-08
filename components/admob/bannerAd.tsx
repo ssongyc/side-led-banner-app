@@ -1,90 +1,70 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Platform, Text, View } from "react-native";
-import {
-  BannerAd,
-  BannerAdSize,
-} from "react-native-google-mobile-ads";
+import { Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { BannerAd, BannerAdSize } from "react-native-google-mobile-ads";
+import { getAdConfiguration } from "@/utils/adConfiguration";
+import { recordAdEvent } from "@/utils/adTrace";
+import { initializeMobileAds, useMobileAdsState } from "@/utils/initializeMobileAds";
 
-const BANNER_AD_UNIT_ID = Platform.select({
-  ios: "ca-app-pub-3506417530430977/4875843768",
-  android: "ca-app-pub-3506417530430977/9971880471",
-});
-
-const LOAD_RETRY_DELAYS_MS = [3000, 6000] as const;
-const UNAVAILABLE_MESSAGE_DURATION_MS = 10_000;
-
-type BannerAdComponentProps = {
-  style?: any;
-  unavailableLabel: string;
-};
-
-export default function BannerAdComponent({
-  style,
-  unavailableLabel,
-}: BannerAdComponentProps) {
-  const [attempt, setAttempt] = useState(0);
-  const [failed, setFailed] = useState(!BANNER_AD_UNIT_ID);
-  const [unavailableVisible, setUnavailableVisible] = useState(true);
-  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+const REQUEST_OPTIONS = { requestNonPersonalizedAdsOnly: true };
+type Props = { style?: StyleProp<ViewStyle>; unavailableLabel: string };
+export default function BannerAdComponent({ style, unavailableLabel }: Props) {
+  const sdkState = useMobileAdsState();
+  const [width, setWidth] = useState(0);
+  const [attempt, setAttempt] = useState(1);
+  const [failed, setFailed] = useState(false);
+  const [messageVisible, setMessageVisible] = useState(true);
+  const [config] = useState(() => { try { return getAdConfiguration(); } catch { return null; } });
+  const cycle = useRef({ alive: true, attempt: 1, handled: false, loaded: false, startedAt: Date.now() });
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const terminal = failed || sdkState === "failed" || sdkState === "configuration" || !config;
   useEffect(() => {
-    return () => {
-      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
-    };
+    cycle.current.alive = true;
+    void initializeMobileAds().catch(() => { /* Shared state carries the failure. */ });
+    return () => { cycle.current.alive = false; if (timer.current) clearTimeout(timer.current); };
   }, []);
-
   useEffect(() => {
-    if (!failed) return;
-    const timer = setTimeout(() => setUnavailableVisible(false), UNAVAILABLE_MESSAGE_DURATION_MS);
-    return () => clearTimeout(timer);
-  }, [failed]);
-
-  const clearRetryTimer = () => {
-    if (!retryTimerRef.current) return;
-    clearTimeout(retryTimerRef.current);
-    retryTimerRef.current = null;
-  };
-
-  if (!BANNER_AD_UNIT_ID) {
-    if (__DEV__) console.error(`[bannerAd] Banner ad is not configured for ${Platform.OS}.`);
-    return (
-      <View style={[{ alignItems: "center", minHeight: 50, justifyContent: "center" }, style]}>
-        {unavailableVisible ? <Text allowFontScaling={false}>{unavailableLabel}</Text> : null}
-      </View>
-    );
-  }
-
-  return (
-    <View style={[{ alignItems: "center", minHeight: 50, justifyContent: "center" }, style]}>
-      {failed ? (
-        unavailableVisible ? <Text allowFontScaling={false}>{unavailableLabel}</Text> : null
-      ) : (
-        <BannerAd
-          key={`${BANNER_AD_UNIT_ID}-${attempt}`}
-          unitId={BANNER_AD_UNIT_ID}
-          size={BannerAdSize.BANNER}
-          requestOptions={{
-            requestNonPersonalizedAdsOnly: true,
-          }}
-          onAdLoaded={() => {
-            clearRetryTimer();
-            if (__DEV__) console.log("Banner ad loaded");
-          }}
-          onAdFailedToLoad={(error) => {
-            if (__DEV__) console.error("Banner ad failed to load", error);
-            clearRetryTimer();
-            const retryDelay = LOAD_RETRY_DELAYS_MS[attempt];
-            if (retryDelay == null) {
-              setFailed(true);
-              return;
-            }
-            retryTimerRef.current = setTimeout(() => {
-              retryTimerRef.current = null;
-              setAttempt((currentAttempt) => currentAttempt + 1);
-            }, retryDelay);
-          }}
-        />
-      )}
-    </View>
-  );
+    if (!terminal) { setMessageVisible(true); return; }
+    const id = setTimeout(() => setMessageVisible(false), 10_000);
+    return () => clearTimeout(id);
+  }, [terminal]);
+  useEffect(() => {
+    if (sdkState !== "ready" || terminal || width <= 0) return;
+    cycle.current.startedAt = Date.now();
+    recordAdEvent("banner", "view_request", { attempt, width, profile: config?.profile });
+  }, [attempt, width, sdkState, terminal, config]);
+  return <View style={[{ alignItems: "center", justifyContent: "center", minHeight: 50, flexShrink: 0 }, style]}
+    onLayout={event => { const next = Math.floor(event.nativeEvent.layout.width); setWidth(current => current === next ? current : next); }}>
+    {terminal ? (messageVisible ? <Text allowFontScaling={false}>{unavailableLabel}</Text> : null) :
+      sdkState === "ready" && config && width > 0 ? <BannerAd key={attempt} unitId={config.banner}
+        size={BannerAdSize.LARGE_ANCHORED_ADAPTIVE_BANNER} width={width} requestOptions={REQUEST_OPTIONS}
+        onSizeChange={size => recordAdEvent("banner", "size_changed", { ...size, attempt })}
+        onAdLoaded={size => {
+          const current = cycle.current;
+          if (!current.alive || current.attempt !== attempt || (current.handled && !current.loaded)) return;
+          const refresh = current.loaded;
+          current.loaded = true; current.handled = true;
+          if (timer.current) clearTimeout(timer.current); timer.current = null;
+          recordAdEvent("banner", refresh ? "sdk_refresh_complete" : "load_complete", {
+            attempt, ...size, requestedAt: refresh ? null : new Date(current.startedAt).toISOString(),
+            elapsedMs: refresh ? null : Date.now() - current.startedAt,
+          });
+        }}
+        onAdFailedToLoad={error => {
+          const current = cycle.current;
+          if (!current.alive || current.attempt !== attempt) return;
+          if (current.loaded) { recordAdEvent("banner", "sdk_refresh_failed", { attempt, requestedAt: null }, error); return; }
+          if (current.handled) return;
+          current.handled = true;
+          recordAdEvent("banner", "load_failed", { attempt, elapsedMs: Date.now() - current.startedAt }, error);
+          const delay = [3000, 6000][attempt - 1];
+          if (delay === undefined) { setFailed(true); return; }
+          recordAdEvent("banner", "retry_scheduled", { attempt: attempt + 1, delayMs: delay });
+          timer.current = setTimeout(() => {
+            timer.current = null;
+            if (!current.alive) return;
+            current.attempt += 1; current.handled = false;
+            setAttempt(current.attempt);
+          }, delay);
+        }} /> : null}
+  </View>;
 }

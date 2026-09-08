@@ -33,7 +33,7 @@ const SUNNY_APPS: SunnyAppEntry[] = [
       "https://apps.apple.com/ca/app/sky-peacemaker-finger-force/id6744907473",
     playStoreUrl:
       "https://play.google.com/store/apps/details?id=com.mwm.ffigher.gg",
-    thumbnail: require("@/assets/images/Sunny's_Icon/Sky-Peacemaker-Finger-Force-Icon.png"),
+    thumbnail: require("@/assets/images/Sunny's_Icon/Sky-Peacemaker-Finger-Force-Icon.webp"),
   },
   {
     id: "world_movie_trailer",
@@ -42,7 +42,7 @@ const SUNNY_APPS: SunnyAppEntry[] = [
       "https://apps.apple.com/ca/app/world-movie-trailer/id6670228768",
     playStoreUrl:
       "https://play.google.com/store/apps/details?id=com.sunnyinnolab.worldMovieTrailer",
-    thumbnail: require("@/assets/images/Sunny's_Icon/World-Movie-Trailer-New-Icon.png"),
+    thumbnail: require("@/assets/images/Sunny's_Icon/World-Movie-Trailer-New-Icon.webp"),
   },
   {
     id: "world_book_ranking",
@@ -51,7 +51,7 @@ const SUNNY_APPS: SunnyAppEntry[] = [
       "https://apps.apple.com/ca/app/world-book-ranking/id6755462071",
     playStoreUrl:
       "https://play.google.com/store/apps/details?id=com.worldbookranking",
-    thumbnail: require("@/assets/images/Sunny's_Icon/World-Book-Ranking-Icon.png"),
+    thumbnail: require("@/assets/images/Sunny's_Icon/World-Book-Ranking-Icon.webp"),
   },
   {
     id: "simply_multi_timer",
@@ -60,14 +60,14 @@ const SUNNY_APPS: SunnyAppEntry[] = [
       "https://apps.apple.com/us/app/simply-multi-timer/id6746514607",
     playStoreUrl:
       "https://play.google.com/store/apps/details?id=com.sunnyinnolab.sunnysmtapp2",
-    thumbnail: require("@/assets/images/Sunny's_Icon/Simply-Multi-Timer-Icon.png"),
+    thumbnail: require("@/assets/images/Sunny's_Icon/Simply-Multi-Timer-Icon.webp"),
   },
   {
     id: "watermelon_checker",
     name: "Watermelon Checker",
     appStoreUrl: "https://watermelonchecker.onelink.me/zF1F/obulncrt",
     playStoreUrl: "https://watermelonchecker.onelink.me/zF1F/obulncrt",
-    thumbnail: require("@/assets/images/Sunny's_Icon/Watermelon-Checker-Icon-1024.jpg"),
+    thumbnail: require("@/assets/images/Sunny's_Icon/Watermelon-Checker-Icon-1024.webp"),
   },
   {
     id: "wisdom_qclock",
@@ -75,7 +75,7 @@ const SUNNY_APPS: SunnyAppEntry[] = [
     appStoreUrl: "https://apps.apple.com/ca/app/wisdom-qclock/id6751124999",
     playStoreUrl:
       "https://play.google.com/store/apps/details?id=com.sunnyinnolab.qclock",
-    thumbnail: require("@/assets/images/Sunny's_Icon/Wisdom-Qclock-Icon.png"),
+    thumbnail: require("@/assets/images/Sunny's_Icon/Wisdom-Qclock-Icon.webp"),
   },
   {
     id: "dual_flashlight",
@@ -83,7 +83,7 @@ const SUNNY_APPS: SunnyAppEntry[] = [
     appStoreUrl: "https://apps.apple.com/app/dual-flashlight/id6741048362",
     playStoreUrl:
       "https://play.google.com/store/apps/details?id=com.sunnyinnolab.dualflashlight2",
-    thumbnail: require("@/assets/images/Sunny's_Icon/Dual-Flashlight-Icon.png"),
+    thumbnail: require("@/assets/images/Sunny's_Icon/Dual-Flashlight-Icon.webp"),
   },
   {
     id: "histree",
@@ -91,7 +91,7 @@ const SUNNY_APPS: SunnyAppEntry[] = [
     appStoreUrl: "https://apps.apple.com/ca/app/histree/id6754057761",
     playStoreUrl:
       "https://play.google.com/store/apps/details?id=com.todayhistory.todayhistory",
-    thumbnail: require("@/assets/images/Sunny's_Icon/Histree-Icon.png"),
+    thumbnail: require("@/assets/images/Sunny's_Icon/Histree-Icon.webp"),
   },
   {
     id: "scanatory",
@@ -99,7 +99,7 @@ const SUNNY_APPS: SunnyAppEntry[] = [
     appStoreUrl: "https://apps.apple.com/ph/app/scanatory/id6757365297",
     playStoreUrl:
       "https://play.google.com/store/apps/details?id=com.sunnyinnolab.scanatory",
-    thumbnail: require("@/assets/images/Sunny's_Icon/Scanatory-Icon.png"),
+    thumbnail: require("@/assets/images/Sunny's_Icon/Scanatory-Icon.webp"),
   },
   {
     id: "play_memo",
@@ -107,7 +107,7 @@ const SUNNY_APPS: SunnyAppEntry[] = [
     appStoreUrl: "https://apps.apple.com/us/app/play-memo/id6746741354",
     playStoreUrl:
       "https://play.google.com/store/apps/details?id=com.sunnyinnolab.playmemo",
-    thumbnail: require("@/assets/images/Sunny's_Icon/Play-Memo-Icon.png"),
+    thumbnail: require("@/assets/images/Sunny's_Icon/Play-Memo-Icon.webp"),
   },
   {
     id: "find_four",
@@ -116,14 +116,14 @@ const SUNNY_APPS: SunnyAppEntry[] = [
       "https://apps.apple.com/ca/app/find-four-find-4-differences/id6478101361",
     playStoreUrl:
       "https://play.google.com/store/apps/details?id=com.mwm.findfour.gg",
-    thumbnail: require("@/assets/images/Sunny's_Icon/Find-Four-Icon.png"),
+    thumbnail: require("@/assets/images/Sunny's_Icon/Find-Four-Icon.webp"),
   },
   {
     id: "decibella2",
     name: "decibella2",
     appStoreUrl: "https://decibella2.onelink.me/T5UV/x5q1f7vs",
     playStoreUrl: "https://decibella2.onelink.me/T5UV/x5q1f7vs",
-    thumbnail: require("@/assets/images/Sunny's_Icon/decibella2-Icon.png"),
+    thumbnail: require("@/assets/images/Sunny's_Icon/decibella2-Icon.webp"),
   },
   {
     id: "decibella",
@@ -131,7 +131,7 @@ const SUNNY_APPS: SunnyAppEntry[] = [
     appStoreUrl: "https://apps.apple.com/ca/app/decibella/id6751743532",
     playStoreUrl:
       "https://play.google.com/store/apps/details?id=cc.cavecafe.app.decibella",
-    thumbnail: require("@/assets/images/Sunny's_Icon/decibella-Icon-1024.png"),
+    thumbnail: require("@/assets/images/Sunny's_Icon/decibella-Icon-1024.webp"),
   },
 ];
 

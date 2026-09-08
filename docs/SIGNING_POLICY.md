@@ -75,3 +75,7 @@ The optimized build reached the 512 MiB Gradle metaspace limit and stalled durin
 The final retry resumes the user-approved e58e9aa snapshot after verifying all 292 recorded file hashes, using artifacts/resume-submission-e58e9aa.ps1 with the corrected JVM limits. It deliberately skips source synchronization and native regeneration because the user requested preservation and exclusion of a concurrent RootLayout splash change. The snapshot source-inputs.json and exact retry wrapper are retained with the artifacts; later documentation/build-wrapper commits are not represented as the app source revision.
 
 Final retry: compile-ok in 12m 40s, 120 executed / 1047 up-to-date. APK/AAB signer, SDK/Billing, 16KB alignment and exact R8 8.13.23 mapping checks passed. See [release report](ANDROID_RELEASE_1.0.6_23.md) for exact hashes, retained warnings and unperformed runtime/Play verification.
+
+## Advertising profile selection
+
+The local wrapper accepts -AdProfile production (default) or test. IncludeBundle requires production. Native builds reject the web diagnostic flag, and Metro rejects project-owned .web sources in Android/iOS resolution. Profile selection is part of the native fingerprint and build provenance. EAS development/preview explicitly select Google test ads; production selects existing LED POP IDs. See [ADVERTISING.md](ADVERTISING.md). The new local immersive module and dynamic config require native regeneration on the next authorized build; current artifact evidence predates this change.

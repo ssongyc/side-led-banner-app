@@ -1,16 +1,15 @@
+import { requireNativeModule } from "expo-modules-core";
+import { getAdConfiguration } from "@/utils/adConfiguration";
+import { initializeMobileAds, getMobileAdsState, retryMobileAdsInitialization } from "@/utils/initializeMobileAds";
+import { recordAdEvent } from "@/utils/adTrace";
 import { getPremiumSnapshot } from "@/utils/ApiClient";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import {
   AdEventType,
   RewardedAd,
   RewardedAdEventType,
 } from "react-native-google-mobile-ads";
-
-const AD_UNIT_ID = Platform.select({
-  ios: "ca-app-pub-3506417530430977/4076706298",
-  android: "ca-app-pub-3506417530430977/6499152286",
-});
 
 const LOAD_RETRY_DELAYS_MS = [3000, 6000] as const;
 const AD_VALID_MS = 60 * 60 * 1000;
@@ -21,7 +20,7 @@ type RewardedSlot = {
   ad: RewardedAd | null;
   attempt: number;
   loadedAt: number | null;
-  failure: "load" | "show" | "configuration" | null;
+  failure: "load" | "show" | "configuration" | "initialization" | null;
   state: SlotState;
   retryTimer: ReturnType<typeof setTimeout> | null;
   unsubs: Array<() => void>;
@@ -46,21 +45,13 @@ let openedCurrentAd = false;
 let earnedRewardCurrentAd = false;
 let rewardGrantedCurrentAd = false;
 let nextLoadRequestedForCurrentShow = false;
+let immersiveFlow = 0;
+let openWatchdog: ReturnType<typeof setTimeout> | null = null;
+function clearOpenWatchdog() { if (openWatchdog) clearTimeout(openWatchdog); openWatchdog = null; }
 const subscribers = new Set<() => void>();
 const rewardSubscribers = new Set<() => void>();
 
-type DebugEvent = {
-  attempt: number;
-  event: string;
-  platform: string;
-  slot: SlotName;
-  state: SlotState;
-  timestamp: string;
-};
-const debugTrace: DebugEvent[] = [];
-
 function trace(slotName: SlotName, event: string) {
-  if (!__DEV__) return;
   const slot = slots[slotName];
   const item = {
     attempt: slot.attempt,
@@ -70,9 +61,7 @@ function trace(slotName: SlotName, event: string) {
     state: slot.state,
     timestamp: new Date().toISOString(),
   };
-  debugTrace.push(item);
-  if (debugTrace.length > 80) debugTrace.shift();
-  console.debug("[rewardedAd]", item);
+  recordAdEvent("rewarded", event, item);
 }
 
 function resolveSlotName(ad: RewardedAd): SlotName | null {
@@ -90,9 +79,7 @@ function notifyRewardEarned() {
 }
 
 function getRewardedAdConfigurationError(): Error | null {
-  return AD_UNIT_ID
-    ? null
-    : new Error(`Rewarded ad is not configured for ${Platform.OS}.`);
+  try { getAdConfiguration(); return null; } catch (error) { return error as Error; }
 }
 
 function clearSlotRetryTimer(slot: RewardedSlot) {
@@ -108,7 +95,16 @@ function disposeSlot(slotName: SlotName) {
   slots[slotName] = createEmptySlot();
 }
 
+function endImmersiveAd(flow = immersiveFlow) {
+  if (Platform.OS !== "android") return;
+  try {
+    void requireNativeModule("LedPopAdImmersive").end(flow).catch((error: unknown) => recordAdEvent("rewarded", "immersive_end_failed", {}, error));
+  } catch (error) { recordAdEvent("rewarded", "immersive_end_failed", {}, error); }
+}
+
 function markShowFailed() {
+  clearOpenWatchdog();
+  endImmersiveAd();
   disposeSlot("current");
   disposeSlot("next");
   slots.current.state = "failed";
@@ -122,10 +118,7 @@ function markShowFailed() {
 }
 
 function createRewardedAd(slotName: SlotName): RewardedAd {
-  const adUnitId = AD_UNIT_ID;
-  if (!adUnitId) {
-    throw new Error(`Rewarded ad is not configured for ${Platform.OS}.`);
-  }
+  const adUnitId = getAdConfiguration().rewarded;
 
   const slot = slots[slotName];
   slot.unsubs.forEach((unsubscribe) => unsubscribe());
@@ -151,6 +144,7 @@ function createRewardedAd(slotName: SlotName): RewardedAd {
     ad.addAdEventListener(AdEventType.OPENED, () => {
       const activeSlotName = resolveSlotName(ad);
       if (activeSlotName !== "current" || slots.current.state !== "showing") return;
+      clearOpenWatchdog();
       openedCurrentAd = true;
       trace(activeSlotName, "opened");
       if (!nextLoadRequestedForCurrentShow) {
@@ -167,6 +161,8 @@ function createRewardedAd(slotName: SlotName): RewardedAd {
     ad.addAdEventListener(AdEventType.CLOSED, () => {
       const activeSlotName = resolveSlotName(ad);
       if (activeSlotName !== "current" || slots.current.state !== "showing") return;
+      clearOpenWatchdog();
+      endImmersiveAd();
       trace(activeSlotName, "closed");
       if (
         openedCurrentAd &&
@@ -183,6 +179,7 @@ function createRewardedAd(slotName: SlotName): RewardedAd {
       const activeSlotName = resolveSlotName(ad);
       if (!activeSlotName) return;
       if (__DEV__) console.warn("[rewardedAd] ad error", error);
+      recordAdEvent("rewarded", "sdk_error", { slot: activeSlotName }, error);
       handleSlotError(activeSlotName);
     }),
   ];
@@ -199,7 +196,7 @@ function requestSlotLoad(slotName: SlotName) {
   slot.loadedAt = null;
   trace(slotName, "load_request");
   notifySubscribers();
-  try { createRewardedAd(slotName).load(); } catch { handleSlotError(slotName); }
+  try { createRewardedAd(slotName).load(); } catch (error) { recordAdEvent("rewarded", "load_threw", { slot: slotName }, error); handleSlotError(slotName); }
 }
 
 function handleSlotError(slotName: SlotName) {
@@ -263,6 +260,8 @@ export function isRewardedAdShowing() {
 }
 
 export function suspendRewardedAds() {
+  clearOpenWatchdog();
+  if (slots.current.state === "showing") endImmersiveAd();
   disposeSlot("current");
   disposeSlot("next");
   openedCurrentAd = false;
@@ -280,7 +279,7 @@ export function loadRewardedAd() {
   if (configError) {
     slots.current.failure = "configuration";
     slots.current.state = "failed";
-    if (__DEV__) console.error("[rewardedAd] load failed", configError);
+    recordAdEvent("rewarded", "configuration_failed", {}, configError);
     notifySubscribers();
     return;
   }
@@ -302,7 +301,19 @@ export function loadRewardedAd() {
   }
 
   disposeSlot("current");
-  requestSlotLoad("current");
+  const waitingSlot = slots.current;
+  waitingSlot.state = "loading";
+  notifySubscribers();
+  void initializeMobileAds().then(() => {
+    if (slots.current !== waitingSlot || getPremiumSnapshot().entitlement !== "free") return;
+    requestSlotLoad("current");
+  }).catch(error => {
+    if (slots.current !== waitingSlot) return;
+    waitingSlot.state = "failed";
+    waitingSlot.failure = getMobileAdsState() === "configuration" ? "configuration" : "initialization";
+    recordAdEvent("rewarded", "initialization_failed", {}, error);
+    notifySubscribers();
+  });
 }
 
 function getLoadedState() {
@@ -313,7 +324,7 @@ function getLoadedState() {
 function getCanRetryState() {
   const current = slots.current;
   return getPremiumSnapshot().entitlement === "free" && current.state === "failed" &&
-    (current.failure === "show" || (current.failure === "load" && current.attempt >= 3));
+    (current.failure === "show" || current.failure === "initialization" || (current.failure === "load" && current.attempt >= 3));
 }
 
 function getAdSnapshot() {
@@ -349,7 +360,7 @@ export function useRewardedAd(onRewardEarned: () => void) {
     if (configError) {
       slots.current.failure = "configuration";
       slots.current.state = "failed";
-      if (__DEV__) console.error("[rewardedAd] show failed", configError);
+      recordAdEvent("rewarded", "configuration_failed", {}, configError);
       notifySubscribers();
       return;
     }
@@ -370,18 +381,34 @@ export function useRewardedAd(onRewardEarned: () => void) {
     trace("current", "show_request");
     notifySubscribers();
     const ad = current.ad;
-    const onShowError = () => {
+    const flow = ++immersiveFlow;
+    const onShowError = (error?: unknown) => {
+      recordAdEvent("rewarded", "show_failed", {}, error);
       if (slots.current.ad === ad && slots.current.state === "showing") markShowFailed();
     };
-    try {
-      void ad.show({ immersiveModeEnabled: Platform.OS === "android" }).catch(onShowError);
-    } catch {
-      onShowError();
-    }
+    void (async () => {
+      let cancelled = false;
+      const pendingSubscription = AppState.addEventListener("change", state => { if (state !== "active") cancelled = true; });
+      try {
+        if (Platform.OS === "android") await requireNativeModule("LedPopAdImmersive").begin(flow);
+        pendingSubscription.remove();
+        if (cancelled || AppState.currentState !== "active" || slots.current.ad !== ad || slots.current.state !== "showing") {
+          endImmersiveAd(flow);
+          onShowError(new Error("Rewarded presentation cancelled"));
+          return;
+        }
+        openWatchdog = setTimeout(() => {
+          openWatchdog = null;
+          if (!openedCurrentAd) onShowError(new Error("Rewarded ad did not open within 15 seconds"));
+        }, 15_000);
+        await ad.show({ immersiveModeEnabled: Platform.OS === "android" });
+      } catch (error) { onShowError(error); } finally { pendingSubscription.remove(); }
+    })();
   }, []);
 
   const retry = useCallback(() => {
     if (!getCanRetryState()) return;
+    retryMobileAdsInitialization();
     disposeSlot("current");
     disposeSlot("next");
     loadRewardedAd(); // Only load; a new enabled Watch Ad action is required to show.

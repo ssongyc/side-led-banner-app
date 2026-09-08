@@ -1,3 +1,4 @@
+import { adUnavailableReason, shouldTrackAdInteraction } from "@/utils/adAvailability";
 import { appFontFamilyForText } from "@/constants/appFonts";
 import { rewardAdModalStyles as styles } from "@/constants/styles";
 import { useSettingsRest } from "@/contexts/settingsContext";
@@ -327,7 +328,7 @@ export function RewardAdModal({
 
   const handleWatchAd = () => {
     if (!visible || !adReady || !onWatchAd || pendingAfterCloseRef.current || (isAdReady && !isAdReady())) return;
-    amplitude.track("WatchAd_clicked");
+    if (shouldTrackAdInteraction()) amplitude.track("WatchAd_clicked");
     // 닫힘 애니메이션이 실제로 끝난 뒤(추측 딜레이 아님) 광고를 띄운다.
     pendingAfterCloseRef.current = onWatchAd ?? null;
     onClose();
@@ -395,7 +396,7 @@ export function RewardAdModal({
 
         <View style={styles.adStatusArea}>
           <ReservedAdText
-            text={adReady ? "" : rewardAdLabel(adShowFailed ? "rewardAdShowFailed" : adFailed ? "rewardAdLoadFailed" : "rewardAdPreparing")}
+            text={adUnavailableReason(resolvedAppLocale) ?? (adReady ? "" : rewardAdLabel(adShowFailed ? "rewardAdShowFailed" : adFailed ? "rewardAdLoadFailed" : "rewardAdPreparing"))}
             variants={REWARD_AD_STATUS_TEXTS}
             textStyle={styles.adStatusText}
           />

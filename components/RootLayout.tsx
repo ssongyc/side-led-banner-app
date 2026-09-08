@@ -20,7 +20,7 @@ import {
   configureAndroidNavigationBarHidden,
   hideAndroidNavigationBar,
 } from "@/utils/SystemChrome";
-import { initializeMobileAds } from "@/utils/initializeMobileAds";
+import { suspendMobileAdsInitialization } from "@/utils/initializeMobileAds";
 import { disableAppTextScaling } from "@/utils/TextScaling";
 import * as amplitude from "@amplitude/analytics-react-native";
 import {
@@ -51,15 +51,13 @@ function PremiumAwareAds() {
   useEffect(() => {
     if (!adsAllowed) {
       suspendRewardedAds();
+      suspendMobileAdsInitialization();
       return;
     }
-    let cancelled = false;
-    void initializeMobileAds()
-      .then(() => { if (!cancelled) loadRewardedAd(); })
-      .catch((error) => { if (__DEV__) console.warn("[App] MobileAds init failed:", error); });
+    loadRewardedAd();
     return () => {
-      cancelled = true;
       suspendRewardedAds();
+      suspendMobileAdsInitialization();
     };
   }, [adsAllowed]);
   return null;
