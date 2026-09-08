@@ -139,10 +139,6 @@ export default function SettingsScreen() {
           { paddingBottom: 40 },
         ]}
       >
-        <NavigationRow
-          label={textSectionLabel("upgradeToPremium")}
-          onPress={() => router.push("/premium" as Href)}
-        />
         <View style={base.settingsRow}>
           <Text style={base.settingsRowLabel} allowFontScaling={false}>
             {textSectionLabel("language")}

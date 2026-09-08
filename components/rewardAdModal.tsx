@@ -174,7 +174,7 @@ function FireworksBurst({ visible }: { visible: boolean }) {
   }, [visible, progress, alpha]);
 
   return (
-    <Canvas style={StyleSheet.absoluteFillObject} pointerEvents="none">
+    <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
       {PARTICLE_DATA.map((particle, index) => (
         <FireworkParticle
           key={index}

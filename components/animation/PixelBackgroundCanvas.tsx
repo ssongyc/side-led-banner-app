@@ -117,7 +117,7 @@ export function PixelBackgroundCanvas({
   }
 
   return (
-    <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
       <Canvas style={{ width, height }} opaque={false}>
         {/* Layer 0: 항상 최하단 — 꺼진 LED 격자 (배경 사진/이펙트 없는 영역에서 보임) */}
         <Group layer={staticOffLayer}>

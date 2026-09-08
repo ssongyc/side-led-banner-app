@@ -112,7 +112,8 @@
       "expo-web-browser",
       "expo-image",
       "expo-iap",
-      "./plugins/withPremiumIap"
+      "./plugins/withPremiumIap",
+      "./plugins/withAndroidKotlin"
     ],
     "experiments": {
       "typedRoutes": true,

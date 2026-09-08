@@ -177,10 +177,6 @@ export default function RootLayout() {
               name="credits"
               options={{ headerShown: false }}
             />
-            <Stack.Screen
-              name="premium"
-              options={{ headerShown: false }}
-            />
           </Stack>
         ) : (
           <SplashLoadingScreen />

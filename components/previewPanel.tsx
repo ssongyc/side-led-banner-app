@@ -1,3 +1,4 @@
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { isSignBoardPreset } from "@/constants/signBoardPresets";
 import { DeleteAllButton } from "@/assets/svg/deleteAllButton";
 import { GradientBackdrop } from "@/components/skia/GradientBackdrop";
@@ -338,7 +339,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
         {hasBgPhoto && !effects.isPixelEffect ? (
           <Image
             source={{ uri: backgroundImageUri }}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
             contentFit="cover"
             blurRadius={backgroundBlur / 8}
           />
@@ -352,7 +353,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
         effects.showGradientBackdrop &&
         previewBox.width > 0 &&
         previewBox.height > 0 ? (
-          <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+          <View style={StyleSheet.absoluteFill} pointerEvents="none">
             <Canvas style={{ flex: 1 }} opaque={false}>
               <GradientBackdrop
                 key={`gradient-${gradientBackgroundPreset}`}
@@ -375,7 +376,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
         {speechBubble.speechTextBoxConfig ? (
           <View
             style={{
-              ...StyleSheet.absoluteFillObject,
+              ...StyleSheet.absoluteFill,
               alignItems: "center",
               ...(speechBubble.speechTextTop == null
                 ? { justifyContent: "center" }
@@ -392,7 +393,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
           </View>
         ) : (
           <View
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
             onLayout={canvas.onSkiaCanvasLayout}
           >
             <MarqueeCanvas {...marqueeCanvasProps} />
@@ -535,7 +536,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
                   accessible={false}
                   focusable={false}
                 >
-                  <Text allowFontScaling={false} style={[toolbarStyles.cursorNavText, { color: toolbarBtn, opacity: history.canUndo ? 1 : 0.3 }]}>↩</Text>
+                  <MaterialIcons allowFontScaling={false} name="undo" size={styles.accessoryClose.fontSize} color={toolbarBtn} style={{ opacity: history.canUndo ? 1 : 0.3 }} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleRedo}
@@ -544,7 +545,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
                   accessible={false}
                   focusable={false}
                 >
-                  <Text allowFontScaling={false} style={[toolbarStyles.cursorNavText, { color: toolbarBtn, opacity: history.canRedo ? 1 : 0.3 }]}>↪</Text>
+                  <MaterialIcons allowFontScaling={false} name="redo" size={styles.accessoryClose.fontSize} color={toolbarBtn} style={{ opacity: history.canRedo ? 1 : 0.3 }} />
                 </TouchableOpacity>
               </View>
               <TouchableOpacity onPress={Keyboard.dismiss} hitSlop={8}>

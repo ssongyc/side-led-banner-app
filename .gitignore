@@ -88,3 +88,6 @@ CLAUDE.md
 *.tsbuildinfo
 
 # @end expo-cli
+# Temporary local signing adapter
+/credentials.json
+/credentials/

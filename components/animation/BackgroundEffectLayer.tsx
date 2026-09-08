@@ -61,7 +61,7 @@ function renderEffect1({
   const effect1EdgeStyle = resolveEffect1EdgeStyle(isFullscreenPortrait);
 
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Image
         source={effect.sources.left}
         style={{ position: "absolute", left: 0, ...effect1EdgeStyle }}
@@ -102,7 +102,7 @@ function renderHeartBackground({
     return (
       <Image
         source={padHeartSource}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         contentFit="contain"
         blurRadius={blurRadius}
       />
@@ -139,11 +139,11 @@ function renderSpeechBubble({
   const imageStyle =
     mode === "preview" && previewInset > 0
       ? {
-          ...StyleSheet.absoluteFillObject,
+          ...StyleSheet.absoluteFill,
           top: -previewInset,
           bottom: -previewInset,
         }
-      : StyleSheet.absoluteFillObject;
+      : StyleSheet.absoluteFill;
 
   return <Image source={source} style={imageStyle} contentFit="fill" blurRadius={blurRadius} />;
 }

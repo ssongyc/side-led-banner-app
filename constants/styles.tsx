@@ -269,7 +269,7 @@ export const rewardAdModalStyles = StyleSheet.create({
     paddingBottom: 12,
   },
   dim: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   card: {
     width: "100%",
@@ -434,7 +434,7 @@ export const rewardAdModalStyles = StyleSheet.create({
     alignSelf: "center",
   },
   ctaButtonBg: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   ctaButtonContent: {
     minHeight: 56,
@@ -461,11 +461,11 @@ export const rewardAdModalStyles = StyleSheet.create({
 
 export const heartBackgroundTickerStyles = StyleSheet.create({
   clip: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     overflow: "hidden",
   },
   row: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     flexDirection: "row",
   },
 });
@@ -531,7 +531,7 @@ export const colorPickerLockStyles = StyleSheet.create({
 
 export const effectSectionLockStyles = StyleSheet.create({
   chipOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(160,160,160,0.5)",
     borderRadius: 24,
     justifyContent: "center",
@@ -543,7 +543,7 @@ export const effectSectionLockStyles = StyleSheet.create({
     resizeMode: "contain",
   },
   cardOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(150,150,150,0.5)",
     justifyContent: "center",
     alignItems: "center",
@@ -557,7 +557,7 @@ export const effectSectionLockStyles = StyleSheet.create({
 
 export const sliderLockStyles = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(150,150,150,0.35)",
     justifyContent: "center",
     alignItems: "center",
@@ -620,14 +620,14 @@ export const sliderComponentStyles = StyleSheet.create({
 
 export const ledBannerFullScreenStyles = StyleSheet.create({
   root: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "#000000",
   },
   flex: {
     flex: 1,
   },
   layerPassThrough: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
 });
 
@@ -640,9 +640,6 @@ export const toolbarStyles = StyleSheet.create({
     height: 42,
     justifyContent: "center",
     alignItems: "center",
-  },
-  cursorNavText: {
-    fontSize: moderateScale(18),
   },
 });
 

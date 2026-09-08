@@ -46,7 +46,7 @@ export const btnStyles = StyleSheet.create({
     color: "#B1B1AF",
   },
   presetButtonLockOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     borderRadius: 20,
     backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "center",

@@ -1,3 +1,4 @@
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {
   MultipleLinePlayButton,
   OneLinePlayButton,
@@ -277,6 +278,7 @@ export default function Index() {
       </KeyboardAvoidingView>
       {Platform.OS === "android" && (
         <KeyboardToolbar
+          showArrows={false}
           doneText={<DismissLabel />}
           content={
             <View style={toolbarStyles.cursorNavContainer}>
@@ -287,7 +289,7 @@ export default function Index() {
                 accessible={false}
                 focusable={false}
               >
-                <Text allowFontScaling={false} style={[toolbarStyles.cursorNavText, { color: toolbarBtn, opacity: canUndo ? 1 : 0.3 }]}>↩</Text>
+                <MaterialIcons allowFontScaling={false} name="undo" size={styles.accessoryClose.fontSize} color={toolbarBtn} style={{ opacity: canUndo ? 1 : 0.3 }} />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => redoRef.current?.()}
@@ -296,7 +298,7 @@ export default function Index() {
                 accessible={false}
                 focusable={false}
               >
-                <Text allowFontScaling={false} style={[toolbarStyles.cursorNavText, { color: toolbarBtn, opacity: canRedo ? 1 : 0.3 }]}>↪</Text>
+                <MaterialIcons allowFontScaling={false} name="redo" size={styles.accessoryClose.fontSize} color={toolbarBtn} style={{ opacity: canRedo ? 1 : 0.3 }} />
               </TouchableOpacity>
             </View>
           }

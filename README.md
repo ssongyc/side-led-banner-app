@@ -1,14 +1,22 @@
 # LED POP (LED Banner App)
 
+## 현재 소스 상태 (2026-09-08)
+
+- Upgrade to Pro 설정 항목과 화면 라우트는 제외되어 있습니다. 사용자의 명시적인 재활성화 요청 전까지 모든 빌드에서 제외를 유지합니다.
+- 키보드의 입력칸 이동 화살표를 숨기고 실행 취소·다시 실행 아이콘을 닫기 표시와 같은 크기 값으로 변경했습니다.
+- Expo 57 빌드에 필요한 StyleSheet 및 Kotlin 2.3.20 수정, 메인 폴더 통합과 외부 서명 키 사용 절차를 반영했습니다.
+- 기존 Expo 57 APK는 키보드 변경과 Pro 화면 제외 이전 산출물입니다. 현재 소스 전체의 새 컴파일·린트·테스트는 실행하지 않았습니다.
+- 빌드 산출물·캐시·서명 비밀 파일은 Git에 포함하지 않습니다.
+
 > 현재 메인 작업 저장소: https://github.com/ssongyc/side-led-banner-app
 
 사용자가 입력한 텍스트를 LED 배너로 표시하는 Expo/React Native 앱입니다.
 
 ## 현재 상태
 
-- 현재 개발 SDK: **Expo 57.0.20 / React Native 0.86.3**. SDK 57 APK·IPA는 아직 생성하지 않았습니다.
+- 현재 개발 SDK: **Expo 57.0.20 / React Native 0.86.3**. SDK 57 로컬 APK를 생성·정적 검증했습니다. IPA는 미생성입니다.
 - 현재 소스 버전: **V1.0.6**. Settings의 App Version은 `app.json`의 버전을 읽습니다.
-- 최근 생성 APK: **V1.0.6 / versionCode 22**, 내부 설치용 preview 빌드 `1cfedbc5-0306-4113-8e65-68e9aebb89b0`. IAP·광고 모달·헤더 변경과 IAP 타입 컴파일 수정을 포함하며 JavaScript 번들이 내장되어 Metro 없이 실행합니다. 이번 APK의 실기기 구매·광고·레이아웃 동작은 미검증입니다.
+- 최근 생성 APK: **V1.0.6 / versionCode 22**, Expo 57 로컬 APK `LedPop-V1.0.6-Expo57-local.apk`. 검증 결과는 아래 로컬 APK 완료 기록을 참고합니다. 실기기 동작은 미검증입니다.
 - Upgrade to Pro에 Apple StoreKit / Google Play 직접 IAP, 구매 복원, 영구 Pro 권한 및 구매자 광고 차단을 연결했습니다. 상품 등록·Google Play 공개키 설정과 실기기 결제 확인은 아직 필요합니다. 자세한 절차는 [IAP_SETUP.md](IAP_SETUP.md)를 참고합니다.
 - 아래 빌드 기록은 생성된 산출물 기록이며 Google Play/App Store의 현재 배포 버전을 뜻하지 않습니다.
 
@@ -31,6 +39,30 @@
 - 키보드 코드는 변경하지 않았습니다. 정적 diff/에셋 참조만 확인했으며 컴파일·린트·테스트·배포는 실행하지 않았습니다. 기존 APK에는 이 추가분이 포함되지 않습니다. 기기별 레이아웃·효과 조합은 미검증입니다.
 - 원본: [Figma Style Sheet](https://www.figma.com/design/2yU4ley6gw6hGPMWOzT7lU/LED-Banner?node-id=278-2125). 노드 및 에셋 대응은 [배경 원본 기록](assets/images/SignBoard_SOURCES.md)에 있습니다.
 
+## 2026-09-08 Expo 57 로컬 APK 완료
+
+- compile-ok: C:/LedPopBuild/20260908-expo57에서 assembleRelease 완료. BUILD SUCCESSFUL in 54m 33s, 1188 tasks (1046 executed / 142 up-to-date).
+- APK: [LedPop-V1.0.6-Expo57-local.apk](artifacts/LedPop-V1.0.6-Expo57-local.apk), 286,779,966 bytes. SHA-256: F440FD1F5FFA3148C619DD82836705115FD33C30209F51D635FC7E4120AF659B.
+- 소스: main 227d57b의 작업 사본 + StyleSheet.absoluteFill 수정 + Kotlin 2.3.20 compiler/classpath 플러그인. Expo 57.0.20 / RN 0.86.3. 내부 설치용 버전 1.0.6/22이며 스토어 업로드용 버전 갱신이 아닙니다.
+- 실제 APK 확인: package com.minkyokim.sideledbannerapp, minSdk 24, compileSdk/targetSdk 36/36, ARM64/ARMv7/x86/x86_64, v2 서명 기존 인증서 일치, ZIP 16KB 정렬 통과. debuggable 및 CAMERA/RECORD_AUDIO 권한 없음.
+- 내장 JavaScript 번들, IAP·구매 서명 검증·리워드 광고 모듈, Premium 상품, 새 배경 PNG 6개를 확인했습니다. Billing은 manifest와 billing.properties 모두 9.1.0입니다. 앱은 production AdMob App ID 및 배너/리워드 Unit ID를 사용하며 SDK 내장 TestIds 상수의 존재는 테스트 광고 활성화를 뜻하지 않습니다.
+- 생성된 release 설정의 R8은 기존 preview와 동일하게 비활성입니다. minifyReleaseWithR8 작업 및 앱 mapping은 없으며, 스토어 최적화·mapping 등록 완료를 뜻하지 않습니다. AAB/Play 업로드는 하지 않았습니다.
+- 빌드에 포함된 lintVitalRelease는 통과했습니다. Gradle 10 비호환 deprecation, 서드파티 API 경고 및 Gradle metaspace 경고가 남습니다. 별도 린트·기기 실행·광고 표시/보상·실제 결제는 미검증입니다.
+- D 드라이브에 생성했던 빌드 파일과 서명 키를 사용자 요청으로 C 드라이브로 이동했습니다. 빌드 76,937개 파일 복사 대조 후 D 원본을 제거했고, 서명 파일은 해시/인증서 검증 후 이동했습니다. 새 경로는 C:/LedPopBuild/20260908-expo57 및 C:/AndroidSigning/com.minkyokim.sideledbannerapp입니다. 이동 중 중단된 빌드와 이전 절대 경로 캐시 오류를 해결한 뒤 C에서 위 빌드를 완료했습니다.
+- 재현/서명 정책: [docs/SIGNING_POLICY.md](docs/SIGNING_POLICY.md), scripts/build-local-apk.ps1. 키/비밀번호는 외부 폴더에만 보관합니다. 이번 빌드 관련 수정은 커밋·푸시하지 않았습니다.
+
+## 2026-09-08 Expo 57 APK 빌드 시도 (이전 기록)
+
+- 기준 소스: main 227d57b + 아래 컴파일 수정. APK는 아직 생성되지 않았습니다.
+- TypeScript 컴파일에서 RN 0.86의 제거된 absoluteFillObject 참조가 발견되어 StyleSheet.absoluteFill로 수정했습니다. 수정 후 npx tsc --noEmit 통과.
+- EAS 56469913-098d-43ae-b933-db239b1779c6: Google Mobile Ads 25.4.0의 Kotlin 2.3 메타데이터와 실제 Kotlin 2.1 컴파일러 충돌로 실패.
+- EAS ba3f7ecd-678c-4fe6-8bb9-7fddac1b0ec4: Kotlin 2.3.21 적용 후 Expo Pika 0.3.2-2.3.21 패키지 미배포로 실패.
+- plugins/withAndroidKotlin.js에서 Gradle 속성과 실제 Kotlin 컴파일러 classpath를 모두 2.3.20으로 지정했습니다. Maven Central에 Pika 0.3.2-2.3.20이 존재함을 확인했습니다. 컴파일러 검증 우회나 SDK/광고 라이브러리 다운그레이드는 없습니다.
+- 최종 2.3.20 수정의 세 번째 제출은 EAS 무료 Android 월간 빌드 한도 소진으로 접수되지 않았습니다. EAS가 표시한 초기화일은 2026-10-01입니다. 이 최종 조합의 네이티브 컴파일은 미검증입니다.
+- 두 실행에서 Expo Doctor 21/21 통과, compileSdk/targetSdk 36/36 확인. npm moderate 19건은 남아 있습니다. 기존 EAS 서명 SHA-256은 이전 APK와 일치했습니다. 새 APK 서명/ABI/번들/광고 모듈/Billing/R8 산출물 검증 및 실기기 동작은 APK 미생성으로 수행하지 못했습니다.
+- 로컬 기본 서명 경로 D:/AndroidSigning/com.minkyokim.sideledbannerapp 및 프로젝트 credentials.json은 없습니다. 기존 키를 생성·교체·내보내기하지 않았고 유료 플랜 결제·스토어 업로드·커밋·푸시는 실행하지 않았습니다.
+- 빌드 로그는 무시된 artifacts/apk-56469913-*, artifacts/apk-ba3f7ecd-*, artifacts/apk-expo57-final-submit.log에 보존합니다.
+
 ## 2026-09-08 변경 묶음
 
 - 메인 브랜치 반영 범위: Background Effects 3종과 원본 에셋, Expo 57 및 광고 SDK 업데이트, IAP 상품 타입 수정, 관련 문서.
@@ -42,7 +74,7 @@
 - 패키지가 지정하는 Google Mobile Ads 네이티브 SDK는 Android 25.0.0 → 25.4.0, iOS 13.1.0 → 13.5.0입니다. 이는 의존성 설정 확인이며 새 APK/IPA에서 해석된 버전 검증은 아닙니다. 앱의 SDK 36 설정, 실제 광고 ID, 재시도·보상·immersive API 호출은 유지합니다.
 - Expo **55.0.31 → 57.0.20**, React Native **0.83.10 → 0.86.3**, React/React DOM **19.2.0 → 19.2.3**으로 전환했습니다. SDK 56·57의 마이그레이션 항목을 함께 반영했습니다.
 - 사용자의 키보드 변경 제한 해제에 따라 keyboard-controller **1.20.7 → 1.21.9**를 적용했습니다. 기존 키보드 UI·입력 동작은 재설계하지 않았습니다. Reanimated **4.5.1**, Worklets **0.10.1**, Gesture Handler **2.32.0**, Skia **2.6.2**, TypeScript **6.0.3** 및 관련 Expo 패키지를 SDK 권장 조합으로 정렬했습니다.
-- 제거된 `InteractionManager`를 `requestIdleCallback`/취소 API로, `StyleSheet.absoluteFill`을 `absoluteFillObject`로 교체했습니다. 테마는 `expo-router`에서 가져오며, 내비게이션 바는 `NavigationBar.setHidden(true)`와 플러그인 `hidden: true`를 사용합니다.
+- 제거된 `InteractionManager`를 `requestIdleCallback`/취소 API로, `StyleSheet.absoluteFillObject`를 `absoluteFill`로 교체했습니다. 테마는 `expo-router`에서 가져오며, 내비게이션 바는 `NavigationBar.setHidden(true)`와 플러그인 `hidden: true`를 사용합니다.
 - expo-modules-core 직접 의존성을 제거했습니다. Expo가 관리하는 **57.0.16** 한 개가 해석되며, IAP가 참조하는 Android Gradle 호환 파일이 존재합니다. Skia 사전 빌드 네이티브 라이브러리 설치를 완료했습니다.
 - npm 설치와 `npm ls --depth=0`, 패키지 잠금 파일·SDK 공식 버전표 대조를 수행했고 버전 불일치는 없습니다. 이는 컴파일·런타임 검증이 아닙니다. Expo Doctor와 보안 audit는 재실행하지 않았으며, 과거 경고가 모두 해결됐다고 판단하지 않습니다.
 - iOS 최소 버전은 **16.4**, iOS 빌드 도구는 **Xcode 26.4 이상**이 필요합니다. Android target/compile SDK 최소 36 소스 설정은 유지했으며 SDK 57의 실제 병합 manifest·서명 산출물은 아직 미검증입니다.
@@ -484,3 +516,21 @@ side-led-banner-app/
 - V1.0.6 소스 변경 자체가 원격 versionCode 증가나 스토어 제출을 뜻하지 않습니다.
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+
+## 2026-09-08 프로젝트 폴더 통합
+
+- 메인 소스와 작업 위치: `C:/dev/Led Banner`.
+- 완료된 빌드 복사본: `artifacts/local-builds/20260908-expo57`로 전체 이동했습니다. 기존 `C:/LedPopBuild`는 비어 있는 것을 확인한 뒤 제거했습니다. 위 빌드 기록의 이전 경로는 당시 실행 위치입니다.
+- 이동 전후 APK 및 app.json 해시가 일치하며, 배포용으로 복사한 APK는 기존 `artifacts/LedPop-V1.0.6-Expo57-local.apk` 위치에 유지합니다.
+- 빌드 스크립트는 메인 폴더 아래 `artifacts/local-builds`만 허용합니다. 이동한 복사본은 절대 경로 캐시가 남은 보관본이므로 재개를 차단했습니다. 다음 빌드는 최신 메인 소스로 새 복사본을 준비해야 합니다. 상세 절차는 `docs/SIGNING_POLICY.md`를 참고하세요.
+- 서명 키는 기존 외부 경로 `C:/AndroidSigning/com.minkyokim.sideledbannerapp`에 유지합니다. 이번 통합에서는 컴파일·린트·테스트·커밋·푸시를 실행하지 않았습니다.
+
+## 키보드 도구 모음 표시 변경
+
+- 입력칸 이동용 위·아래 화살표를 숨겼습니다.
+- 실행 취소·다시 실행을 MaterialIcons 아이콘으로 표시하고, 닫기 표시와 같은 크기 값 및 시스템 글자 확대 제외 설정을 적용했습니다. Android와 iOS의 기존 실행 취소·다시 실행 동작은 유지합니다.
+- 이 변경의 컴파일 및 실기기 화면 확인은 실행하지 않았습니다.
+
+## Upgrade to Pro 노출 중단 (2026-09-08)
+
+사용자 요청으로 설정의 Upgrade to Pro 항목과 `/premium` 라우트를 제거했습니다. 화면 구현은 `disabled-features/premium/PremiumScreen.tsx`에 보관하며 앱에서 import하지 않아 번들 진입 경로에서 제외합니다. 사용자가 명시적으로 다시 넣어 달라고 요청하기 전까지 모든 빌드에서 이 상태를 유지합니다. 일반 빌드·SDK 업데이트·출시 요청은 재활성화 승인이 아닙니다. 기존 구매 권한 확인과 광고 면제 처리는 유지합니다. 이번 변경으로 APK를 새로 만들거나 번들을 검사하지는 않았습니다.

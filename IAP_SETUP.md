@@ -17,6 +17,10 @@ Premium은 **1회 구매하는 영구 비소모성 상품**입니다. 구독이�
 **현재 스토어 상품은 미등록이고 Google Play 공개키도 미설정입니다. 실제 결제 개통이나 실기기 동작이 검증된 상태가 아닙니다.**
 SDK 55 기준 2026-09-08 Android preview APK `1cfedbc5-0306-4113-8e65-68e9aebb89b0` 컴파일 완료(`compile-ok`, V1.0.6/22). IAP·구매 서명 검증 모듈을 포함합니다. TypeScript 상품 타입 오류를 수정했고 컴파일이 통과했습니다. 실제 결제 테스트, iOS 빌드, 스토어 업로드 및 콘솔 변경은 실행하지 않았습니다.
 
+## Expo 57 후속 빌드
+
+2026-09-08 로컬 APK LedPop-V1.0.6-Expo57-local.apk 컴파일 완료. IAP·구매 서명 검증 모듈, Billing 9.1.0(manifest/프로퍼티), SDK 36/36 및 기존 서명 일치를 확인했습니다. 실제 스토어 상품 등록·공개키 설정·결제/복원 동작은 여전히 미검증입니다. 상세 기록은 README의 로컬 APK 완료 절을 참고합니다.
+
 ## 변경 파일
 
 | 파일 / 디렉터리 | 역할 |
@@ -127,3 +131,7 @@ Apple 구매가 Google 계정에 자동 이전되거나 그 반대로 이전되�
 - [Play Billing 지원 기한](https://developer.android.com/google/play/billing/deprecation-faq)
 - [Play Billing 릴리스 노트](https://developer.android.com/google/play/billing/release-notes)
 - [사용 SDK의 공개 Maven 의존성](https://repo.maven.apache.org/maven2/io/github/hyochan/openiap/openiap-google/3.5.0/openiap-google-3.5.0.pom)
+
+## Upgrade to Pro 노출 중단 (2026-09-08)
+
+사용자 요청으로 설정의 Upgrade to Pro 항목과 `/premium` 라우트를 제거했습니다. 화면 구현은 `disabled-features/premium/PremiumScreen.tsx`에 보관하며 앱에서 import하지 않아 번들 진입 경로에서 제외합니다. 사용자가 명시적으로 다시 넣어 달라고 요청하기 전까지 모든 빌드에서 이 상태를 유지합니다. 일반 빌드·SDK 업데이트·출시 요청은 재활성화 승인이 아닙니다. 기존 구매 권한 확인과 광고 면제 처리는 유지합니다. 이번 변경으로 APK를 새로 만들거나 번들을 검사하지는 않았습니다.
