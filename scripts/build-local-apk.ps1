@@ -123,7 +123,7 @@ try {
   $started=Get-Date
   $tasks=@(':app:assembleRelease')
   if($IncludeBundle){$tasks+= ':app:bundleRelease'}
-  & ./android/gradlew.bat -p android @tasks --build-cache --no-daemon --max-workers=2 > gradle-release.log 2>&1
+  & ./android/gradlew.bat -p android @tasks --build-cache --no-daemon --max-workers=2 "-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=1024m" --stacktrace > gradle-release.log 2>&1
   $buildExit=$LASTEXITCODE
   Copy-Item -LiteralPath (Join-Path $resolved 'gradle-release.log') -Destination $record
   if($buildExit -ne 0){throw 'Gradle build failed; inspect gradle-release.log'}

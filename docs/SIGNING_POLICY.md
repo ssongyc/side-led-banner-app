@@ -67,3 +67,7 @@ The first R8-enabled run reported Kotlin metadata parsing errors with the AGP 8.
 After verified native regeneration at the unchanged artifacts/b path, only generated app/build and app/.cxx caches may be copied from that run's archive. Native source, Gradle configuration, signing settings and manifests are never restored. Gradle/Ninja must still invalidate changed inputs, and final artifact/mapping checks remain mandatory.
 
 References: https://developer.android.com/build/kotlin-support and https://r8.googlesource.com/r8/+/refs/heads/main/README.md#replacing-r8-in-android-gradle-plugin
+
+### Local Gradle class metadata memory
+
+The optimized build exhausted the 512 MiB Gradle metaspace limit and stalled during failure shutdown. The local wrapper retains the 2 GiB heap and two-worker limit, increases only MaxMetaspaceSize to 1024 MiB, and retains stack traces in the complete build log. This build-process setting does not alter app runtime memory or clear native caches.
