@@ -6,6 +6,7 @@ import {
 } from "@/assets/svg/playOptionButton";
 import { PlayResumeButton } from "@/assets/svg/playResumeButton";
 import { usePremium } from "@/contexts/premiumContext";
+import { ProDebugFab } from "@/components/dev/proDebugFab";
 import { RewardAdDebugFab } from "@/components/dev/rewardAdDebugFab";
 import { SheetFetchDebugPanel } from "@/components/dev/sheetFetchDebugPanel";
 import { LedBannerFullScreen } from "@/components/ledBannerFullScreen";
@@ -277,6 +278,7 @@ export default function Index() {
         />
         {__DEV__ ? (
           <>
+            <ProDebugFab />
             <RewardAdDebugFab onOpen={openRewardAdModal} />
             <SheetFetchDebugPanel />
           </>
