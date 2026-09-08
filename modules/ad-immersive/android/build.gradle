@@ -2,4 +2,10 @@ apply plugin: 'com.android.library'
 apply plugin: 'expo-module-gradle-plugin'
 group = 'expo.modules.ledpopads'
 version = '1.0.0'
-android { namespace 'expo.modules.ledpopads' }
+android {
+  namespace 'expo.modules.ledpopads'
+  defaultConfig {
+    versionCode 1
+    versionName '1.0.0'
+  }
+}
