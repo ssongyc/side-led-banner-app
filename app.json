@@ -22,7 +22,8 @@
       "blockedPermissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "versionCode": 23
     },
     "web": {
       "output": "static",
@@ -113,7 +114,8 @@
       "expo-image",
       "expo-iap",
       "./plugins/withPremiumIap",
-      "./plugins/withAndroidKotlin"
+      "./plugins/withAndroidKotlin",
+      "./plugins/withAndroidRelease"
     ],
     "experiments": {
       "typedRoutes": true,

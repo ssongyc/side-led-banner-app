@@ -25,11 +25,24 @@
 | EffectSection의 텍스트·그라데이션·배경 UI 분리 | 소스 반영·실행 검증 전 | 미포함 |
 | 리워드 상태 정리·APK 자동 준비·캐시 사용 | 소스 반영 | 미포함·자동화 실행 및 시간 미측정 |
 
-**최근 소스 변경 전체를 담은 새 APK는 아직 만들지 않았습니다.** 아래 APK의 compile-ok는 해당 빌드에만 적용됩니다. Expo 57 실기기 UI·광고·결제 및 iOS 빌드는 미검증입니다. 과거 SDK 55 기기 확인 결과를 현재 버전의 결과로 간주하지 않습니다.
+**최신 APK는 아래 edaf82b 기준 빌드입니다.** 위 표의 비교 대상은 이전 85a61d6 APK이며, 최신 APK에는 표의 소스 변경이 포함됩니다. compile-ok는 각 빌드에만 적용됩니다. Expo 57 Android 실기기 UI·광고는 아래 QA 보고서 범위에서 확인했으며, 결제 및 iOS 빌드는 미검증입니다. 과거 SDK 55 기기 확인 결과를 현재 버전의 결과로 간주하지 않습니다.
 
-성능 측정은 연결된 기기가 없어 미실행입니다. Amplitude는 빌드 폴더의 키 일치만 확인했으며 실제 이벤트 수신은 미확인입니다. 자세한 상태는 [PERFORMANCE_BASELINE.md](docs/PERFORMANCE_BASELINE.md)에 기록했습니다.
+SM-M336K(Android 16)에서 미리보기·전체 화면 성능 및 주요 기능 QA를 수행했습니다. [실측·QA 보고서](docs/QA_PERFORMANCE_20260908.md)를 참고하세요. 숨은 미리보기 중복 프레임 생성과 광고 종료 Google Play 시트의 시스템 바 노출을 확인했습니다. 후속 소스에는 숨은 화면 애니메이션 중단·진행 상태 보존과 Android 호스트 복귀 시 바 숨김 재적용을 반영했습니다. 새 APK 비교 측정은 미실행이며 외부 Google Play 창의 바 노출은 미해결입니다. React 렌더 횟수는 미측정입니다. Amplitude는 빌드 폴더의 키 일치만 확인했으며 실제 이벤트 수신은 미확인입니다. 자세한 상태는 [PERFORMANCE_BASELINE.md](docs/PERFORMANCE_BASELINE.md)에 기록했습니다.
 
-## 최근 생성 APK — 85a61d6 기준
+## 최신 생성 APK — edaf82b 기준 (2026-09-08)
+
+- **compile-ok**: BUILD SUCCESSFUL in **7m 5s**, 1188 tasks 중 83 executed / 1105 up-to-date. 이전 전체 빌드 40m 57s 대비 약 83% 단축. Gradle 구간 비교이며 준비·검증 시간은 별도입니다.
+- [APK 다운로드](artifacts/LedPop-V1.0.6-edaf82b.apk): 286783382 bytes, SHA-256 `126bbddd5bbb4a91b8022ba1f654241e1a391557bee700f703306e4fa3696aff`.
+- 앱 소스 main edaf82b22d0d97a01e879eec9dc027d043f811c6. 빌드 준비 스크립트의 SDK 메타데이터 경로만 로컬에서 수정했습니다. 존재하지 않는 SDK 루트 packages.xml 대신 설치 패키지별 source.properties를 읽습니다. 해당 수정은 미커밋이며 앱 기능 변경은 없습니다.
+- 의존성 설치·네이티브 재생성 없이 고정 artifacts/b 재사용. 내부 버전 1.0.6 / versionCode 22, package com.minkyokim.sideledbannerapp, minSdk 24 / compileSdk 36 / targetSdk 36, ARM64·ARMv7·x86·x86_64 확인.
+- 기존 인증서 SHA-256 730173560958735BF237CA84BA4F35BBE76A6734986929EB65F6CED63D3FD893와 APK v2 서명 일치, zipalign -P 16 통과. debuggable·CAMERA·RECORD_AUDIO 없음. ZIP 정렬 검증은 모든 기기의 실행 검증을 의미하지 않습니다.
+- 매니페스트와 billing.properties에서 Billing 9.1.0 확인. AdMob App ID와 production 광고 Unit ID, IAP·구매 검증·리워드 모듈 포함 확인. [공식 Billing 지원 일정](https://developer.android.com/google/play/billing/deprecation-faq)과 [릴리스 노트](https://developer.android.com/google/play/billing/release-notes) 재확인.
+- 생성된 Hermes 번들과 APK 번들 해시 일치. 소스맵에서 공백·자간 수정, 분리된 EffectSection, Sunny 목록과 리워드 변경 포함 및 Pro 화면 제외 확인.
+- 전체 1575줄 로그를 검토했습니다. 빌드 내 lintVitalRelease 완료. 남은 경고: Gradle 10 폐기 API, SDK XML 버전/명령줄 도구 설치 위치, NODE_ENV 및 출력 색상 설정, Expo 플러그인을 사용하는 AdMob의 설정 위치 안내. 실제 APK AdMob 메타데이터는 정상 포함입니다.
+- 기존 내부 빌드의 R8 비활성 설정 유지; 앱 난독화 mapping은 적용 대상이 아닙니다. AAB·Play 업로드는 실행하지 않았습니다. 빌드 후 Android 실기기 공백/자간·광고·성능 확인 범위와 미해결 사항은 아래 QA 보고서에 기록했습니다.
+- 로그·소스 입력 해시·APK는 artifacts/apk-runs의 이번 실행 기록에, 독립 검증 결과는 artifacts/apk-edaf82b-*에 보존합니다.
+
+## 이전 생성 APK — 85a61d6 기준
 
 - compile-ok: C:/dev/Led Banner/artifacts/b에서 BUILD SUCCESSFUL in 40m 57s, 1188 actionable tasks 모두 실행. 전체 2015줄 로그를 보존하고 오류 및 경고를 검토했습니다.
 - APK: [LedPop-V1.0.6-Expo57-85a61d6.apk](artifacts/LedPop-V1.0.6-Expo57-85a61d6.apk), 286,760,890 bytes. SHA-256: 7FC942663CB4F9D75B446730DED073CEB04C460337490935FC7CDB5D95829D65.
@@ -89,7 +102,7 @@ Upgrade to Pro 설정 항목과 `/premium` 라우트는 제외했습니다. 구�
 - 기존 내부 versionCode를 유지합니다. 최초 준비 시 소스와 빌드 폴더 모두 versionCode가 없으면 `-VersionCode <정수>`를 지정해야 합니다. `-ResumeNative`는 선택 사항이며 재설치·재생성이 필요하면 중단합니다.
 - `--build-cache`, 네 가지 ABI, 현재 worker 제한을 유지합니다. 결과 APK·Gradle 로그·소스 해시·커밋 및 미커밋 여부·컴파일 시간을 실행별로 기록합니다.
 
-새 자동화는 아직 실행하지 않았고 시간 단축 효과도 미측정입니다. 최초 실행은 기존 성공 로그와 source-revision 기록을 바탕으로 이전 소스 목록을 구성합니다. 최초 기준 기록 이전의 도구 변경과 설치/생성 파일의 수동 수정은 입력 파일 비교만으로 완전히 검증되지 않으므로 별도 확인이 필요합니다. 완성 APK의 서명·버전·SDK·ABI·내장 번들·광고/Billing·정렬 검증과 전체 로그 검토는 별도로 수행해야 합니다.
+자동화 첫 실행에서 SDK 메타데이터 경로 오류를 수정했으며, 재실행은 재설치·재생성 없이 7분 5초에 성공했습니다. 최초 실행은 기존 성공 로그와 source-revision 기록을 바탕으로 이전 소스 목록을 구성합니다. 최초 기준 기록 이전의 도구 변경과 설치/생성 파일의 수동 수정은 입력 파일 비교만으로 완전히 검증되지 않으므로 별도 확인이 필요합니다. 완성 APK의 서명·버전·SDK·ABI·내장 번들·광고/Billing·정렬 검증과 전체 로그 검토는 별도로 수행해야 합니다.
 
 서명 원본은 `C:/AndroidSigning/com.minkyokim.sideledbannerapp`에 보관합니다. 키·비밀번호는 Git과 로그에 포함하지 않습니다. 세부 절차는 [서명 정책](docs/SIGNING_POLICY.md)을 따릅니다. 저장소 루트의 기존 `android/ios` 생성 폴더를 최신 빌드용으로 간주하지 않습니다.
 
@@ -97,11 +110,11 @@ Upgrade to Pro 설정 항목과 `/premium` 라우트는 제외했습니다. 구�
 
 ## 배경 효과의 공백·자간 보존
 
-일반 표시와 배경 효과 내부의 줄 배치는 `utils/skiaLineLayout.ts`를 공유합니다. 글자 윤곽 폭 대신 폰트의 glyph advance를 사용하고 공백에도 입력한 개수와 설정한 자간을 반영합니다. 배경 효과도 그리기에 사용하는 문자별 폰트로 폭을 계산하며, 한 줄 모드에서 선행 공백을 제거하지 않습니다. 글자 크기·배경의 표시 영역·스크롤 정책은 유지합니다. 이 수정은 기존 APK에 포함되지 않았으며 컴파일·테스트·실기기 시각 검증은 미실행입니다.
+일반 표시와 배경 효과 내부의 줄 배치는 `utils/skiaLineLayout.ts`를 공유합니다. 글자 윤곽 폭 대신 폰트의 glyph advance를 사용하고 공백에도 입력한 개수와 설정한 자간을 반영합니다. 배경 효과도 그리기에 사용하는 문자별 폰트로 폭을 계산하며, 한 줄 모드에서 선행 공백을 제거하지 않습니다. 글자 크기·배경의 표시 영역·스크롤 정책은 유지합니다. 이 수정은 edaf82b APK에 포함되어 컴파일 완료했으며, 별도 테스트·실기기 시각 검증은 미실행입니다.
 
 ## 효과 설정 컴포넌트 경계
 
-`EffectSection`에서 Context를 한 번 읽고 `TextEffects`, `GradientEffects`, `BackgroundEffects`에 필요한 값과 기존 갱신 함수를 전달합니다. 상태 저장소와 바깥 ScrollView는 유지하며 하위 컴포넌트에 별도 상태나 레이아웃용 View를 추가하지 않았습니다. 효과 선택·해제, Pixel 선택 시 Bold 제한과 언어별 폰트, Glow/Blink 저장값, Gradient 기본값, 배경 잠금·광고 모달 연결은 기존 코드를 이동했습니다. 이번 분리는 정적으로 검토했으며 컴파일·린트·테스트·실기기 확인은 실행하지 않았습니다.
+`EffectSection`에서 Context를 한 번 읽고 `TextEffects`, `GradientEffects`, `BackgroundEffects`에 필요한 값과 기존 갱신 함수를 전달합니다. 상태 저장소와 바깥 ScrollView는 유지하며 하위 컴포넌트에 별도 상태나 레이아웃용 View를 추가하지 않았습니다. 효과 선택·해제, Pixel 선택 시 Bold 제한과 언어별 폰트, Glow/Blink 저장값, Gradient 기본값, 배경 잠금·광고 모달 연결은 기존 코드를 이동했습니다. 이번 분리는 edaf82b APK에 포함되어 컴파일 및 빌드 내 lintVitalRelease를 완료했습니다. 별도 린트·테스트·실기기 확인은 미실행입니다.
 
 ## 사전 요구사항
 
@@ -287,3 +300,10 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 - Sunny's Games and Apps: `decibella2`를 `decibella` 바로 위에 배치하고 제공된 원본 아이콘 및 [OneLink](https://decibella2.onelink.me/T5UV/x5q1f7vs)를 사용합니다.
 - 미사용 `language/translatorHandoff.ts`와 호출되지 않는 텍스트 계산 함수 4개를 삭제했습니다. 플랫폼별 파일, 원본 에셋, Pro 보관 화면과 빌드 캐시는 유지합니다.
 - 과거 SDK 전환·보안 검사·기기 테스트·APK/AAB 상세 이력은 [이전 기록](docs/BUILD_HISTORY.md)에 보존합니다. 과거 버전·audit 수치·검증 범위는 당시 결과이며 최신 재검사를 의미하지 않습니다.
+
+## 제출용 1.0.6 (23) 준비
+
+- 사용자 확인 스토어 표시 버전: 1.0.5. 이번 Android 소스 버전은 1.0.6 (23)이며 Settings 표시도 기존 1.0.6을 유지합니다. Play의 가장 큰 숫자 versionCode는 확인되지 않았으므로 업로드 시 중복 여부 확인이 필요합니다.
+- 숨은 화면 애니메이션 중단·재개와 Android 호스트 복귀 시 바 숨김 보강, QA 문서 및 증분 빌드 보완을 포함합니다.
+- 제출 산출물은 기존 외부 서명 키로 scripts/build-local-apk.ps1 -IncludeBundle을 통해 함께 생성합니다. R8/resource shrinking과 같은 빌드의 AAB 내 매핑 일치를 검증합니다.
+- 빌드 결과·해시·검증 범위는 완료 후 별도 제출 빌드 보고서로 기록합니다. Play 업로드/검수 제출은 이 파일 생성 작업에 포함되지 않습니다.

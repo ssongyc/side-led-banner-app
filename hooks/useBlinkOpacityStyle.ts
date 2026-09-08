@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import {
   cancelAnimation,
   Easing,
+  useDerivedValue,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -16,29 +17,46 @@ function blinkHalfCycleMs(speed: number) {
   return Math.round(slow - ((s - 1) / 9) * (slow - fast));
 }
 
-export function useBlinkOpacityStyle() {
+const BLINK_EASING = Easing.inOut(Easing.ease);
+
+export function useBlinkOpacityStyle(isActive = true) {
   const { config } = useSettingsRest();
   const active = config.appearance.effectSelectedItems.includes("Blink");
   const blinkSpeed = config.appearance.blinkSpeed;
-  const opacity = useSharedValue(1);
+  // One linear cycle retains both direction and easing progress across a pause.
+  const phase = useSharedValue(0);
+  const opacity = useDerivedValue(() => {
+    return phase.value <= 1
+      ? 1 - BLINK_EASING(phase.value)
+      : BLINK_EASING(phase.value - 1);
+  });
 
   useEffect(() => {
+    cancelAnimation(phase);
     if (!active) {
-      cancelAnimation(opacity);
-      opacity.value = 1;
+      phase.value = 0;
       return;
     }
-    const half = blinkHalfCycleMs(blinkSpeed);
-    opacity.value = 1;
-    opacity.value = withRepeat(
-      withTiming(0, {
-        duration: half,
-        easing: Easing.inOut(Easing.ease),
-      }),
-      -1,
-      true,
+    if (!isActive) return;
+
+    const duration = blinkHalfCycleMs(blinkSpeed) * 2;
+    const progress = phase.value / 2;
+    phase.value = withTiming(
+      2,
+      { duration: duration * (1 - progress), easing: Easing.linear },
+      (finished) => {
+        "worklet";
+        if (!finished) return;
+        phase.value = 0;
+        phase.value = withRepeat(
+          withTiming(2, { duration, easing: Easing.linear }),
+          -1,
+          false,
+        );
+      },
     );
-  }, [active, blinkSpeed]);
+    return () => cancelAnimation(phase);
+  }, [active, blinkSpeed, isActive, phase]);
 
   return { opacity };
 }

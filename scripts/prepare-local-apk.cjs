@@ -94,12 +94,17 @@ const dependencyHash = digest(dependencyNames, true);
 // Hash the preserved local environment without copying or logging values.
 const envNames = fs.readdirSync(target).filter(n => /^\.env(?:\..*)?$/.test(n)).sort();
 const environmentHash = hash(JSON.stringify(envNames.map(n => [n, hash(fs.readFileSync(path.join(target, n)))])));
+const sdkRoot = 'C:/Users/ssong/AppData/Local/Android/Sdk';
+const sdkMetadata = ['build-tools', 'platforms', 'ndk', 'cmake'].flatMap(group =>
+  fs.readdirSync(path.join(sdkRoot, group), { withFileTypes: true })
+    .filter(entry => entry.isDirectory())
+    .map(entry => path.join(sdkRoot, group, entry.name, 'source.properties'))
+).sort();
 const toolchainHash = hash(JSON.stringify([
   process.version,
-  ...['C:/Program Files/Android/Android Studio/jbr/release',
-    'C:/Users/ssong/AppData/Local/Android/Sdk/packages.xml'].map(file => {
-    if (!fs.existsSync(file)) throw Error('Required local toolchain metadata is missing');
-    return hash(fs.readFileSync(file));
+  ...['C:/Program Files/Android/Android Studio/jbr/release', ...sdkMetadata].map(file => {
+    if (!fs.existsSync(file)) throw Error('Required local toolchain metadata is missing: ' + file);
+    return [file, hash(fs.readFileSync(file))];
   }),
 ]));
 const nativeHash = hash(digest(nativeNames, true) + environmentHash + toolchainHash);

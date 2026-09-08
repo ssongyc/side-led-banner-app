@@ -68,7 +68,7 @@ export type BackgroundEffectAnimationResult =
 export type BackgroundEffectId = BackgroundEffectAnimationResult["id"];
 
 //각 배경 이펙트마다 렌더링 가능한 상태로 바꿈
-export function useBackgroundAnimation() {
+export function useBackgroundAnimation(isActive = true) {
   const { config } = useSettingsRest();
   const preset: BackgroundEffectPreset = config.appearance.backgroundEffectPreset as BackgroundEffectPreset;
   const [frameIndex, setFrameIndex] = useState(0);
@@ -81,11 +81,12 @@ export function useBackgroundAnimation() {
       setFrameIndex(0);
       return;
     }
+    if (!isActive) return;
     const id = setInterval(() => {
       setFrameIndex((prev) => (prev + 1) % FRAME_SEQUENCE.length);
     }, FRAME_DURATION_MS);
     return () => clearInterval(id);
-  }, [isEnabled]);
+  }, [isEnabled, isActive]);
 
   return useMemo<BackgroundEffectAnimationResult>(() => {
     if (isHeartEnabled) {

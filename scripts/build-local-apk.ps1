@@ -1,6 +1,7 @@
 param(
  [string]$BuildRoot=(Join-Path $PSScriptRoot '../artifacts/b'),
  [switch]$ResumeNative,
+ [switch]$IncludeBundle,
  [Nullable[int]]$VersionCode
 )
 $ErrorActionPreference='Stop'
@@ -39,6 +40,13 @@ try {
  foreach($name in @('gradle-release.log','prebuild.log','npm-ci.log','source-inputs.json','source-revision.txt')){
   $old=Join-Path $resolved $name
   if(Test-Path -LiteralPath $old){Copy-Item -LiteralPath $old -Destination (Join-Path $record ('previous-'+$name))}
+ }
+ foreach($item in @(
+  @{Source='android/app/build/outputs/bundle/release/app-release.aab'; Name='previous.aab'},
+  @{Source='android/app/build/outputs/mapping/release/mapping.txt'; Name='previous-mapping.txt'}
+ )){
+  $previous=Join-Path $resolved $item.Source
+  if(Test-Path -LiteralPath $previous){Copy-Item -LiteralPath $previous -Destination (Join-Path $record $item.Name)}
  }
  $previousApk=Join-Path $resolved 'android/app/build/outputs/apk/release/app-release.apk'
  if(Test-Path -LiteralPath $previousApk){Copy-Item -LiteralPath $previousApk -Destination (Join-Path $record 'previous.apk')}
@@ -99,15 +107,35 @@ try {
   if($LASTEXITCODE -ne 0){throw 'Native state recording failed'}
   Copy-Item -LiteralPath (Join-Path $resolved 'source-inputs.json') -Destination $record
   $started=Get-Date
-  & ./android/gradlew.bat -p android :app:assembleRelease --build-cache --no-daemon --max-workers=2 > gradle-release.log 2>&1
+  $tasks=@(':app:assembleRelease')
+  if($IncludeBundle){$tasks+= ':app:bundleRelease'}
+  & ./android/gradlew.bat -p android @tasks --build-cache --no-daemon --max-workers=2 > gradle-release.log 2>&1
   $buildExit=$LASTEXITCODE
   Copy-Item -LiteralPath (Join-Path $resolved 'gradle-release.log') -Destination $record
   if($buildExit -ne 0){throw 'Gradle build failed; inspect gradle-release.log'}
   $apk=Join-Path $resolved 'android/app/build/outputs/apk/release/app-release.apk'
   if(-not (Test-Path -LiteralPath $apk)){throw 'Gradle succeeded but APK is missing'}
   Copy-Item -LiteralPath $apk -Destination (Join-Path $record 'app-release.apk')
-  @{ elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=(Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash; revision=$plan.revision; dirty=$plan.dirty; versionCode=$plan.versionCode } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
-  Write-Output 'Gradle assembleRelease completed; independent APK verification still required.'
+  $mapping=Join-Path $resolved 'android/app/build/outputs/mapping/release/mapping.txt'
+  if(-not (Test-Path -LiteralPath $mapping) -or (Get-Item -LiteralPath $mapping).Length -eq 0){throw 'Optimized release mapping is missing'}
+  Copy-Item -LiteralPath $mapping -Destination (Join-Path $record 'mapping.txt')
+  $aabHash=$null
+  if($IncludeBundle){
+   $aab=Join-Path $resolved 'android/app/build/outputs/bundle/release/app-release.aab'
+   if(-not (Test-Path -LiteralPath $aab)){throw 'Gradle succeeded but AAB is missing'}
+   Copy-Item -LiteralPath $aab -Destination (Join-Path $record 'app-release.aab')
+   $aabHash=(Get-FileHash -LiteralPath $aab -Algorithm SHA256).Hash
+   $zip=[IO.Compression.ZipFile]::OpenRead($aab)
+   try {
+    $entry=$zip.GetEntry('BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map')
+    if($null -eq $entry){throw 'AAB mapping metadata is missing'}
+    $stream=$entry.Open()
+    try {$embeddedHash=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($stream))} finally {$stream.Dispose()}
+    if($embeddedHash -ne (Get-FileHash -LiteralPath $mapping -Algorithm SHA256).Hash){throw 'AAB mapping differs from same-build mapping'}
+   } finally {$zip.Dispose()}
+  }
+  @{ aabSha256=$aabHash; mappingSha256=(Get-FileHash -LiteralPath $mapping -Algorithm SHA256).Hash; elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=(Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash; revision=$plan.revision; dirty=$plan.dirty; versionCode=$plan.versionCode } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
+  Write-Output ('Gradle '+($tasks -join ', ')+' completed; independent artifact verification still required. Record: '+$record)
  } finally { Pop-Location }
 } finally {
  if($null -ne $buildLock){$buildLock.Dispose()}

@@ -7,6 +7,7 @@ import { useSettingsRest } from "@/contexts/settingsContext";
 import { useBackgroundAnimation } from "@/hooks/useBackgroundAnimation";
 import { useBlinkOpacityStyle } from "@/hooks/useBlinkOpacityStyle";
 import { useEffects } from "@/hooks/useEffects";
+import { usePlaybackActive } from "@/hooks/usePlaybackActive";
 import { useMarqueeAnimation } from "@/hooks/useMarqueeAnimation";
 import { usePreviewPanelCanvas } from "@/hooks/usePreviewPanelCanvas";
 import {
@@ -69,7 +70,8 @@ export const LedBannerFullScreen = ({
     [],
   );
 
-  const backgroundEdgeEffectAnim = useBackgroundAnimation();
+  const isAnimationActive = usePlaybackActive(visible);
+  const backgroundEdgeEffectAnim = useBackgroundAnimation(isAnimationActive);
   const sizingPolicy = useMemo(
     () => getSizingPolicy({ effectId: backgroundEdgeEffectAnim.id }),
     [backgroundEdgeEffectAnim.id],
@@ -119,11 +121,12 @@ export const LedBannerFullScreen = ({
     speechBubble.speechBoxPx?.widthPx ?? stageWidth;
 
   const { displayText, translateX, onTextLayout, SPACER } = useMarqueeAnimation({
+    isActive: isAnimationActive,
     viewportWidthPx: marqueeViewportWidthPx,
     effectBleedPx: effects.effectSpacePx,
   });
 
-  const { opacity: blinkOpacity } = useBlinkOpacityStyle();
+  const { opacity: blinkOpacity } = useBlinkOpacityStyle(isAnimationActive);
 
   const canvasFallback = useMemo(
     () =>

@@ -106,6 +106,17 @@ export default function RootLayout() {
 
   useEffect(() => {
     configureAndroidNavigationBarHidden();
+    const stateSubscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") hideAndroidNavigationBar();
+    });
+    // Reapply on host-window return; this cannot control external Play windows.
+    const focusSubscription = Platform.OS === "android"
+      ? AppState.addEventListener("focus", hideAndroidNavigationBar)
+      : undefined;
+    return () => {
+      stateSubscription.remove();
+      focusSubscription?.remove();
+    };
   }, []);
 
   //최소 0.75초 스플래쉬 강제

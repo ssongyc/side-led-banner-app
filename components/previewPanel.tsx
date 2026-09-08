@@ -17,6 +17,7 @@ import {
 import { useBackgroundAnimation } from "@/hooks/useBackgroundAnimation";
 import { useBlinkOpacityStyle } from "@/hooks/useBlinkOpacityStyle";
 import { useEffects } from "@/hooks/useEffects";
+import { usePlaybackActive } from "@/hooks/usePlaybackActive";
 import { useMarqueeAnimation } from "@/hooks/useMarqueeAnimation";
 import { usePreviewPanelCanvas } from "@/hooks/usePreviewPanelCanvas";
 import {
@@ -113,7 +114,8 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isPortrait = windowHeight >= windowWidth;
 
-  const backgroundEdgeEffectAnim = useBackgroundAnimation();
+  const isAnimationActive = usePlaybackActive(!ui.isPlaying);
+  const backgroundEdgeEffectAnim = useBackgroundAnimation(isAnimationActive);
   const sizingPolicy = useMemo(
     () => getSizingPolicy({ effectId: backgroundEdgeEffectAnim.id }),
     [backgroundEdgeEffectAnim.id],
@@ -143,6 +145,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
 
   const { displayText, translateX, onTextLayout, SPACER } = useMarqueeAnimation(
     {
+      isActive: isAnimationActive,
       viewportWidthPx: marqueeViewportWidthPx,
       effectBleedPx: effects.effectSpacePx,
     },
@@ -170,7 +173,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
     }),
   });
 
-  const { opacity: blinkOpacity } = useBlinkOpacityStyle();
+  const { opacity: blinkOpacity } = useBlinkOpacityStyle(isAnimationActive);
 
   const marqueeCanvasProps = buildCanvas({
     canvas,

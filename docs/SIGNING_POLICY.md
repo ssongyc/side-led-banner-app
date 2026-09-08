@@ -40,10 +40,22 @@ The short-path build completed successfully (40m 57s) for main 85a61d6. The deli
 - Keep the current worker limit until host memory and measured timings justify adjustment. No speedup estimate is a measured result; report total time and UP-TO-DATE/FROM-CACHE/executed counts after the next authorized build.
 - This standing workflow does not authorize compiling, testing, committing, pushing or uploading without a user request.
 
-## Automated preparation (source change, not yet executed)
+## Automated preparation
 
 Run scripts/build-local-apk.ps1 from the main checkout for an authorized APK build. The signing-verified wrapper invokes prepare-local-apk.cjs to inventory and synchronize source additions, modifications and deletions. It preserves local environment files and external credentials. Package/lock/npm/patch inputs decide installation; Expo config, plugins, modules, referenced config assets, local environment, Node version and JDK/Android SDK installation metadata fingerprints decide native regeneration. ResumeNative is an optional assertion that stops when preparation is required.
 
 Successful phase stamps are invalidated before installation/regeneration and restored only on success. Previous native output is moved to artifacts/native-archives outside the active Metro root; it is never silently restored. APKs/logs and source hashes are retained per run under artifacts/apk-runs. An exclusive lock prevents concurrent wrapper builds. Existing local versionCode is preserved unless explicitly supplied; a first build without one stops.
 
-The initial inventory is bootstrapped from the previous source revision and successful build log. Toolchain changes predating the first recorded baseline and manually altered native/dependency files still require independent inspection; an installation marker is not a full dependency integrity audit. This automation has not been executed or timed. Generated APKs still require all independent release checks; the wrapper does not claim compile-ok, runtime validation or Play registration.
+The initial inventory is bootstrapped from the previous source revision and successful build log. Toolchain changes predating the first recorded baseline and manually altered native/dependency files still require independent inspection; an installation marker is not a full dependency integrity audit. The successful execution and timing are recorded below. Generated APKs still require all independent release checks; the wrapper does not claim compile-ok, runtime validation or Play registration.
+
+## Incremental build execution — 2026-09-08
+
+The edaf82b application source built successfully in 7m 5s (83 executed, 1105 up-to-date). The preparation helper was corrected locally to fingerprint installed SDK package source.properties files instead of a nonexistent SDK-root packages.xml. No dependency install or native regeneration was required. The existing signer, APK v2 signature, manifest SDK/ABI/Billing metadata and 16KB ZIP alignment passed independent verification. See README for artifact hashes and runtime/R8 limitations. Earlier statements that the automation was unexecuted describe the pre-build state. This helper correction and build report are included with the subsequent main-branch delivery.
+
+## Store APK and AAB workflow
+
+Use the same signing boundary: scripts/build-local-apk.ps1 -IncludeBundle -VersionCode <unused-code>. The switch invokes assembleRelease and bundleRelease in one Gradle run, retaining the APK, AAB, exact mapping and SHA-256 identities in artifacts/apk-runs/<run-id>. Previous AAB/mapping are archived before build preparation.
+
+The withAndroidRelease config plugin enables R8 and resource shrinking and selects proguard-android-optimize.txt. Existing framework/SDK consumer rules are retained; no blanket keep rule or warning suppression was added. The wrapper requires a nonempty application mapping and verifies byte-identical mapping content in AAB BUNDLE-METADATA. Independent signing, manifest, SDK, ABI, Billing, native alignment and bundle validation are still required. An optimized build is not runtime QA or Play upload/registration verification.
+
+This changes native inputs, so the first optimized build requires verified native regeneration; later unchanged builds reuse the fixed artifacts/b directory. Existing internal APK evidence remains valid only for its own build. No store upload is performed by this wrapper.

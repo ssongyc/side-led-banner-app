@@ -14,6 +14,7 @@ import {
 } from "react-native-reanimated";
 
 export interface UseMarqueeAnimationParams {
+  isActive?: boolean;
   /** Style B(lineClear)*/
   viewportWidthPx?: number;
   /** 타일 끝 여유(글로우·stroke)*/
@@ -30,6 +31,7 @@ type TextLayoutEvent = {
  * 애니메이션에서 재사용할 `translateX` shared value와 표시 텍스트를 제공할 겁니다.
  */
 export function useMarqueeAnimation({
+  isActive = true,
   viewportWidthPx = 0,
   effectBleedPx = 0,
 }: UseMarqueeAnimationParams = {}) {
@@ -56,6 +58,11 @@ export function useMarqueeAnimation({
       cancelAnimation(translateX);
       translateX.value = 0;
       totalShiftRef.current = 0;
+      return;
+    }
+
+    if (!isActive) {
+      cancelAnimation(translateX);
       return;
     }
 
@@ -91,7 +98,10 @@ export function useMarqueeAnimation({
         }
       },
     );
+    return () => cancelAnimation(translateX);
   }, [
+    isActive,
+    translateX,
     speed,
     text,
     playOption,
