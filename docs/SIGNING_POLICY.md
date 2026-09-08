@@ -59,3 +59,11 @@ Use the same signing boundary: scripts/build-local-apk.ps1 -IncludeBundle -Versi
 The withAndroidRelease config plugin enables R8 and resource shrinking and selects proguard-android-optimize.txt. Existing framework/SDK consumer rules are retained; no blanket keep rule or warning suppression was added. The wrapper requires a nonempty application mapping and verifies byte-identical mapping content in AAB BUNDLE-METADATA. Independent signing, manifest, SDK, ABI, Billing, native alignment and bundle validation are still required. An optimized build is not runtime QA or Play upload/registration verification.
 
 This changes native inputs, so the first optimized build requires verified native regeneration; later unchanged builds reuse the fixed artifacts/b directory. Existing internal APK evidence remains valid only for its own build. No store upload is performed by this wrapper.
+
+### Kotlin/R8 compatibility correction
+
+The first R8-enabled run reported Kotlin metadata parsing errors with the AGP 8.12 bundled optimizer and Kotlin 2.3.20. Such output is not accepted for submission. The release plugin now pins Google Maven R8 8.13.23 in settings.gradle pluginManagement.buildscript, following the R8 project's documented override mechanism. The wrapper rejects metadata parsing warnings and requires the mapping compiler header to match the pinned version.
+
+After verified native regeneration at the unchanged artifacts/b path, only generated app/build and app/.cxx caches may be copied from that run's archive. Native source, Gradle configuration, signing settings and manifests are never restored. Gradle/Ninja must still invalidate changed inputs, and final artifact/mapping checks remain mandatory.
+
+References: https://developer.android.com/build/kotlin-support and https://r8.googlesource.com/r8/+/refs/heads/main/README.md#replacing-r8-in-android-gradle-plugin
