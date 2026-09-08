@@ -61,7 +61,7 @@ function renderEffect1({
   const effect1EdgeStyle = resolveEffect1EdgeStyle(isFullscreenPortrait);
 
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
       <Image
         source={effect.sources.left}
         style={{ position: "absolute", left: 0, ...effect1EdgeStyle }}
@@ -102,7 +102,7 @@ function renderHeartBackground({
     return (
       <Image
         source={padHeartSource}
-        style={StyleSheet.absoluteFill}
+        style={StyleSheet.absoluteFillObject}
         contentFit="contain"
         blurRadius={blurRadius}
       />
@@ -143,7 +143,7 @@ function renderSpeechBubble({
           top: -previewInset,
           bottom: -previewInset,
         }
-      : StyleSheet.absoluteFill;
+      : StyleSheet.absoluteFillObject;
 
   return <Image source={source} style={imageStyle} contentFit="fill" blurRadius={blurRadius} />;
 }
@@ -154,6 +154,9 @@ const effectRenderers: Record<BackgroundEffectId, EffectRenderer> = {
   heartBgA: renderHeartBackground,
   speechBg1: renderSpeechBubble,
   speechBg2: renderSpeechBubble,
+  nameBg: renderSpeechBubble,
+  locationBg: renderSpeechBubble,
+  todayBg: renderSpeechBubble,
 };
 
 /** 배경이펙트레이어용 */

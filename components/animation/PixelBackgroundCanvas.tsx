@@ -1,3 +1,4 @@
+import { isSignBoardPreset } from "@/constants/signBoardPresets";
 import {
   DOT_MATRIX_BACKGROUND_SKSL,
   DOT_MATRIX_PHOTO_BACKGROUND_SKSL,
@@ -56,15 +57,17 @@ function PixelBackgroundImage({
   uri,
   width,
   height,
+  fit = "cover",
 }: {
-  uri: string;
+  fit?: "cover" | "fill";
+  uri: string | number;
   width: number;
   height: number;
 }) {
   const image = useImage(uri);
   if (!image) return null;
   return (
-    <Image image={image} x={0} y={0} width={width} height={height} fit="cover" />
+    <Image image={image} x={0} y={0} width={width} height={height} fit={fit} />
   );
 }
 
@@ -114,7 +117,7 @@ export function PixelBackgroundCanvas({
   }
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
       <Canvas style={{ width, height }} opaque={false}>
         {/* Layer 0: 항상 최하단 — 꺼진 LED 격자 (배경 사진/이펙트 없는 영역에서 보임) */}
         <Group layer={staticOffLayer}>
@@ -177,7 +180,14 @@ export function PixelBackgroundCanvas({
           />
         ) : null}
 
-        {isSpeechBg && speechBubbleSource != null ? (
+        {isSignBoardPreset(effectId) && speechBubbleSource != null ? (
+          <PixelBackgroundImage
+            uri={speechBubbleSource}
+            width={width}
+            height={height}
+            fit="fill"
+          />
+        ) : isSpeechBg && speechBubbleSource != null ? (
           <PixelSpeechBubbleFrame
             source={speechBubbleSource}
             width={width}

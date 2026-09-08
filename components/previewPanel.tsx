@@ -1,3 +1,4 @@
+import { isSignBoardPreset } from "@/constants/signBoardPresets";
 import { DeleteAllButton } from "@/assets/svg/deleteAllButton";
 import { GradientBackdrop } from "@/components/skia/GradientBackdrop";
 import { btnStyles } from "@/constants/btnStyles";
@@ -120,7 +121,8 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
   const speechBubble = useSpeechBubble({
     speechBubbleId: sizingPolicy.speechBubbleId,
     effectId: backgroundEdgeEffectAnim.id,
-    isPortrait,
+    // The editor preview uses the landscape artwork even on a portrait phone.
+    isPortrait: isSignBoardPreset(backgroundEdgeEffectAnim.id) ? false : isPortrait,
     basisWidthPx: previewBox.width,
     viewportHeight: previewHeight,
   });
@@ -336,7 +338,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
         {hasBgPhoto && !effects.isPixelEffect ? (
           <Image
             source={{ uri: backgroundImageUri }}
-            style={StyleSheet.absoluteFill}
+            style={StyleSheet.absoluteFillObject}
             contentFit="cover"
             blurRadius={backgroundBlur / 8}
           />
@@ -350,7 +352,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
         effects.showGradientBackdrop &&
         previewBox.width > 0 &&
         previewBox.height > 0 ? (
-          <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
             <Canvas style={{ flex: 1 }} opaque={false}>
               <GradientBackdrop
                 key={`gradient-${gradientBackgroundPreset}`}
@@ -390,7 +392,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
           </View>
         ) : (
           <View
-            style={StyleSheet.absoluteFill}
+            style={StyleSheet.absoluteFillObject}
             onLayout={canvas.onSkiaCanvasLayout}
           >
             <MarqueeCanvas {...marqueeCanvasProps} />

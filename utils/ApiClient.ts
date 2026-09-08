@@ -196,8 +196,11 @@ export function refreshPremium(): Promise<void> {
     }
     try {
       const products = await iap!.fetchProducts({ skus: [premiumProductId()], type: "in-app" });
-      let product = products?.find((item): item is Product =>
+      const fetchedProduct = products?.find((item) =>
         item.id === premiumProductId() && item.type === "in-app");
+      let product: Product | undefined = fetchedProduct?.type === "in-app"
+        ? fetchedProduct
+        : undefined;
       let offerTokenAndroid: string | null = null;
       if (product?.platform === "ios" && product.typeIOS !== "non-consumable") {
         product = undefined;

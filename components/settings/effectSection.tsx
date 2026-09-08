@@ -29,6 +29,9 @@ const PRO_LOCKED_BG_EFFECTS = new Set([
   "heartBgA",
   "speechBg1",
   "speechBg2",
+  "nameBg",
+  "locationBg",
+  "todayBg",
 ]);
 
 const PRIMARY_EFFECT_CHIP_ROWS = [
@@ -457,6 +460,9 @@ export const EffectSection = () => {
               preset: "speechBg2",
               src: require("@/assets/images/Speech_BG_2_B.png"),
             },
+            { preset: "nameBg", src: require("@/assets/images/Name_BG_1_B.png") },
+            { preset: "locationBg", src: require("@/assets/images/Location_BG_1_B.png") },
+            { preset: "todayBg", src: require("@/assets/images/Today_BG_1_B.png") },
           ] as const
         ).map(({ preset, src }) => {
           const isLocked = !isProActive && PRO_LOCKED_BG_EFFECTS.has(preset);

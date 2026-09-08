@@ -1,3 +1,5 @@
+import { SIGN_BOARD_TEXT_LAYOUT } from "@/constants/signBoardPresets";
+import { isSpeechBubblePreset } from "@/constants/speechBubblePresets";
 import { countRows } from "@/utils/skiaBubbleTextLayout";
 import {
   maxFontSizeForAvailableHeight,
@@ -17,6 +19,9 @@ const PREVIEW_VERTICAL_TEXT_PADDING = {
   default: 0,
   speechBg1: 12,
   speechBg2: 24,
+  nameBg: 0,
+  locationBg: 0,
+  todayBg: 0,
 } as const;
 /** Speech BG 없을 때: 뷰포트 세로 대비 텍스트 영역 비율 */
 export const DEFAULT_MAX_TEXT_HEIGHT_RATIO = {
@@ -29,6 +34,9 @@ export const DEFAULT_MAX_TEXT_HEIGHT_RATIO = {
  * landscape 전체화면: top·height = viewportHeight × 비율
  */
 export const SPEECH_BG_TEXT_LAYOUT = {
+  nameBg: SIGN_BOARD_TEXT_LAYOUT,
+  locationBg: SIGN_BOARD_TEXT_LAYOUT,
+  todayBg: SIGN_BOARD_TEXT_LAYOUT,
   speechBg1: {
     portrait: {
       /** 393px 아트보드 — landscape와 동일 상단 64px 이후 텍스트 영역 */
@@ -67,7 +75,7 @@ function getSpeechTextLayout(
 }
 
 export function getSpeechBubbleId(effectId: string): SpeechBubbleId | null {
-  return effectId === "speechBg1" || effectId === "speechBg2" ? effectId : null;
+  return isSpeechBubblePreset(effectId) ? effectId : null;
 }
 
 export function resolveFullscreenMaxHeight(params: {

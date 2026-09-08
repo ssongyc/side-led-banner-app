@@ -27,7 +27,7 @@ import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
-} from "@react-navigation/native";
+} from "expo-router";
 import { useFonts } from "expo-font";
 import { useKeepAwake } from 'expo-keep-awake';
 import { useLocales } from "expo-localization";
@@ -35,7 +35,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useMemo, useState } from "react";
-import { AppState, InteractionManager, Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -124,7 +124,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (!isReady) return;
 
-    const task = InteractionManager.runAfterInteractions(() => {
+    const task = requestIdleCallback(() => {
       const initAmplitude = async () => {
         const key = process.env.EXPO_PUBLIC_AMPLITUDE_API_KEY ?? "";
         if (!key) return;
@@ -147,7 +147,7 @@ export default function RootLayout() {
     });
 
     return () => {
-      task.cancel();
+      cancelIdleCallback(task);
       sub.remove();
     };
   }, [isReady]);

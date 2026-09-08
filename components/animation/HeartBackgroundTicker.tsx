@@ -72,7 +72,7 @@ export function HeartBackgroundTicker({
   );
 
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill} onLayout={onLayout}>
+    <View pointerEvents="none" style={StyleSheet.absoluteFillObject} onLayout={onLayout}>
       <View style={styles.clip}>
         <Animated.View style={[styles.row, tickerStyle]}>
           {tileIndexes.map((i) => (

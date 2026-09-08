@@ -1,4 +1,8 @@
+import { SIGN_BOARD_PRESETS } from "./signBoardPresets";
+
+// Framed backgrounds share the existing image and text-box pipeline.
 export const SPEECH_BUBBLE_PRESETS = {
+  ...SIGN_BOARD_PRESETS,
   speechBg1: {
     previewSource: require("@/assets/images/Speech_BG_1_A.png"),
     fullscreenLandscapeSource: require("@/assets/images/Speech_BG_1_A.png"),
@@ -43,5 +47,5 @@ export const SPEECH_BUBBLE_PRESETS = {
 export type SpeechBubblePresetId = keyof typeof SPEECH_BUBBLE_PRESETS;
 
 export function isSpeechBubblePreset(id: string): id is SpeechBubblePresetId {
-  return id in SPEECH_BUBBLE_PRESETS;
+  return Object.prototype.hasOwnProperty.call(SPEECH_BUBBLE_PRESETS, id);
 }

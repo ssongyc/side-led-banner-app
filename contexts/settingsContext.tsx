@@ -160,6 +160,9 @@ const PRO_LOCKED_BG_EFFECTS = new Set([
   "heartBgA",
   "speechBg1",
   "speechBg2",
+  "nameBg",
+  "locationBg",
+  "todayBg",
 ]);
 
 // textColorPalette: 9개 열, 행내 index >= 4 잠금 (colorPicker.tsx 의 isLocked 조건과 동일)

@@ -15,7 +15,7 @@ Premium은 **1회 구매하는 영구 비소모성 상품**입니다. 구독이�
 - 구매 취소, 승인 대기, 조회/검증 실패, 복원할 구매 없음은 각각 표시합니다. 자동 구매 재시도는 없습니다.
 
 **현재 스토어 상품은 미등록이고 Google Play 공개키도 미설정입니다. 실제 결제 개통이나 실기기 동작이 검증된 상태가 아닙니다.**
-이번 변경은 소스·문서 업데이트입니다. 컴파일, lint, 테스트, 스토어 업로드 및 콘솔 변경은 실행하지 않았습니다. 기존 APK에는 새 IAP 코드가 포함되어 있지 않습니다.
+SDK 55 기준 2026-09-08 Android preview APK `1cfedbc5-0306-4113-8e65-68e9aebb89b0` 컴파일 완료(`compile-ok`, V1.0.6/22). IAP·구매 서명 검증 모듈을 포함합니다. TypeScript 상품 타입 오류를 수정했고 컴파일이 통과했습니다. 실제 결제 테스트, iOS 빌드, 스토어 업로드 및 콘솔 변경은 실행하지 않았습니다.
 
 ## 변경 파일
 
@@ -84,14 +84,14 @@ EXPO_PUBLIC_GOOGLE_PLAY_LICENSE_KEY=콘솔에서_복사한_Base64_RSA_공개키
 - `app.json`: `expo-iap`, `./plugins/withPremiumIap` 추가.
 - 커스텀 플러그인: Android 결제 앱 전환/복귀용 `singleTop`, 최소 target/compile SDK 36 설정, iOS IAP capability.
 - `modules/purchase-verification`: Android의 RSA 구매 서명과 서명된 package/product/token/완료 상태를 검증하는 로컬 Expo 모듈.
-- `expo-modules-core 55.0.26`: 프로젝트 Expo 55와 동일한 명시적 버전.
+- Expo 57 전환 후 `expo-modules-core` 직접 설치는 제거하고 Expo가 관리하는 57.0.16 단일 의존성을 사용합니다. IAP가 참조하는 Android Gradle 호환 파일은 존재하지만 SDK 57에서의 네이티브 컴파일·구매 동작은 아직 미검증입니다.
 - 설치 패키지 `openiap-versions.json`은 Google SDK 3.5.0 / Apple SDK 3.4.0을 지정합니다.
 - Google SDK 3.5.0의 공개 POM은 Play Billing **9.1.0**을 지정합니다.
-- 실제 Gradle 의존성 해석, 병합 manifest, target/compile SDK, APK/AAB Billing 메타데이터 및 네이티브 호환성은 **빌드 미실행으로 미검증**입니다.
+- SDK 55로 생성한 2026-09-08 APK `1cfedbc5`에서 compileSdk/targetSdk 36/36, BILLING 권한 및 Billing 9.1.0(manifest + billing.properties), 신규 네이티브 모듈을 확인했습니다. 기존 인증서 서명 검증 통과. Gradle 컴파일은 통과했지만 전체 의존성 트리의 별도 출력·실기기 네이티브 동작·AAB는 미검증입니다. EAS Expo Doctor는 직접 설치한 expo-modules-core 항목 1건 실패(19/20 통과)이며 npm moderate 19건이 남습니다.
 
-새 네이티브 모듈이 있으므로 기존 APK나 Expo Go로는 동작하지 않습니다.
+새 네이티브 모듈은 9월 8일 APK `1cfedbc5`에 포함됩니다. 그 이전 APK나 Expo Go로는 새 IAP가 동작하지 않습니다.
 다음에 네이티브 빌드를 승인받아 진행할 때 이 설정으로 네이티브 프로젝트를 갱신해야 합니다.
-기존 `android/`는 이전에 생성된 출력이며 이번 작업에서는 재생성하지 않았습니다.
+기존 `android/`는 SDK 55에서 생성된 출력이며 Expo 57 전환 시 재생성하지 않았습니다. 다음 승인된 빌드에서 서명을 보존한 채 SDK 57 네이티브 구성을 생성해야 합니다. iOS는 16.4 이상/Xcode 26.4 이상이 필요합니다.
 원본 서명 정체성을 보존하고 실제 스토어 설치/구매 검증에 debug 서명을 사용하지 않습니다.
 
 ## 4. 검증 범위와 제한

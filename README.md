@@ -6,8 +6,9 @@
 
 ## 현재 상태
 
+- 현재 개발 SDK: **Expo 57.0.20 / React Native 0.86.3**. SDK 57 APK·IPA는 아직 생성하지 않았습니다.
 - 현재 소스 버전: **V1.0.6**. Settings의 App Version은 `app.json`의 버전을 읽습니다.
-- 최근 생성 APK: **V1.0.6 / versionCode 22**, 내부 설치용 preview 빌드 `eb8f5b17-3e90-43db-bbe5-2d369e362249`. JavaScript 번들이 내장되어 Metro 없이 실행합니다. 사용자 실기기 테스트에서 네비바 스와이프 표시, 콘텐츠 터치 숨김과 버튼/스크롤, 전체 화면 및 광고 복귀 후 동작이 모두 통과했습니다. 이후 헤더 여백/폰트 변경과 아래의 직접 IAP 연동은 이 APK에 포함되지 않았습니다.
+- 최근 생성 APK: **V1.0.6 / versionCode 22**, 내부 설치용 preview 빌드 `1cfedbc5-0306-4113-8e65-68e9aebb89b0`. IAP·광고 모달·헤더 변경과 IAP 타입 컴파일 수정을 포함하며 JavaScript 번들이 내장되어 Metro 없이 실행합니다. 이번 APK의 실기기 구매·광고·레이아웃 동작은 미검증입니다.
 - Upgrade to Pro에 Apple StoreKit / Google Play 직접 IAP, 구매 복원, 영구 Pro 권한 및 구매자 광고 차단을 연결했습니다. 상품 등록·Google Play 공개키 설정과 실기기 결제 확인은 아직 필요합니다. 자세한 절차는 [IAP_SETUP.md](IAP_SETUP.md)를 참고합니다.
 - 아래 빌드 기록은 생성된 산출물 기록이며 Google Play/App Store의 현재 배포 버전을 뜻하지 않습니다.
 
@@ -18,8 +19,46 @@
 - 취소·승인 대기·실패·복원 내역 없음 상태를 7개 언어로 표시하고, 고정 가격 대신 스토어의 현지화 가격을 사용합니다.
 - 외부 구매 관리 서비스나 서버 없이 iOS 현재 entitlement/StoreKit 검증, Android 현재 보유 내역/RSA 서명 검증을 사용합니다. 플랫폼 간 구매 이전이나 실시간 서버 환불 알림은 제공하지 않습니다.
 - `constants/premium.ts`의 상품 ID, `.env.example`의 Google Play 공개키 설정, 네이티브 IAP 플러그인과 Android 검증 모듈을 추가했습니다.
-- **남은 작업:** 양쪽 상품 등록·활성화, Google Play 공개키 설정, 새 네이티브 빌드 및 실기기 결제 검증. 이번 변경에서 앱 버전은 올리지 않았으며 컴파일·lint·테스트·스토어 업로드는 실행하지 않았습니다.
+- **남은 작업:** 양쪽 상품 등록·활성화, Google Play 공개키 설정 및 실기기 결제 검증. 앱 버전은 유지했습니다. 9월 7일 소스 변경 당시 빌드는 미실행이었으며, 9월 8일 Android APK 컴파일 결과는 아래에 기록합니다. iOS 빌드·스토어 업로드는 미실행입니다.
 - 설정 값, 검증 제한 및 인계 체크리스트는 [IAP_SETUP.md](IAP_SETUP.md)에 정리했습니다.
+
+## 2026-09-08 Background Effects 추가
+
+- Figma Style Sheet의 3개 배경을 기존 Speech 효과 뒤에 추가했습니다: **HELLO / MY NAME IS**, **Please take me here**, **TODAY IS**.
+- 원본 가로·세로 PNG 6개를 로컬 에셋으로 저장했습니다. 편집 미리보기는 가로 원본, 전체 화면은 실제 화면 방향에 맞는 원본을 사용합니다. 제목과 위치 아이콘은 원본 영어 아트워크를 유지합니다.
+- 흰색 본문 영역에 맞춰 배너 텍스트 박스의 너비·높이·상단 여백을 설정했습니다. 사용자 글자색·폰트·움직임 설정은 유지하며, Pixel 모드에서도 프레임 아트워크는 원본 색상으로 표시합니다.
+- 기존 배경과 같은 Pro 잠금·광고 보상 해제·프리셋 저장 흐름에 연결했습니다. 영구 Premium 구매자는 광고 없이 사용합니다.
+- 키보드 코드는 변경하지 않았습니다. 정적 diff/에셋 참조만 확인했으며 컴파일·린트·테스트·배포는 실행하지 않았습니다. 기존 APK에는 이 추가분이 포함되지 않습니다. 기기별 레이아웃·효과 조합은 미검증입니다.
+- 원본: [Figma Style Sheet](https://www.figma.com/design/2yU4ley6gw6hGPMWOzT7lU/LED-Banner?node-id=278-2125). 노드 및 에셋 대응은 [배경 원본 기록](assets/images/SignBoard_SOURCES.md)에 있습니다.
+
+## 2026-09-08 변경 묶음
+
+- 메인 브랜치 반영 범위: Background Effects 3종과 원본 에셋, Expo 57 및 광고 SDK 업데이트, IAP 상품 타입 수정, 관련 문서.
+- 아래 APK 컴파일 기록은 SDK 55 빌드 기록입니다. Expo 57 변경에 대한 컴파일·린트·테스트·배포는 별도 요청 전까지 실행하지 않습니다.
+
+## 2026-09-08 SDK 업데이트
+
+- `react-native-google-mobile-ads`를 16.3.3에서 16.5.0으로 업데이트하고 정확한 버전으로 고정했습니다. package-lock도 함께 갱신했으며 변경된 설치 패키지는 1개입니다.
+- 패키지가 지정하는 Google Mobile Ads 네이티브 SDK는 Android 25.0.0 → 25.4.0, iOS 13.1.0 → 13.5.0입니다. 이는 의존성 설정 확인이며 새 APK/IPA에서 해석된 버전 검증은 아닙니다. 앱의 SDK 36 설정, 실제 광고 ID, 재시도·보상·immersive API 호출은 유지합니다.
+- Expo **55.0.31 → 57.0.20**, React Native **0.83.10 → 0.86.3**, React/React DOM **19.2.0 → 19.2.3**으로 전환했습니다. SDK 56·57의 마이그레이션 항목을 함께 반영했습니다.
+- 사용자의 키보드 변경 제한 해제에 따라 keyboard-controller **1.20.7 → 1.21.9**를 적용했습니다. 기존 키보드 UI·입력 동작은 재설계하지 않았습니다. Reanimated **4.5.1**, Worklets **0.10.1**, Gesture Handler **2.32.0**, Skia **2.6.2**, TypeScript **6.0.3** 및 관련 Expo 패키지를 SDK 권장 조합으로 정렬했습니다.
+- 제거된 `InteractionManager`를 `requestIdleCallback`/취소 API로, `StyleSheet.absoluteFill`을 `absoluteFillObject`로 교체했습니다. 테마는 `expo-router`에서 가져오며, 내비게이션 바는 `NavigationBar.setHidden(true)`와 플러그인 `hidden: true`를 사용합니다.
+- expo-modules-core 직접 의존성을 제거했습니다. Expo가 관리하는 **57.0.16** 한 개가 해석되며, IAP가 참조하는 Android Gradle 호환 파일이 존재합니다. Skia 사전 빌드 네이티브 라이브러리 설치를 완료했습니다.
+- npm 설치와 `npm ls --depth=0`, 패키지 잠금 파일·SDK 공식 버전표 대조를 수행했고 버전 불일치는 없습니다. 이는 컴파일·런타임 검증이 아닙니다. Expo Doctor와 보안 audit는 재실행하지 않았으며, 과거 경고가 모두 해결됐다고 판단하지 않습니다.
+- iOS 최소 버전은 **16.4**, iOS 빌드 도구는 **Xcode 26.4 이상**이 필요합니다. Android target/compile SDK 최소 36 소스 설정은 유지했으며 SDK 57의 실제 병합 manifest·서명 산출물은 아직 미검증입니다.
+- 기존 무시된 android/ios 생성 폴더는 SDK 55 산출물일 수 있어 그대로 빌드하면 안 됩니다. 다음 승인된 네이티브 빌드에서 기존 서명을 보존하며 SDK 57 설정으로 갱신해야 합니다. SDK 57의 prebuild는 기본적으로 native 폴더를 재생성하므로 직접 실행 전에 생성 폴더 소유권과 서명을 확인합니다.
+- IAP 5.5.1 및 Billing 설정, 기존 광고 정책과 새 배경 3종은 유지했습니다. 기존 APK `1cfedbc5`는 SDK 55 파일이며 이번 전환이 포함되지 않습니다. 이번 업데이트는 설치 및 정적 diff 확인만 수행했고 컴파일·린트·테스트·배포는 실행하지 않았습니다.
+- 근거: [Expo 57](https://expo.dev/changelog/sdk-57), [Expo 56 마이그레이션](https://expo.dev/changelog/sdk-56), [키보드 1.21.9](https://github.com/kirillzyusko/react-native-keyboard-controller/releases/tag/1.21.9), [광고 16.5.0](https://github.com/invertase/react-native-google-mobile-ads/releases/tag/v16.5.0).
+
+## 2026-09-08 APK 컴파일
+
+- IAP 상품 조회 결과의 `in-app` 타입을 명시적으로 좁혀 TypeScript 컴파일 오류를 수정했습니다. `npx tsc --noEmit` 통과. 키보드 코드는 변경하지 않았습니다.
+- `compile-ok`: Android preview 빌드 `1cfedbc5-0306-4113-8e65-68e9aebb89b0` 완료, Gradle `BUILD SUCCESSFUL in 29m 23s`. 기준 커밋 `c451d3a` + 위 타입 수정.
+- APK: [LedPop-V1.0.6-preview-1cfedbc5.apk](artifacts/LedPop-V1.0.6-preview-1cfedbc5.apk), 271,250,364 bytes. SHA-256 `7DEDC40EEAC6261F5F24111E646499E5BE42C462D11B6FFF47F67E4BCB91A7B4`.
+- 실제 APK: package `com.minkyokim.sideledbannerapp`, 버전 `1.0.6/22`, minSdk 24, compileSdk/targetSdk 36/36, ARM64/ARMv7/x86/x86_64. 기존 인증서 v2 서명 일치 및 ZIP 16 KB 정렬 검사 통과. CAMERA/RECORD_AUDIO와 debuggable 표시 없음.
+- Billing manifest 메타데이터와 `billing.properties` 모두 9.1.0. IAP·구매 서명 검증·리워드 광고 네이티브 모듈과 내장 번들 확인. 실제 AdMob ID를 사용하는 빌드이며 광고 노출·보상은 실기기 미검증입니다.
+- 기존 preview 설정은 앱 R8 난독화를 활성화하지 않았으며 `:app:minifyReleaseWithR8` 실행과 앱 mapping 파일은 없습니다. 최적화 호환성 및 스토어 배포 준비 완료를 뜻하지 않습니다. AAB 생성·Play mapping 등록·기기 테스트·별도 린트는 미실행입니다.
+- EAS 자동 Expo Doctor: 19/20 통과. IAP 호환성을 위해 직접 고정한 `expo-modules-core` 의존성 검사 1건 실패. npm moderate 19건이 남아 있습니다.
 
 ## 2026-09-08 보상 광고 모달 업데이트
 
@@ -32,7 +71,7 @@
 - 3회 로딩 실패 후 “광고를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.”와 수동 “다시 시도”를 표시합니다. Watch Ad는 계속 비활성화하며 한국어 버튼 문구는 “광고 준비 중…”을 유지합니다.
 - 수동 재시도는 최종 로딩 실패 상태에서만 새로운 최대 3회 로딩을 시작합니다. 로딩 성공으로 광고를 자동 재생하지 않습니다.
 - 토스트·스낵바·추가 팝업은 사용하지 않습니다. 닫힘이 반영된 다음 프레임에, 준비된 광고에 대한 새 사용자 동작으로만 표시를 요청합니다.
-- 키보드 관련 코드는 수정하지 않았습니다. 이번 변경은 소스·문서 업데이트이며, 컴파일·린트·테스트·스토어 배포는 미실행입니다. 기존 APK에는 이 모달 업데이트가 포함되어 있지 않습니다.
+- 키보드 관련 코드는 수정하지 않았습니다. 이 모달 업데이트는 9월 8일 APK `1cfedbc5`에 포함되어 컴파일됐습니다. 실제 기기 테스트와 스토어 배포는 미실행입니다.
 
 ## Features
 
@@ -43,7 +82,7 @@
 
 ## 사전 요구사항
 
-- Node.js 20.19.4 이상 (설치된 React Native 0.83.10의 engines 요구사항 기준)
+- Node.js `^20.19.4 || ^22.13.0 || ^24.3.0 || >=25.0.0` (React Native 0.86.3 요구사항; 현재 호스트 24.14.1)
 - npm (`package-lock.json` 기준으로 의존성 설치)
 - Expo CLI는 프로젝트의 `expo` 패키지를 통해 사용합니다. 별도 전역 설치는 필요하지 않습니다.
 - EAS 원격 빌드 시 EAS CLI와 `led-banner-app` Expo 프로젝트 접근 권한이 필요합니다.
@@ -189,23 +228,23 @@ side-led-banner-app/
 
 | 라이브러리                                                                                      | 버전     | 용도                            |
 | ----------------------------------------------------------------------------------------------- | -------- | ------------------------------- |
-| [Expo](https://expo.dev/)                                                                       | ^55.0.31 | React Native 개발 프레임워크    |
-| [expo-router](https://docs.expo.dev/router/introduction/)                                       | ~55.0.18 | 파일 기반 라우팅                |
-| [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/)                  | 4.2.1    | 마키 스크롤 애니메이션          |
-| [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/)        | ~2.30.0  | 터치/제스처 처리                |
-| [expo-screen-orientation](https://docs.expo.dev/versions/latest/sdk/screen-orientation/)        | ~55.0.20 | 전체화면 시 가로/세로 전환 제어 |
-| [expo-linear-gradient](https://docs.expo.dev/versions/latest/sdk/linear-gradient/)              | ~55.0.18 | 프리셋 버튼 그라디언트          |
+| [Expo](https://expo.dev/)                                                                       | ~57.0.20 | React Native 개발 프레임워크    |
+| [expo-router](https://docs.expo.dev/router/introduction/)                                       | ~57.0.19 | 파일 기반 라우팅                |
+| [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/)                  | 4.5.1    | 마키 스크롤 애니메이션          |
+| [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/)        | ~2.32.0  | 터치/제스처 처리                |
+| [expo-screen-orientation](https://docs.expo.dev/versions/latest/sdk/screen-orientation/)        | ~57.0.2 | 전체화면 시 가로/세로 전환 제어 |
+| [expo-linear-gradient](https://docs.expo.dev/versions/latest/sdk/linear-gradient/)              | ~57.0.1 | 프리셋 버튼 그라디언트          |
 | [@miblanchard/react-native-slider](https://github.com/miblanchard/react-native-slider)          | ^2.6.0   | 속도/크기/블러 등 슬라이더 UI   |
 | [react-native-element-dropdown](https://github.com/hoaphantn7604/react-native-element-dropdown) | ^2.12.4  | 폰트 선택 드롭다운              |
-| [react-native-svg](https://github.com/software-mansion/react-native-svg)                        | 15.15.3  | SVG 아이콘 (재생/정지 버튼 등)  |
-| [react-native-safe-area-context](https://github.com/th3rdwave/react-native-safe-area-context)   | ~5.6.0   | 노치/Safe Area 대응             |
-| [@react-navigation/native](https://reactnavigation.org/)                                        | ^7.1.8   | 네비게이션 & 테마 관리          |
-| [react-native-google-mobile-ads](https://docs.page/invertase/react-native-google-mobile-ads)    | ^16.3.3  | AdMob 배너/리워드 광고          |
+| [react-native-svg](https://github.com/software-mansion/react-native-svg)                        | 15.15.4  | SVG 아이콘 (재생/정지 버튼 등)  |
+| [react-native-safe-area-context](https://github.com/th3rdwave/react-native-safe-area-context)   | ~5.7.0   | 노치/Safe Area 대응             |
+| [@react-navigation/native](https://reactnavigation.org/)                                        | ^7.1.8   | 기존 의존성 (테마는 expo-router)          |
+| [react-native-google-mobile-ads](https://docs.page/invertase/react-native-google-mobile-ads)    | 16.5.0  | AdMob 배너/리워드 광고          |
 | [@amplitude/analytics-react-native](https://amplitude.com/docs/sdks/analytics/react-native/react-native-sdk) | ^1.8.0 | 사용 이벤트 분석 |
 
 ## SDK 54 당시 타입 및 호환성 오류 수정 기록
 
-다음은 SDK 55 이전 기록입니다. 현재 선언은 keyboard-controller 1.20.7, expo-file-system ~55.0.26이며 아래 과거 버전을 다시 설치하지 않습니다.
+다음은 SDK 55 이전 기록입니다. 현재 선언은 keyboard-controller 1.21.9, expo-file-system ~57.0.6이며 아래 과거 버전을 다시 설치하지 않습니다.
 
 - 당시 react-native-keyboard-controller 1.18.5 API에 맞춰 KeyboardToolbar.Content/Done 대신 content/doneText 속성을 사용합니다. 실행 취소/다시 실행 콜백과 체크 표시를 유지하고 닫기는 라이브러리 기본 버튼이 처리합니다.
 - expo-file-system ~19.0.24를 직접 의존성으로 선언했습니다. 실제 설치 버전은 기존 Expo 내부 버전과 동일한 19.0.24이며, 원격 폰트 로더 코드는 변경하지 않았습니다.

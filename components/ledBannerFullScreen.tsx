@@ -218,7 +218,7 @@ export const LedBannerFullScreen = ({
             {hasBgPhoto && !effects.isPixelEffect ? (
               <Image
                 source={{ uri: backgroundImageUri }}
-                style={StyleSheet.absoluteFill}
+                style={StyleSheet.absoluteFillObject}
                 contentFit="cover"
                 blurRadius={backgroundBlur / 8}
               />
@@ -227,7 +227,7 @@ export const LedBannerFullScreen = ({
               <PixelBackgroundCanvas {...pixelBackgroundProps} />
             ) : null}
             {!effects.isPixelEffect && effects.showGradientBackdrop && stageWidth > 0 && stageHeight > 0 ? (
-              <View style={StyleSheet.absoluteFill} pointerEvents="none">
+              <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
                 <Canvas style={{ flex: 1 }} opaque={false}>
                   <GradientBackdrop
                     key={`gradient-${gradientBackgroundPreset}`}
@@ -269,7 +269,7 @@ export const LedBannerFullScreen = ({
               </View>
             ) : (
               <View
-                style={StyleSheet.absoluteFill}
+                style={StyleSheet.absoluteFillObject}
                 onLayout={canvas.onSkiaCanvasLayout}
               >
                 <MarqueeCanvas
@@ -280,7 +280,7 @@ export const LedBannerFullScreen = ({
           </View>
         </View>
         <Pressable
-          style={StyleSheet.absoluteFill}
+          style={StyleSheet.absoluteFillObject}
           onPress={onClose}
           accessibilityLabel="Close fullscreen"
         />

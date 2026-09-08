@@ -1,3 +1,4 @@
+import type { SpeechBubblePresetId } from "@/constants/speechBubblePresets";
 import type { SkFont } from "@shopify/react-native-skia";
 
 export const BUBBLE_SAFE = {
@@ -34,7 +35,7 @@ export function resolveBubbleCanvasOpts(params: {
   isSpeechActive: boolean;
   isPixelEffect: boolean;
   pixelShaderSize: number;
-  speechBubbleId?: "speechBg1" | "speechBg2" | null;
+  speechBubbleId?: SpeechBubblePresetId | null;
 }): BubbleCanvasOpts | null {
   if (!params.isSpeechActive) return null;
   const opts: BubbleCanvasOpts = {};
