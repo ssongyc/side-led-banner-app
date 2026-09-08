@@ -2,14 +2,18 @@ import { appFontFamilyForText } from "@/constants/appFonts";
 import { rewardAdModalStyles as styles } from "@/constants/styles";
 import { useSettingsRest } from "@/contexts/settingsContext";
 import * as amplitude from "@amplitude/analytics-react-native";
-import type { RewardAdLabelKey } from "@/language/rewardAdLabels";
+import { REWARD_AD_STATUS_TEXTS, REWARD_AD_BUTTON_TEXTS, type RewardAdLabelKey } from "@/language/rewardAdLabels";
 import { Ionicons } from "@expo/vector-icons";
 import { Canvas, Group, Path, Rect, Skia } from "@shopify/react-native-skia";
 import { Image } from "expo-image";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  AppState,
   BackHandler,
   Pressable,
+  ScrollView,
+  type StyleProp,
+  type TextStyle,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -28,6 +32,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const CHECK_ICON = require("../assets/images/Check.png");
 const WATCH_AD_BUTTON = require("../assets/images/Watch_Ad_Button.png");
@@ -197,12 +202,37 @@ const BENEFIT_ROWS: BenefitRow[] = [
   { labelKey: "rewardBenefitOutlineShadow" },
 ];
 
+// Overlapping, in-flow invisible copies reserve the tallest variant in the first
+// native layout pass. No onLayout/setState resize after the popup is displayed.
+function ReservedAdText({ text, variants, textStyle }: {
+  text: string;
+  variants: readonly string[];
+  textStyle: StyleProp<TextStyle>;
+}) {
+  return (
+    <View style={styles.reservedText}>
+      <View style={styles.reservedTextRow} pointerEvents="none"
+        accessibilityElementsHidden importantForAccessibility="no-hide-descendants" aria-hidden>
+        {[...variants, text].map((variant, index) => (
+          <Text key={index} allowFontScaling={false}
+            style={[textStyle, styles.reservedTextCopy]}>{variant}</Text>
+        ))}
+      </View>
+      <Text style={[textStyle, styles.reservedTextVisible]} allowFontScaling={false}
+        accessibilityLiveRegion="polite">{text}</Text>
+    </View>
+  );
+}
+
 type Props = {
   visible: boolean;
   onClose: () => void;
   adReady?: boolean;
   adFailed?: boolean;
   onWatchAd?: () => void;
+  canRetry?: boolean;
+  onRetry?: () => void;
+  isAdReady?: () => boolean;
 };
 
 export function RewardAdModal({
@@ -211,8 +241,14 @@ export function RewardAdModal({
   adReady = false,
   adFailed = false,
   onWatchAd,
+  canRetry = false,
+  onRetry,
+  isAdReady,
 }: Props) {
   const { rewardAdLabel, resolvedAppLocale } = useSettingsRest();
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const isTablet = Math.min(width, height) >= 600;
   const watchAdFontFamily =
     resolvedAppLocale === "ko" || resolvedAppLocale === "en"
       ? appFontFamilyForText("noto_sans_kr", "bold")
@@ -223,12 +259,42 @@ export function RewardAdModal({
   const wasVisibleRef = useRef(visible);
   const pendingAfterCloseRef = useRef<(() => void) | null>(null);
 
+  const frameRef = useRef<number | null>(null);
   const handleFullyClosed = useCallback(() => {
     setMounted(false);
-    const after = pendingAfterCloseRef.current;
-    pendingAfterCloseRef.current = null;
-    if (after) requestAnimationFrame(after);
   }, []);
+
+  // Schedule only after React has committed removal of the overlay.
+  useEffect(() => {
+    if (mounted || !pendingAfterCloseRef.current) return;
+    frameRef.current = requestAnimationFrame(() => {
+      frameRef.current = null;
+      const after = pendingAfterCloseRef.current;
+      pendingAfterCloseRef.current = null;
+      if (AppState.currentState === "active") after?.();
+    });
+    return () => {
+      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
+    };
+  }, [mounted]);
+
+  useEffect(() => {
+    const cancelPending = () => {
+      pendingAfterCloseRef.current = null;
+      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
+    };
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state !== "active") cancelPending();
+    });
+    return () => { sub.remove(); cancelPending(); };
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    pendingAfterCloseRef.current = null;
+    onClose();
+  }, [onClose]);
 
   useEffect(() => {
     if (visible) {
@@ -249,15 +315,16 @@ export function RewardAdModal({
     if (!mounted) return;
     //true로 마지막에 등록된 handler 호출
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      onClose();
+      handleCancel();
       return true;
     });
     return () => sub.remove();
-  }, [mounted, onClose]);
+  }, [mounted, handleCancel]);
 
   const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
 
   const handleWatchAd = () => {
+    if (!visible || !adReady || !onWatchAd || pendingAfterCloseRef.current || (isAdReady && !isAdReady())) return;
     amplitude.track("WatchAd_clicked");
     // 닫힘 애니메이션이 실제로 끝난 뒤(추측 딜레이 아님) 광고를 띄운다.
     pendingAfterCloseRef.current = onWatchAd ?? null;
@@ -268,16 +335,16 @@ export function RewardAdModal({
 
   return (
     <Animated.View
-      style={[styles.root, overlayStyle]}
+      style={[styles.root, { paddingLeft: 12 + insets.left, paddingRight: 12 + insets.right }, overlayStyle]}
       pointerEvents={visible ? "auto" : "none"}
     >
       <Pressable
         style={[styles.dim, { backgroundColor: "rgba(0,0,0,0.45)" }]}
-        onPress={onClose}
+        onPress={handleCancel}
       />
       <FireworksBurst visible={visible} />
 
-      <View style={styles.card}>
+      <View style={[styles.card, { maxWidth: isTablet ? 560 : 380 }]}>
         <View style={styles.appIconContainer}>
           <Image
             source={PRO_BADGE}
@@ -289,7 +356,7 @@ export function RewardAdModal({
 
           <TouchableOpacity
             style={styles.closeButton}
-            onPress={onClose}
+            onPress={handleCancel}
             hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
             accessibilityRole="button"
             accessibilityLabel="Close"
@@ -297,6 +364,8 @@ export function RewardAdModal({
             <Ionicons name="close" size={22} color="#8A8A8A" />
           </TouchableOpacity>
 
+          <ScrollView style={styles.modalBody} contentContainerStyle={styles.modalBodyContent}
+            showsVerticalScrollIndicator>
           <View style={styles.contentContainer}>
             <Text
               style={styles.headerBadge}
@@ -322,12 +391,32 @@ export function RewardAdModal({
           </View>
         </View>
 
+        <View style={styles.adStatusArea}>
+          <ReservedAdText
+            text={adReady ? "" : rewardAdLabel(adFailed ? "rewardAdLoadFailed" : "rewardAdPreparing")}
+            variants={REWARD_AD_STATUS_TEXTS}
+            textStyle={styles.adStatusText}
+          />
+        </View>
+        </ScrollView>
+
+        <View style={styles.modalActions}>
+          <View style={styles.adRetryArea}>
+            {canRetry && onRetry && (
+              <TouchableOpacity onPress={() => { if (visible && canRetry) onRetry(); }}
+                accessibilityRole="button" style={styles.adRetryButton}>
+                <Text style={styles.adRetryText} allowFontScaling={false}>{rewardAdLabel("rewardAdRetry")}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={handleWatchAd}
           disabled={!adReady}
           accessibilityRole="button"
-          accessibilityLabel={rewardAdLabel("rewardWatchAd")}
+          accessibilityLabel={rewardAdLabel(adReady ? "rewardWatchAd" : "rewardAdPreparingButton")}
+          accessibilityState={{ disabled: !adReady }}
           style={[styles.ctaButton, !adReady && { opacity: 0.4 }]}
         >
           <Image
@@ -343,20 +432,17 @@ export function RewardAdModal({
               contentFit="contain"
               accessibilityIgnoresInvertColors
             />
-            <Text
-              style={[
+            <ReservedAdText
+              text={rewardAdLabel(adReady ? "rewardWatchAd" : "rewardAdPreparingButton")}
+              variants={REWARD_AD_BUTTON_TEXTS}
+              textStyle={[
                 styles.ctaButtonText,
                 watchAdFontFamily ? { fontFamily: watchAdFontFamily } : undefined,
               ]}
-              allowFontScaling={false}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.72}
-            >
-              {adFailed ? rewardAdLabel("rewardAdUnavailable") : rewardAdLabel("rewardWatchAd")}
-            </Text>
+            />
           </View>
         </TouchableOpacity>
+        </View>
       </View>
     </Animated.View>
   );

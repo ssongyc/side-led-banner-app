@@ -17,9 +17,49 @@ export type RewardAdLabelKey =
   | "rewardBenefitOutlineShadow"
   | "rewardDescription"
   | "rewardWatchAd"
+  | "rewardAdPreparing"
+  | "rewardAdPreparingButton"
+  | "rewardAdLoadFailed"
+  | "rewardAdRetry"
   | "rewardAdUnavailable";
 
 const LABELS: Record<RewardAdLabelKey, Record<AppLocaleKey, string>> = {
+  rewardAdPreparing: {
+  "ko": "광고를 준비하고 있어요. 잠시만 기다려 주세요.",
+  "en": "Preparing your ad. Please wait a moment.",
+  "ja": "広告を準備しています。少々お待ちください。",
+  "zhTC": "正在準備廣告，請稍候。",
+  "zhSC": "正在准备广告，请稍候。",
+  "fr": "La publicité se prépare. Veuillez patienter.",
+  "es": "Estamos preparando el anuncio. Espera un momento."
+},
+  rewardAdPreparingButton: {
+  "ko": "광고 준비 중…",
+  "en": "Preparing ad…",
+  "ja": "広告を準備中…",
+  "zhTC": "廣告準備中…",
+  "zhSC": "广告准备中…",
+  "fr": "Préparation…",
+  "es": "Preparando…"
+},
+  rewardAdLoadFailed: {
+  "ko": "광고를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.",
+  "en": "We couldn't load the ad. Please try again later.",
+  "ja": "広告を読み込めませんでした。しばらくしてから再試行してください。",
+  "zhTC": "無法載入廣告，請稍後再試。",
+  "zhSC": "无法加载广告，请稍后重试。",
+  "fr": "La publicité n’a pas pu être chargée. Réessayez plus tard.",
+  "es": "No se pudo cargar el anuncio. Inténtalo de nuevo más tarde."
+},
+  rewardAdRetry: {
+  "ko": "다시 시도",
+  "en": "Try again",
+  "ja": "再試行",
+  "zhTC": "重試",
+  "zhSC": "重试",
+  "fr": "Réessayer",
+  "es": "Reintentar"
+},
   rewardHeaderBadge: {
     ko: "LED Pop 프로 무료 사용",
     en: "Use LED Pop Pro for Free",
@@ -103,6 +143,16 @@ const LABELS: Record<RewardAdLabelKey, Record<AppLocaleKey, string>> = {
   },
 };
 
+// All variants participate in intrinsic layout, including before an ad state changes.
+export const REWARD_AD_STATUS_TEXTS = [
+  ...Object.values(LABELS.rewardAdPreparing),
+  ...Object.values(LABELS.rewardAdLoadFailed),
+];
+export const REWARD_AD_BUTTON_TEXTS = [
+  ...Object.values(LABELS.rewardWatchAd),
+  ...Object.values(LABELS.rewardAdPreparingButton),
+];
+
 /** 게시 CSV 행 번호(1-based). 영·한 앵커가 같으면 시트 값이 코드 fallback보다 우선 */
 const REWARD_SHEET_PICK: Partial<
   Record<RewardAdLabelKey, SheetRowPickOptions>
@@ -136,6 +186,9 @@ export function tRewardAdLabel(
   sheetRows?: GoogleSheetLocaleRow[] | null,
 ): string {
   const fb = LABELS[key];
+  // Authored modal status copy must not be replaced by a remotely matched Sheet row.
+  if (key === "rewardAdPreparing" || key === "rewardAdPreparingButton" ||
+      key === "rewardAdLoadFailed" || key === "rewardAdRetry") return fb[locale];
   const opts = REWARD_SHEET_PICK[key];
 
   const fromSheet = pickLocaleFromSheetRows(

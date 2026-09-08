@@ -47,6 +47,9 @@ export default function Index() {
   const {
     loaded: rewardAdLoaded,
     failed: rewardAdFailed,
+    canRetry: rewardAdCanRetry,
+    retry: retryRewardedAd,
+    isReady: isRewardedAdReady,
     show: showRewardedAd,
   } = useRewardedAd(activatePro);
 
@@ -254,6 +257,9 @@ export default function Index() {
           onClose={() => updateUI({ rewardAdVisible: false })}
           adReady={rewardAdLoaded}
           adFailed={rewardAdFailed}
+          canRetry={rewardAdCanRetry}
+          onRetry={retryRewardedAd}
+          isAdReady={isRewardedAdReady}
           onWatchAd={showRewardedAd}
         />}
         {/* fullscreen LED banner modal */}
