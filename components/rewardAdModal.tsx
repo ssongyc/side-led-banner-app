@@ -44,21 +44,20 @@ const PRO_BADGE = require("../assets/images/PRO_Badge.png");
 const N = 45;
 
 const createStarPath = (size: number) => {
-  const path = Skia.Path.Make();
   const half = size / 2;
   const inner = size * 0.15;
 
-  path.moveTo(0, -half);
-  path.quadTo(0, 0, inner, -inner);
-  path.lineTo(half, 0);
-  path.quadTo(0, 0, inner, inner);
-  path.lineTo(0, half);
-  path.quadTo(0, 0, -inner, inner);
-  path.lineTo(-half, 0);
-  path.quadTo(0, 0, -inner, -inner);
-  path.close();
-
-  return path;
+  return Skia.PathBuilder.Make()
+    .moveTo(0, -half)
+    .quadTo(0, 0, inner, -inner)
+    .lineTo(half, 0)
+    .quadTo(0, 0, inner, inner)
+    .lineTo(0, half)
+    .quadTo(0, 0, -inner, inner)
+    .lineTo(-half, 0)
+    .quadTo(0, 0, -inner, -inner)
+    .close()
+    .build();
 };
 
 const PARTICLE_DATA = Array.from({ length: N }, (_, i) => {
