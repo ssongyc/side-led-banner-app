@@ -88,3 +88,7 @@ PSS는 dumpsys의 보고값으로 그래픽/스왑 등 집계 차이가 있어 R
 - 원본 트레이스·CSV·메모리·UI XML·스크린샷·광고 녹화: `artifacts/qa-device/` (Git 제외).
 - [Perfetto FrameTimeline 의미와 Buffer Stuffing](https://perfetto.dev/docs/data-sources/frametimeline)
 - [React Native DevTools](https://reactnative.dev/docs/react-native-devtools)
+
+## 제출 빌드 전 컴파일 점검
+
+Expo 57의 useIsFocused는 expo-router에서 가져오도록 정정했습니다. 별도 React Navigation 패키지의 포커스 컨텍스트와 혼용하지 않습니다. tsconfig에서 확인된 생성 산출물 artifacts와 의존성 node_modules를 제외한 뒤 현재 소스의 TypeScript --noEmit 컴파일이 통과했습니다. 기기 성능 재측정 결과는 아닙니다.

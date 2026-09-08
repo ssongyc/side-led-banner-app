@@ -307,3 +307,5 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 - 숨은 화면 애니메이션 중단·재개와 Android 호스트 복귀 시 바 숨김 보강, QA 문서 및 증분 빌드 보완을 포함합니다.
 - 제출 산출물은 기존 외부 서명 키로 scripts/build-local-apk.ps1 -IncludeBundle을 통해 함께 생성합니다. R8/resource shrinking과 같은 빌드의 AAB 내 매핑 일치를 검증합니다.
 - 빌드 결과·해시·검증 범위는 완료 후 별도 제출 빌드 보고서로 기록합니다. Play 업로드/검수 제출은 이 파일 생성 작업에 포함되지 않습니다.
+
+TypeScript 검증은 node_modules와 생성 산출물 artifacts를 제외합니다. 과거 빌드 복사본을 현재 소스로 중복 검사하지 않도록 범위를 고정했습니다.
