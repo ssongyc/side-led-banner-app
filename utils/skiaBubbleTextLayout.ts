@@ -1,3 +1,4 @@
+import { layoutSkiaLine } from "@/utils/skiaLineLayout";
 import type { SpeechBubblePresetId } from "@/constants/speechBubblePresets";
 import type { SkFont } from "@shopify/react-native-skia";
 
@@ -48,14 +49,6 @@ export function resolveBubbleCanvasOpts(params: {
   return Object.keys(opts).length > 0 ? opts : {};
 }
 
-export function speechMaxHeightForMetrics(
-  maxTextHeight: number,
-  canvasOpts: BubbleCanvasOpts | null,
-): number {
-  const inset = canvasOpts?.edgeInsetPx ?? 0;
-  return Math.max(1, maxTextHeight - inset * 2);
-}
-
 export function splitEnterRows(text: string): string[] {
   return text.replace(/\r\n?/g, "\n").split("\n");
 }
@@ -79,35 +72,22 @@ export function bubbleRows(params: {
   const { text, maxRows = BUBBLE_MAX_ROWS, playOption = "multi" } = params;
   const manual = splitEnterRows(text);
   if (playOption === "one") {
-    const one = manual.join(" ").trimStart();
+    const one = manual.join(" ");
     return one.length > 0 ? [one] : [];
   }
   return manual.slice(0, maxRows);
-}
-
-function rowGlyphs(
-  font: SkFont,
-  text: string,
-  letterSpacing: number,
-): BubbleRowLayout {
-  if (text.length === 0) return { text: "", width: 0, glyphs: [] };
-  let x = 0;
-  const glyphs: { x: number; text: string }[] = [];
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i]!;
-    glyphs.push({ x, text: ch });
-    x +=
-      font.measureText(ch).width + (i < text.length - 1 ? letterSpacing : 0);
-  }
-  return { text, width: x, glyphs };
 }
 
 export function bubbleLayouts(
   font: SkFont,
   rows: string[],
   letterSpacing: number,
+  getCharFont?: (ch: string) => SkFont,
 ): BubbleRowLayout[] {
-  return rows.map((row) => rowGlyphs(font, row, letterSpacing));
+  return rows.map((text) => ({
+    text,
+    ...layoutSkiaLine(font, text, letterSpacing, getCharFont),
+  }));
 }
 
 export function bubbleGlyphs(params: {
@@ -157,35 +137,4 @@ export function bubbleGlyphs(params: {
     }
   }
   return out;
-}
-
-export function layoutBubbleText(params: {
-  font: SkFont;
-  text: string;
-  letterSpacing: number;
-  playOption?: "one" | "multi";
-  opts: BubbleLayoutOpts;
-}) {
-  const { font, text, letterSpacing, playOption = "multi", opts } = params;
-  const {
-    frameWidth,
-    frameHeight,
-    safeWRatio = BUBBLE_SAFE.widthRatio,
-    safeHRatio = BUBBLE_SAFE.heightRatio,
-    maxRows = BUBBLE_MAX_ROWS,
-    lineGapPx,
-  } = opts;
-
-  const rows = bubbleRows({ text, maxRows, playOption });
-  const layouts = bubbleLayouts(font, rows, letterSpacing);
-  const glyphs = bubbleGlyphs({
-    font,
-    rows: layouts,
-    frameWidth,
-    frameHeight,
-    safeWRatio,
-    safeHRatio: safeHRatio,
-    lineGapPx,
-  });
-  return { rows, layouts, glyphs };
 }

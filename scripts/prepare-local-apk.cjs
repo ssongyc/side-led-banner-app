@@ -1,0 +1,135 @@
+// Called by the signing-verified wrapper. Never runs a build or downloads credentials.
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { execFileSync } = require('node:child_process');
+const root = path.resolve(__dirname, '..');
+const target = path.join(root, 'artifacts', 'b');
+const statePath = path.join(target, '.source-state.json');
+const planPath = path.join(target, '.source-plan.json');
+const phase = process.argv[2];
+const hash = value => crypto.createHash('sha256').update(value).digest('hex');
+const git = args => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
+// Only generated directories listed in .gitignore are excluded; user source/assets are inventoried.
+const excluded = name => /^(?:artifacts|node_modules|android|ios|\.git|\.expo|dist|web-build|credentials)(?:\/|$)/.test(name) ||
+  /(?:^|\/)(?:\.env(?:\..*)?|credentials\.json)$/.test(name) && name !== '.env.example' ||
+  /\.(?:jks|keystore|p12|p8|pem|key|mobileprovision)$/.test(name);
+function safePath(base, name) {
+  if (!name || path.isAbsolute(name) || name.includes('\\') || name.split('/').some(p => p === '..' || p === '.')) throw Error('Invalid source path');
+  const full = path.resolve(base, name);
+  if (!full.startsWith(base + path.sep) || excluded(name)) throw Error('Source path outside managed scope');
+  let cursor = base;
+  for (const part of name.split('/')) {
+    cursor = path.join(cursor, part);
+    if (fs.existsSync(cursor) && fs.lstatSync(cursor).isSymbolicLink()) throw Error('Linked paths cannot be synchronized');
+  }
+  return full;
+}
+for (const dir of [root, path.join(root, 'artifacts'), target]) {
+  if (fs.existsSync(dir) && fs.lstatSync(dir).isSymbolicLink()) throw Error('Build root must not be a link');
+}
+if (phase !== 'prepare') {
+  if (!['install-start', 'native-start', 'installed', 'native-ready'].includes(phase)) throw Error('Unknown preparation phase');
+  const state = readJson(statePath);
+  const plan = readJson(planPath);
+  if (phase === 'install-start') state.dependencyHash = null;
+  else if (phase === 'native-start') state.nativeHash = null;
+  else if (phase === 'installed') state.dependencyHash = plan.dependencyHash;
+  else state.nativeHash = plan.nativeHash;
+  fs.writeFileSync(statePath, JSON.stringify(state, null, 2));
+  process.exit(0);
+}
+fs.mkdirSync(target, { recursive: true });
+const files = [...new Set(git(['ls-files', '--cached', '--others', '--exclude-standard', '-z']).split('\0'))]
+  .filter(name => name && !excluded(name) && fs.existsSync(safePath(root, name))).sort();
+const app = readJson(path.join(root, 'app.json'));
+const oldAppPath = path.join(target, 'app.json');
+const versionCode = process.argv[3] ? Number(process.argv[3]) : app.expo.android.versionCode ??
+  (fs.existsSync(oldAppPath) ? readJson(oldAppPath).expo.android.versionCode : undefined);
+if (!Number.isSafeInteger(versionCode) || versionCode < 1) throw Error('Supply -VersionCode for the first local build');
+app.expo.android.versionCode = versionCode;
+const contents = new Map(files.map(name => [name, name === 'app.json'
+  ? Buffer.from(JSON.stringify(app, null, 2) + '\n') : fs.readFileSync(safePath(root, name))]));
+const dependencyNames = ['package.json', 'package-lock.json', '.npmrc', ...files.filter(n => n.startsWith('patches/'))];
+const nativeAssets = new Set();
+function collectAssets(value) {
+  if (typeof value === 'string' && value.startsWith('./assets/')) nativeAssets.add(value.slice(2));
+  else if (Array.isArray(value)) value.forEach(collectAssets);
+  else if (value && typeof value === 'object') Object.values(value).forEach(collectAssets);
+}
+collectAssets(app);
+if (fs.existsSync(oldAppPath)) collectAssets(readJson(oldAppPath));
+const nativeFile = name => /^(?:app\.config\.|react-native\.config\.|expo-module\.config\.)/.test(name) ||
+  /^(?:plugins|modules|patches)\//.test(name) || nativeAssets.has(name);
+const state = fs.existsSync(statePath) ? readJson(statePath) : null;
+let previousFiles = state?.files;
+let bootstrap = false;
+if (!previousFiles) {
+  const revisionPath = path.join(target, 'source-revision.txt');
+  if (fs.existsSync(revisionPath)) {
+    const revision = fs.readFileSync(revisionPath, 'utf8').trim();
+    if (!/^[a-f0-9]{40}$/.test(revision)) throw Error('Invalid previous source revision');
+    previousFiles = git(['ls-tree', '-r', '--name-only', '-z', revision]).split('\0').filter(n => n && !excluded(n));
+    const logPath = path.join(target, 'gradle-release.log');
+    bootstrap = fs.existsSync(logPath) && /BUILD SUCCESSFUL/.test(fs.readFileSync(logPath, 'utf8'));
+  } else {
+    if (fs.existsSync(oldAppPath) || fs.existsSync(path.join(target, 'android'))) throw Error('Existing build lacks a source inventory');
+    previousFiles = [];
+  }
+}
+dependencyNames.push(...previousFiles.filter(n => n.startsWith('patches/')));
+const nativeNames = [...new Set(['app.json', ...dependencyNames, ...files.filter(nativeFile), ...previousFiles.filter(nativeFile)])].sort();
+// Config/plugin changes conservatively invalidate native output. Dynamic config may read any asset.
+if (files.some(n => n.startsWith('app.config.'))) nativeNames.push(...files.filter(n => n.startsWith('assets/')));
+function digest(names, fromSource) {
+  return hash(JSON.stringify([...new Set(names)].sort().map(name => {
+    const file = safePath(target, name);
+    let content = fromSource ? contents.get(name) : fs.existsSync(file) ? fs.readFileSync(file) : undefined;
+    if (name === 'app.json' && content) content = Buffer.from(JSON.stringify(JSON.parse(content.toString())));
+    return [name, content ? hash(content) : null];
+  })));
+}
+const dependencyHash = digest(dependencyNames, true);
+// Hash the preserved local environment without copying or logging values.
+const envNames = fs.readdirSync(target).filter(n => /^\.env(?:\..*)?$/.test(n)).sort();
+const environmentHash = hash(JSON.stringify(envNames.map(n => [n, hash(fs.readFileSync(path.join(target, n)))])));
+const toolchainHash = hash(JSON.stringify([
+  process.version,
+  ...['C:/Program Files/Android/Android Studio/jbr/release',
+    'C:/Users/ssong/AppData/Local/Android/Sdk/packages.xml'].map(file => {
+    if (!fs.existsSync(file)) throw Error('Required local toolchain metadata is missing');
+    return hash(fs.readFileSync(file));
+  }),
+]));
+const nativeHash = hash(digest(nativeNames, true) + environmentHash + toolchainHash);
+const previousDependencyHash = state?.dependencyHash ?? (bootstrap ? digest(dependencyNames, false) : null);
+const previousNativeHash = state?.nativeHash ?? (bootstrap ? hash(digest(nativeNames, false) + environmentHash + toolchainHash) : null);
+const plan = {
+  revision: git(['rev-parse', 'HEAD']).trim(),
+  dirty: git(['status', '--porcelain', '-z']).length > 0,
+  versionCode, dependencyHash, nativeHash,
+  installRequired: dependencyHash !== previousDependencyHash || !fs.existsSync(path.join(target, 'node_modules', '.package-lock.json')),
+  nativeRequired: nativeHash !== previousNativeHash || !fs.existsSync(path.join(target, 'android', 'app', 'build.gradle')),
+  changed: [], removed: [],
+};
+// Persist an inventory BEFORE mutation, retaining successful dependency/native stamps on failure.
+fs.writeFileSync(statePath, JSON.stringify({ files: [...new Set([...previousFiles, ...files])], dependencyHash: previousDependencyHash, nativeHash: previousNativeHash }, null, 2));
+for (const name of files) {
+  const dest = safePath(target, name);
+  const content = contents.get(name);
+  if (fs.existsSync(dest) && hash(fs.readFileSync(dest)) === hash(content)) continue;
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.writeFileSync(dest, content);
+  plan.changed.push(name);
+}
+for (const name of previousFiles) {
+  if (contents.has(name)) continue;
+  const dest = safePath(target, name);
+  if (fs.existsSync(dest)) { fs.unlinkSync(dest); plan.removed.push(name); }
+}
+fs.writeFileSync(statePath, JSON.stringify({ files, dependencyHash: previousDependencyHash, nativeHash: previousNativeHash }, null, 2));
+fs.writeFileSync(planPath, JSON.stringify(plan, null, 2));
+fs.writeFileSync(path.join(target, 'source-revision.txt'), plan.revision + '\n');
+fs.writeFileSync(path.join(target, 'source-inputs.json'), JSON.stringify({ revision: plan.revision, dirty: plan.dirty, versionCode, files: Object.fromEntries([...contents].map(([n, b]) => [n, hash(b)])) }, null, 2));
+console.log(JSON.stringify({ changed: plan.changed.length, removed: plan.removed.length, installRequired: plan.installRequired, nativeRequired: plan.nativeRequired, versionCode }));

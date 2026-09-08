@@ -15,5 +15,5 @@ export function useRewardedAd(_onRewardEarned: () => void) {
     if (__DEV__) console.error(`[rewardedAd] ${WEB_AD_ERROR}`);
   }, []);
 
-  return { loaded: false, failed: true, show, canRetry: false, retry: loadRewardedAd, isReady: () => false };
+  return { loaded: false, failed: true, showFailed: false, show, canRetry: false, retry: loadRewardedAd, isReady: () => false };
 }

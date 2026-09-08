@@ -21,7 +21,7 @@ type RewardedSlot = {
   ad: RewardedAd | null;
   attempt: number;
   loadedAt: number | null;
-  retryableLoad: boolean;
+  failure: "load" | "show" | "configuration" | null;
   state: SlotState;
   retryTimer: ReturnType<typeof setTimeout> | null;
   unsubs: Array<() => void>;
@@ -31,7 +31,7 @@ const createEmptySlot = (): RewardedSlot => ({
   ad: null,
   attempt: 0,
   loadedAt: null,
-  retryableLoad: false,
+  failure: null,
   state: "idle",
   retryTimer: null,
   unsubs: [],
@@ -42,7 +42,6 @@ let slots: Record<SlotName, RewardedSlot> = {
   next: createEmptySlot(),
 };
 
-let terminalLoadFailed = false;
 let openedCurrentAd = false;
 let earnedRewardCurrentAd = false;
 let rewardGrantedCurrentAd = false;
@@ -109,6 +108,19 @@ function disposeSlot(slotName: SlotName) {
   slots[slotName] = createEmptySlot();
 }
 
+function markShowFailed() {
+  disposeSlot("current");
+  disposeSlot("next");
+  slots.current.state = "failed";
+  slots.current.failure = "show";
+  openedCurrentAd = false;
+  earnedRewardCurrentAd = false;
+  rewardGrantedCurrentAd = false;
+  nextLoadRequestedForCurrentShow = false;
+  trace("current", "show_failed");
+  notifySubscribers();
+}
+
 function createRewardedAd(slotName: SlotName): RewardedAd {
   const adUnitId = AD_UNIT_ID;
   if (!adUnitId) {
@@ -132,13 +144,13 @@ function createRewardedAd(slotName: SlotName): RewardedAd {
       clearSlotRetryTimer(activeSlot);
       activeSlot.state = "loaded";
       activeSlot.loadedAt = Date.now();
-      if (activeSlotName === "current") terminalLoadFailed = false;
+      activeSlot.failure = null;
       trace(activeSlotName, "loaded");
       notifySubscribers();
     }),
     ad.addAdEventListener(AdEventType.OPENED, () => {
       const activeSlotName = resolveSlotName(ad);
-      if (activeSlotName !== "current") return;
+      if (activeSlotName !== "current" || slots.current.state !== "showing") return;
       openedCurrentAd = true;
       trace(activeSlotName, "opened");
       if (!nextLoadRequestedForCurrentShow) {
@@ -148,13 +160,13 @@ function createRewardedAd(slotName: SlotName): RewardedAd {
     }),
     ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => {
       const activeSlotName = resolveSlotName(ad);
-      if (activeSlotName !== "current") return;
+      if (activeSlotName !== "current" || slots.current.state !== "showing") return;
       earnedRewardCurrentAd = true;
       trace(activeSlotName, "earned_reward");
     }),
     ad.addAdEventListener(AdEventType.CLOSED, () => {
       const activeSlotName = resolveSlotName(ad);
-      if (activeSlotName !== "current") return;
+      if (activeSlotName !== "current" || slots.current.state !== "showing") return;
       trace(activeSlotName, "closed");
       if (
         openedCurrentAd &&
@@ -182,7 +194,7 @@ function requestSlotLoad(slotName: SlotName) {
   if (getPremiumSnapshot().entitlement !== "free") return;
   const slot = slots[slotName];
   slot.attempt += 1;
-  slot.retryableLoad = true;
+  slot.failure = null;
   slot.state = "loading";
   slot.loadedAt = null;
   trace(slotName, "load_request");
@@ -196,26 +208,15 @@ function handleSlotError(slotName: SlotName) {
   if (slot.retryTimer || slot.state === "failed") return;
 
   if (slot.state === "showing") {
-    terminalLoadFailed = true;
-    slot.state = "failed";
-    slot.loadedAt = null;
-    trace(slotName, "show_failed");
-    notifySubscribers();
+    markShowFailed();
     return;
   }
 
-  if (!slot.retryableLoad) {
-    terminalLoadFailed = true;
-    slot.state = "failed";
-    slot.loadedAt = null;
-    trace(slotName, "promoted_next_failed");
-    notifySubscribers();
-    return;
-  }
+  if (slot.state !== "loading") return;
 
   const retryDelay = LOAD_RETRY_DELAYS_MS[slot.attempt - 1];
   if (retryDelay == null) {
-    if (slotName === "current") terminalLoadFailed = true;
+    slot.failure = "load";
     slot.state = "failed";
     slot.loadedAt = null;
     trace(slotName, "terminal_load_failed");
@@ -248,7 +249,6 @@ function promoteNextSlotToCurrent() {
   earnedRewardCurrentAd = false;
   rewardGrantedCurrentAd = false;
   nextLoadRequestedForCurrentShow = false;
-  terminalLoadFailed = slots.current.state === "failed" && slots.current.retryableLoad && slots.current.attempt >= 3;
   trace("current", "next_promoted_to_current");
 }
 
@@ -265,7 +265,6 @@ export function isRewardedAdShowing() {
 export function suspendRewardedAds() {
   disposeSlot("current");
   disposeSlot("next");
-  terminalLoadFailed = false;
   openedCurrentAd = false;
   earnedRewardCurrentAd = false;
   rewardGrantedCurrentAd = false;
@@ -275,9 +274,11 @@ export function suspendRewardedAds() {
 
 export function loadRewardedAd() {
   if (getPremiumSnapshot().entitlement !== "free") return;
+  // Screen re-entry must not restart a terminally failed cycle.
+  if (slots.current.state === "failed") return;
   const configError = getRewardedAdConfigurationError();
   if (configError) {
-    terminalLoadFailed = true;
+    slots.current.failure = "configuration";
     slots.current.state = "failed";
     if (__DEV__) console.error("[rewardedAd] load failed", configError);
     notifySubscribers();
@@ -288,7 +289,6 @@ export function loadRewardedAd() {
   if (isLoadedSlotExpired(current)) {
     trace("current", "loaded_ad_expired");
     disposeSlot("current");
-    terminalLoadFailed = false;
   }
 
   const currentState = slots.current.state;
@@ -302,7 +302,6 @@ export function loadRewardedAd() {
   }
 
   disposeSlot("current");
-  terminalLoadFailed = false;
   requestSlotLoad("current");
 }
 
@@ -311,28 +310,28 @@ function getLoadedState() {
     slots.current.ad?.loaded === true && !isLoadedSlotExpired(slots.current);
 }
 
-function getFailedState() {
-  return terminalLoadFailed || slots.current.state === "failed";
+function getCanRetryState() {
+  const current = slots.current;
+  return getPremiumSnapshot().entitlement === "free" && current.state === "failed" &&
+    (current.failure === "show" || (current.failure === "load" && current.attempt >= 3));
 }
 
-function getCanRetryState() {
-  return getPremiumSnapshot().entitlement === "free" && terminalLoadFailed &&
-    slots.current.state === "failed" && slots.current.retryableLoad && slots.current.attempt >= 3;
+function getAdSnapshot() {
+  return {
+    loaded: getLoadedState(),
+    failed: slots.current.state === "failed",
+    showFailed: slots.current.failure === "show",
+    canRetry: getCanRetryState(),
+  };
 }
 
 export function useRewardedAd(onRewardEarned: () => void) {
-  const [loaded, setLoaded] = useState(getLoadedState);
-  const [failed, setFailed] = useState(getFailedState);
-  const [canRetry, setCanRetry] = useState(getCanRetryState);
+  const [snapshot, setSnapshot] = useState(getAdSnapshot);
   const onRewardEarnedRef = useRef(onRewardEarned);
   onRewardEarnedRef.current = onRewardEarned;
 
   useEffect(() => {
-    const syncState = () => {
-      setLoaded(getLoadedState());
-      setFailed(getFailedState());
-      setCanRetry(getCanRetryState());
-    };
+    const syncState = () => setSnapshot(getAdSnapshot());
     const rewardListener = () => onRewardEarnedRef.current();
     subscribers.add(syncState);
     rewardSubscribers.add(rewardListener);
@@ -348,7 +347,7 @@ export function useRewardedAd(onRewardEarned: () => void) {
     if (getPremiumSnapshot().entitlement !== "free") return;
     const configError = getRewardedAdConfigurationError();
     if (configError) {
-      terminalLoadFailed = true;
+      slots.current.failure = "configuration";
       slots.current.state = "failed";
       if (__DEV__) console.error("[rewardedAd] show failed", configError);
       notifySubscribers();
@@ -356,17 +355,9 @@ export function useRewardedAd(onRewardEarned: () => void) {
     }
 
     const current = slots.current;
-    if (!current.ad || current.state !== "loaded" || !current.ad.loaded) {
-      if (__DEV__) console.warn("[rewardedAd] show() called before ad loaded");
-      return;
-    }
-
-    if (isLoadedSlotExpired(current)) {
-      terminalLoadFailed = true;
-      current.state = "failed";
-      current.loadedAt = null;
-      trace("current", "show_blocked_expired");
-      notifySubscribers();
+    if (current.state === "showing" || current.state === "failed") return;
+    if (!current.ad || current.state !== "loaded" || !current.ad.loaded || isLoadedSlotExpired(current)) {
+      markShowFailed();
       return;
     }
 
@@ -374,17 +365,27 @@ export function useRewardedAd(onRewardEarned: () => void) {
     earnedRewardCurrentAd = false;
     rewardGrantedCurrentAd = false;
     nextLoadRequestedForCurrentShow = false;
-    current.retryableLoad = false;
+    current.failure = null;
     current.state = "showing";
     trace("current", "show_request");
     notifySubscribers();
-    current.ad.show({ immersiveModeEnabled: Platform.OS === "android" });
+    const ad = current.ad;
+    const onShowError = () => {
+      if (slots.current.ad === ad && slots.current.state === "showing") markShowFailed();
+    };
+    try {
+      void ad.show({ immersiveModeEnabled: Platform.OS === "android" }).catch(onShowError);
+    } catch {
+      onShowError();
+    }
   }, []);
 
   const retry = useCallback(() => {
     if (!getCanRetryState()) return;
+    disposeSlot("current");
+    disposeSlot("next");
     loadRewardedAd(); // Only load; a new enabled Watch Ad action is required to show.
   }, []);
 
-  return { loaded, failed, show, canRetry, retry, isReady: getLoadedState };
+  return { ...snapshot, show, retry, isReady: getLoadedState };
 }

@@ -45,22 +45,3 @@ export function maxFontSizeForAvailableHeight(params: {
     Math.floor(bodyBudget / (rowHeightPerFontPx * n)),
   );
 }
-
-export function clampFontSizeBySkiaBlockHeight(params: {
-  desiredFontSize: number;
-  rowHeightPxAtProbe: number;
-  probeFontSize: number;
-  lineCount: number;
-  lineGapPx: number;
-  maxHeightPx: number;
-  paddingPx: number;
-}): number {
-  const maxBySkia = maxFontSizeForAvailableHeight({
-    rowHeightPxAtProbe: params.rowHeightPxAtProbe,
-    probeFontSize: params.probeFontSize,
-    lineCount: params.lineCount,
-    lineGapPx: params.lineGapPx,
-    availableHeightPx: Math.max(1, params.maxHeightPx - params.paddingPx),
-  });
-  return Math.max(1, Math.min(params.desiredFontSize, maxBySkia));
-}

@@ -119,8 +119,15 @@ const SUNNY_APPS: SunnyAppEntry[] = [
     thumbnail: require("@/assets/images/Sunny's_Icon/Find-Four-Icon.png"),
   },
   {
+    id: "decibella2",
+    name: "decibella2",
+    appStoreUrl: "https://decibella2.onelink.me/T5UV/x5q1f7vs",
+    playStoreUrl: "https://decibella2.onelink.me/T5UV/x5q1f7vs",
+    thumbnail: require("@/assets/images/Sunny's_Icon/decibella2-Icon.png"),
+  },
+  {
     id: "decibella",
-    name: "Decibella",
+    name: "decibella",
     appStoreUrl: "https://apps.apple.com/ca/app/decibella/id6751743532",
     playStoreUrl:
       "https://play.google.com/store/apps/details?id=cc.cavecafe.app.decibella",

@@ -138,16 +138,6 @@ export function getRelLineSpacing(params: {
   return requested * (1 - t);
 }
 
-export function getLineCountForMode(params: {
-  text: string;
-  playOption: "one" | "multi";
-  maxLines?: number;
-}) {
-  const { text, playOption, maxLines = 3 } = params;
-  if (playOption === "one") return 1;
-  return Math.min((text.match(/\n/g) || []).length + 1, maxLines);
-}
-
 function resolveMaxFontSizeForBox(params: {
   availableHeight: number;
   lineCount: number;

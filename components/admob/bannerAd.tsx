@@ -11,6 +11,7 @@ const BANNER_AD_UNIT_ID = Platform.select({
 });
 
 const LOAD_RETRY_DELAYS_MS = [3000, 6000] as const;
+const UNAVAILABLE_MESSAGE_DURATION_MS = 10_000;
 
 type BannerAdComponentProps = {
   style?: any;
@@ -23,6 +24,7 @@ export default function BannerAdComponent({
 }: BannerAdComponentProps) {
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(!BANNER_AD_UNIT_ID);
+  const [unavailableVisible, setUnavailableVisible] = useState(true);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -30,6 +32,12 @@ export default function BannerAdComponent({
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!failed) return;
+    const timer = setTimeout(() => setUnavailableVisible(false), UNAVAILABLE_MESSAGE_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [failed]);
 
   const clearRetryTimer = () => {
     if (!retryTimerRef.current) return;
@@ -41,7 +49,7 @@ export default function BannerAdComponent({
     if (__DEV__) console.error(`[bannerAd] Banner ad is not configured for ${Platform.OS}.`);
     return (
       <View style={[{ alignItems: "center", minHeight: 50, justifyContent: "center" }, style]}>
-        <Text allowFontScaling={false}>{unavailableLabel}</Text>
+        {unavailableVisible ? <Text allowFontScaling={false}>{unavailableLabel}</Text> : null}
       </View>
     );
   }
@@ -49,7 +57,7 @@ export default function BannerAdComponent({
   return (
     <View style={[{ alignItems: "center", minHeight: 50, justifyContent: "center" }, style]}>
       {failed ? (
-        <Text allowFontScaling={false}>{unavailableLabel}</Text>
+        unavailableVisible ? <Text allowFontScaling={false}>{unavailableLabel}</Text> : null
       ) : (
         <BannerAd
           key={`${BANNER_AD_UNIT_ID}-${attempt}`}

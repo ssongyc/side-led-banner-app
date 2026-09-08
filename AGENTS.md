@@ -59,3 +59,15 @@ I am a solo mobile app/game and Microsoft Windows app developer.
 - Show `Ad Unavailable` only after all three requests fail. Do not display a terminal unavailable state between attempts.
 - Stop automatically after the third failed request. Prevent duplicate callbacks, concurrent retry timers, render-triggered requests, and any further automatic retry loop.
 - A user-initiated manual retry may start a new bounded three-request cycle only when the app explicitly provides that control.
+
+## Incremental local APK workflow
+
+- User-approved default: keep C:/dev/Led Banner/artifacts/b as the fixed active build directory and reuse its dependencies, native output and caches. Do not create a new snapshot or clear caches for each APK.
+- Before every authorized build, synchronize the current main working source, including additions and deletions, into that directory. Use a source-file inventory and compare content; copy only changed files. Never mirror the whole repository into its own artifacts subfolder or overwrite generated output/credentials. Record the source revision and any uncommitted changes used.
+- Compare package.json and package-lock.json with the last build inputs. Run dependency installation only if inputs changed or the installation is missing/inconsistent. Do not routinely run npm ci for UI-only changes.
+- Compare Expo config, config plugins, native modules, toolchain and native-affecting assets/settings with the previous inputs. Reuse native output with -ResumeNative when these inputs are unchanged. Regenerate only when native inputs actually require it, using the signing-verified procedure; never resume stale native configuration merely to save time.
+- Preserve previous APKs, verification evidence and complete logs under unique build identifiers before another run. Keep the active build directory at the same path.
+- The release wrapper explicitly enables the local Gradle build cache. Do not routinely clean, delete .cxx, reinstall dependencies or rewrite unchanged generated configuration. Invalidate only the identified stale output when an actual error requires it.
+- Keep all four existing Android ABIs. ARM64-only builds require a separate explicit request and device compatibility confirmation. Retain signing, API level and artifact verification requirements.
+- Keep the current worker limit until host memory and measured timings justify adjustment. No speedup estimate is a measured result; report total time and UP-TO-DATE/FROM-CACHE/executed counts after the next authorized build.
+- This standing workflow does not authorize compiling, testing, committing, pushing or uploading without a user request.

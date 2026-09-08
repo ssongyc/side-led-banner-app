@@ -48,11 +48,16 @@ export default function Index() {
   const {
     loaded: rewardAdLoaded,
     failed: rewardAdFailed,
+    showFailed: rewardAdShowFailed,
     canRetry: rewardAdCanRetry,
     retry: retryRewardedAd,
     isReady: isRewardedAdReady,
     show: showRewardedAd,
   } = useRewardedAd(activatePro);
+
+  useEffect(() => {
+    if (rewardAdShowFailed) openRewardAdModal();
+  }, [rewardAdShowFailed, openRewardAdModal]);
 
   // 실측한 플레이바 폭에 비례해 버튼 크기 키우기 (1.6배 제한)
   const [playBarScale, setPlayBarScale] = useState(1);
@@ -258,6 +263,7 @@ export default function Index() {
           onClose={() => updateUI({ rewardAdVisible: false })}
           adReady={rewardAdLoaded}
           adFailed={rewardAdFailed}
+          adShowFailed={rewardAdShowFailed}
           canRetry={rewardAdCanRetry}
           onRetry={retryRewardedAd}
           isAdReady={isRewardedAdReady}

@@ -20,6 +20,7 @@ export type RewardAdLabelKey =
   | "rewardAdPreparing"
   | "rewardAdPreparingButton"
   | "rewardAdLoadFailed"
+  | "rewardAdShowFailed"
   | "rewardAdRetry"
   | "rewardAdUnavailable";
 
@@ -35,7 +36,7 @@ const LABELS: Record<RewardAdLabelKey, Record<AppLocaleKey, string>> = {
 },
   rewardAdPreparingButton: {
   "ko": "광고 준비 중…",
-  "en": "Preparing ad…",
+  "en": "Preparing Ad...",
   "ja": "広告を準備中…",
   "zhTC": "廣告準備中…",
   "zhSC": "广告准备中…",
@@ -51,6 +52,15 @@ const LABELS: Record<RewardAdLabelKey, Record<AppLocaleKey, string>> = {
   "fr": "La publicité n’a pas pu être chargée. Réessayez plus tard.",
   "es": "No se pudo cargar el anuncio. Inténtalo de nuevo más tarde."
 },
+  rewardAdShowFailed: {
+    ko: "광고를 재생하지 못했어요. 다시 시도해 주세요.",
+    en: "We couldn't play the ad. Please try again.",
+    ja: "広告を再生できませんでした。もう一度お試しください。",
+    zhTC: "無法播放廣告，請再試一次。",
+    zhSC: "无法播放广告，请重试。",
+    fr: "La publicité n’a pas pu être lue. Veuillez réessayer.",
+    es: "No se pudo reproducir el anuncio. Inténtalo de nuevo."
+  },
   rewardAdRetry: {
   "ko": "다시 시도",
   "en": "Try again",
@@ -147,6 +157,7 @@ const LABELS: Record<RewardAdLabelKey, Record<AppLocaleKey, string>> = {
 export const REWARD_AD_STATUS_TEXTS = [
   ...Object.values(LABELS.rewardAdPreparing),
   ...Object.values(LABELS.rewardAdLoadFailed),
+  ...Object.values(LABELS.rewardAdShowFailed),
 ];
 export const REWARD_AD_BUTTON_TEXTS = [
   ...Object.values(LABELS.rewardWatchAd),
@@ -188,7 +199,7 @@ export function tRewardAdLabel(
   const fb = LABELS[key];
   // Authored modal status copy must not be replaced by a remotely matched Sheet row.
   if (key === "rewardAdPreparing" || key === "rewardAdPreparingButton" ||
-      key === "rewardAdLoadFailed" || key === "rewardAdRetry") return fb[locale];
+      key === "rewardAdLoadFailed" || key === "rewardAdShowFailed" || key === "rewardAdRetry") return fb[locale];
   const opts = REWARD_SHEET_PICK[key];
 
   const fromSheet = pickLocaleFromSheetRows(

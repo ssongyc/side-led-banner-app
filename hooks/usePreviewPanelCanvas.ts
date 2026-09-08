@@ -30,8 +30,7 @@ type TextLayoutEvent = {
   nativeEvent: { lines: { width: number }[] };
 };
 
-type SkiaLineGlyphLayout = { x: number; text: string };
-type SkiaLineLayout = { width: number; glyphs: SkiaLineGlyphLayout[] };
+import { layoutSkiaLine, type SkiaLineLayout } from "@/utils/skiaLineLayout";
 
 /** CJK문자 판별하는 용  */
 function isCJKChar(ch: string): boolean {
@@ -42,50 +41,6 @@ function isCJKChar(ch: string): boolean {
     (code >= 0x20000 && code <= 0x2a6df) ||
     (code >= 0xf900 && code <= 0xfaff)
   );
-}
-
-function getSpaceAdvanceWidth(font: SkFont): number {
-  const ids = font.getGlyphIDs(" ", 1);
-  if (ids.length > 0 && ids[0] !== 0) {
-    const widths = font.getGlyphWidths(ids);
-    if (widths.length > 0 && widths[0] != null && widths[0] > 0) return widths[0];
-  }
-  return 0;
-}
-
-function layoutSkiaLine(
-  font: SkFont,
-  text: string,
-  letterSpacing: number,
-  getCharFont?: (ch: string) => SkFont,
-): SkiaLineLayout {
-  if (text.length === 0) return { width: 0, glyphs: [] };
-
-  const glyphs: SkiaLineGlyphLayout[] = [];
-  let x = 0;
-
-  if (!getCharFont) {
-    const advances = font.getGlyphWidths(font.getGlyphIDs(text));
-    for (let i = 0; i < text.length; i++) {
-      const ch = text[i]!;
-      glyphs.push({ x, text: ch });
-      const isSpace = ch === " ";
-      x += (advances[i] ?? 0) + (!isSpace && i < text.length - 1 ? letterSpacing : 0);
-    }
-  } else {
-    for (let i = 0; i < text.length; i++) {
-      const ch = text[i]!;
-      glyphs.push({ x, text: ch });
-      const charFont = getCharFont(ch);
-      const adv =
-        ch === " "
-          ? getSpaceAdvanceWidth(charFont)
-          : charFont.measureText(ch).width + (i < text.length - 1 ? letterSpacing : 0);
-      x += adv;
-    }
-  }
-
-  return { width: x, glyphs };
 }
 
 /** 마퀴 타일은 텍스트 너비 기준(고정). 프레임 가운데 정렬 x는 별도 오프셋으로 복원합니다. */
@@ -305,14 +260,14 @@ export function usePreviewPanelCanvas({
         })
       : (displayText.length > 0 ? [displayText] : []);
 
-    if (useBubbleLayout) {
-      return bubbleLayouts(skiaFont, rows, letterSpacing);
-    }
-
     const getCharFont: ((ch: string) => SkFont) | undefined =
       isPixelMode && (pixelZhHansFont || pixelZhHantFont)
         ? (ch) => pickBestCJKFont(ch, pixelZhHansFont, pixelZhHantFont, skiaFont)
         : (localeCharFontPicker ?? undefined);
+
+    if (useBubbleLayout) {
+      return bubbleLayouts(skiaFont, rows, letterSpacing, getCharFont);
+    }
 
     return rows.map((line) => layoutSkiaLine(skiaFont, line, letterSpacing, getCharFont));
   }, [

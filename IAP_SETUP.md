@@ -1,5 +1,7 @@
 # LED POP Premium IAP 설정
 
+> 현재 Upgrade to Pro 메뉴와 라우트는 제외되어 있습니다. 아래 구매 UI 설명은 보관 구현과 재활성화 시 설정 절차이며, 현재 화면에 노출되지 않습니다. 사용자의 명시적인 요청 전까지 재활성화하지 않습니다. 최신 APK 및 포함 범위는 [README](README.md)를 참고하세요.
+
 ## 현재 구현과 상태
 
 외부 결제 관리 서비스 없이 `expo-iap 5.5.1`로 Apple StoreKit과 Google Play Billing에 직접 연결합니다.
@@ -25,7 +27,7 @@ SDK 55 기준 2026-09-08 Android preview APK `1cfedbc5-0306-4113-8e65-68e9aebb89
 
 | 파일 / 디렉터리 | 역할 |
 | --- | --- |
-| `app/premium.tsx` | 실제 가격, 구매·복원 버튼 및 결과 상태 |
+| `disabled-features/premium/PremiumScreen.tsx` | 실제 가격, 구매·복원 버튼 및 결과 상태 |
 | `utils/ApiClient.ts` | 스토어 연결, 거래 직렬 처리, 구매·복원·검증 |
 | `contexts/premiumContext.tsx` | 구매 상태 구독, 시작·앱 복귀 시 확인 |
 | `contexts/settingsContext.tsx` | 영구 구매와 기존 보상 Pro를 모든 잠금 조건에 연결 |
