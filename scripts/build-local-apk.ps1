@@ -97,7 +97,8 @@ try {
      if(Test-Path -LiteralPath $cached){
       if((Get-Item -LiteralPath $cached).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Native cache must not be a link'}
       if(Test-Path -LiteralPath $destination){throw 'Fresh native project unexpectedly contains build cache'}
-      Copy-Item -LiteralPath $cached -Destination $destination -Recurse
+      if([IO.Path]::GetFullPath($cached) -ne (Join-Path $archive $relative) -or [IO.Path]::GetFullPath($destination) -ne (Join-Path $native $relative)){throw 'Unexpected generated cache path'}
+      Move-Item -LiteralPath $cached -Destination $destination
      }
     }
    }
@@ -118,6 +119,22 @@ try {
         }
 "@
   if(-not $gradle.Contains('localVerified {')){$gradle=$gradle.Replace($marker,$block)}
+  # Bound Ninja independently of Gradle workers to avoid Windows commit-limit exhaustion.
+  if(-not $gradle.Contains('// LED POP local CMake jobs')){
+   $gradle += @"
+
+// LED POP local CMake jobs
+android {
+    defaultConfig {
+        externalNativeBuild {
+            cmake {
+                arguments '-DCMAKE_JOB_POOLS=ledpop_compile=1;ledpop_link=1', '-DCMAKE_JOB_POOL_COMPILE=ledpop_compile', '-DCMAKE_JOB_POOL_LINK=ledpop_link'
+            }
+        }
+    }
+}
+"@
+  }
   $gradlePath=Join-Path $resolved 'android/app/build.gradle'
   if([IO.File]::ReadAllText($gradlePath) -cne $gradle){[IO.File]::WriteAllText($gradlePath,$gradle)}
   $propertiesPath=Join-Path $resolved 'android/local.properties'
@@ -129,7 +146,7 @@ try {
   $started=Get-Date
   $tasks=@(':app:assembleRelease')
   if($IncludeBundle){$tasks+= ':app:bundleRelease'}
-  & ./android/gradlew.bat -p android @tasks --build-cache --no-daemon --max-workers=2 "-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=1024m" --stacktrace > gradle-release.log 2>&1
+  & ./android/gradlew.bat -p android @tasks --build-cache --no-daemon --max-workers=1 "-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=1024m" --stacktrace > gradle-release.log 2>&1
   $buildExit=$LASTEXITCODE
   Copy-Item -LiteralPath (Join-Path $resolved 'gradle-release.log') -Destination $record
   if($buildExit -ne 0){throw 'Gradle build failed; inspect gradle-release.log'}

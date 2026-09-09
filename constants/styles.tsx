@@ -263,9 +263,9 @@ export const rewardAdModalStyles = StyleSheet.create({
     zIndex: 10000,
     justifyContent: "center",
     alignItems: "center",
-    // Parent editor already owns safe-area insets; do not apply them twice.
+    // Absolute overlay owns its safe-area padding in RewardAdModal.
     paddingHorizontal: 12,
-    paddingTop: 56,
+    paddingTop: 12,
     paddingBottom: 12,
   },
   dim: {
@@ -273,14 +273,12 @@ export const rewardAdModalStyles = StyleSheet.create({
   },
   card: {
     width: "100%",
-    maxWidth: 380,
+
     maxHeight: "100%",
     flexShrink: 1,
     backgroundColor: "#FFFFFF",
     borderRadius: 32,
-    paddingTop: 54,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
+
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
@@ -290,9 +288,7 @@ export const rewardAdModalStyles = StyleSheet.create({
     position: "relative",
   },
   closeButton: {
-    position: "absolute",
-    top: 8,
-    right: 16,
+    alignSelf: "flex-end",
     width: 44,
     height: 44,
     backgroundColor: "#EFEFEF",
@@ -302,8 +298,7 @@ export const rewardAdModalStyles = StyleSheet.create({
     zIndex: 1,
   },
   appIconContainer: {
-    position: "absolute",
-    top: -44,
+
     alignSelf: "center",
     width: "100%",
     maxWidth: 240,
@@ -370,7 +365,7 @@ export const rewardAdModalStyles = StyleSheet.create({
     minHeight: 0,
   },
   modalBodyContent: {
-    paddingBottom: 8,
+    padding: 16,
   },
   modalActions: {
     flexShrink: 0,
@@ -648,7 +643,7 @@ export const settingsFooterStyles = StyleSheet.create({
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
     paddingTop: 8,
     paddingBottom: 24,
     paddingHorizontal: 20,

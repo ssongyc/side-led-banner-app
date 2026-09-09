@@ -1,7 +1,8 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { uiThemeFontStyle } from "@/constants/appFonts";
 import { useSettingsRest } from "@/contexts/settingsContext";
 import { hideAndroidNavigationBar } from "@/utils/SystemChrome";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Modal,
   Platform,
@@ -25,6 +26,8 @@ export function SheetFetchDebugPanel() {
 
 function SheetFetchDebugPanelInner() {
   const [open, setOpen] = useState(false);
+  const insets = useSafeAreaInsets();
+  const drag = useRef({ x: 0, y: 0, moved: false });
   const {
     sheetParseResult: data,
     sheetStringsLoading: loading,
@@ -67,20 +70,24 @@ function SheetFetchDebugPanelInner() {
         transparent
         onRequestClose={() => setOpen(false)}
       >
-        <View style={styles.backdrop} onTouchStart={hideAndroidNavigationBar}>
+        <View style={[styles.backdrop, { paddingTop: insets.top, paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right }]} onTouchStart={hideAndroidNavigationBar}>
           <View style={styles.sheet}>
+            <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled" canCancelContentTouches
+              onTouchStart={event => { drag.current = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY, moved: false }; }}
+              onTouchMove={event => {
+                if (Math.hypot(event.nativeEvent.pageX - drag.current.x, event.nativeEvent.pageY - drag.current.y) > 8) drag.current.moved = true;
+              }}
+              onScrollBeginDrag={() => { drag.current.moved = true; }}>
             <View style={styles.toolbar}>
-              <Pressable onPress={() => setOpen(false)} hitSlop={12}>
+              <Pressable onPress={() => { if (!drag.current.moved) setOpen(false); }} hitSlop={12}>
                 <Text style={styles.toolbarBtn} allowFontScaling={false}>닫기</Text>
               </Pressable>
-              <Pressable onPress={() => void refetch()} hitSlop={12}>
+              <Pressable onPress={() => { if (!drag.current.moved) void refetch(); }} hitSlop={12}>
                 <Text style={styles.toolbarBtn} allowFontScaling={false}>다시 불러오기</Text>
               </Pressable>
             </View>
-            <ScrollView
-              style={styles.scroll}
-              contentContainerStyle={styles.scrollContent}
-            >
+
               <Text selectable style={styles.mono} allowFontScaling={false}>
                 {bodyText}
               </Text>
@@ -115,14 +122,16 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.4)",
   },
   sheet: {
-    maxHeight: "72%",
+    maxHeight: "100%",
     backgroundColor: "#1a1a1a",
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
-    paddingBottom: 8,
+
   },
   toolbar: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -132,10 +141,13 @@ const styles = StyleSheet.create({
   toolbarBtn: {
     ...uiThemeFontStyle,
     color: "#6ae",
+    minHeight: 44,
+    paddingVertical: 10,
     fontSize: 16,
   },
   scroll: {
     flexGrow: 0,
+    flexShrink: 1,
   },
   scrollContent: {
     paddingHorizontal: 12,

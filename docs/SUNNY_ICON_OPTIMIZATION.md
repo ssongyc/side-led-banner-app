@@ -22,6 +22,6 @@ Pillow 12.1.1의 WebP lossless=True, exact=True, method=6으로 인코딩했습�
 | decibella2-Icon | 20,913 | 6,748 | 67.7% |
 | decibella-Icon-1024 | 560,369 | 363,516 | 35.1% |
 
-[Expo Image 공식 문서](https://docs.expo.dev/versions/latest/sdk/image/)의 WebP 지원을 확인했습니다. 이미지 내용은 픽셀 단위로 비교했으나 Android/iOS 실제 화면 검증은 미실행입니다. 컴파일·린트·앱 테스트는 실행하지 않았습니다. 아이콘과 문서는 사용자 요청에 따른 main 브랜치 전달 범위에 포함합니다. 기존 생성 APK/AAB에는 이번 변경이 포함되지 않습니다.
+[Expo Image 공식 문서](https://docs.expo.dev/versions/latest/sdk/image/)의 WebP 지원을 확인했습니다. 이미지 내용은 픽셀 단위로 비교했으나 Android/iOS 실제 화면 검증은 미실행입니다. 아이콘 최적화 단계에서는 컴파일·린트·앱 테스트를 실행하지 않았습니다. 아이콘과 문서는 사용자 요청에 따른 main 브랜치 전달 범위에 포함합니다. 후속 Android 1.0.6 (24) APK/AAB에 포함됐으며 APK 안의 WebP 13개가 소스 바이트와 일치함을 검증했습니다. 실기기 화면 검증은 미실행입니다.
 
 파일별 원본/후보 용량 및 RGBA 해시 기록: artifacts/sunny-icon-optimization/analysis.json (로컬 작업 기록).

@@ -2,7 +2,7 @@
 
 ## Status
 
-Source implementation only. No compile, lint, app test, build, AdMob Console change or deployment was performed for this update. Documentation and source are included in the user-requested main-branch delivery; the separate splash lifecycle edit is preserved outside this commit. The previously generated APK/AAB do not include these changes. Device layout and native lifecycle behavior remain unverified.
+Initial source delivery was followed by the user-requested Android 1.0.6 (24) production APK/AAB build. TypeScript compilation, native build and local artifact/profile/JS isolation/signing/mapping checks passed; see [release evidence](ANDROID_RELEASE_1.0.6_24.md). The native module required defaultConfig version fields during compilation. The separate splash edit remains excluded. No real-device ad/layout/lifecycle test, iOS build, AdMob Console change or Play upload was performed.
 
 ## Native profiles
 
@@ -22,9 +22,11 @@ Cancellation/ads ineligibility invalidates callbacks and cancels the shared time
 
 ## Settings banner
 
-Uses SDK 16.5.0 `LARGE_ANCHORED_ADAPTIVE_BANNER` and measured container width. The wrapper has no fixed 60dp height; the SDK's size drives content height. Left/right/bottom Safe Area are owned once by Settings. At usable viewport heights below 480 logical units, the footer is part of the Settings scroll body so it does not consume a fixed band beside the anchored ad. Other sizes retain the anchored footer. Actual phone/tablet/rotation measurements are pending.
+Uses react-native-google-mobile-ads 16.5.0 `LARGE_ANCHORED_ADAPTIVE_BANNER` and measured container width. The wrapper has no fixed 60dp height; the SDK's size drives content height. Left/right/bottom Safe Area are owned once by Settings. At usable viewport heights below 480 logical units, the footer is part of the Settings scroll body so it does not consume a fixed band beside the anchored ad. Other sizes retain the anchored footer. Actual phone/tablet/rotation measurements are pending.
 
-Before the first success: at most three app-controlled requests with 3-second/6-second failure retries; stale/duplicate callbacks are ignored. Final failure removes the failed ad view, shows the existing localized unavailable message for 10 seconds, then hides the message. A later Settings mount is a new visible banner placement.
+Before the first success: an initial three-request cycle uses 3-second/6-second failure retries; stale/duplicate callbacks are ignored. After all three fail, remove the failed view and show the localized unavailable message for 10 seconds. After it disappears, wait another 60 seconds, then start exactly one additional three-request cycle with the same 3-second/6-second retries (at most six app-controlled requests per mount). If that cycle also fails, show the message for 10 seconds and stop without another automatic cycle. Success stops app retries; unmount cancels timers. Increasing request identities reject callbacks from the previous cycle. A later Settings mount is a new visible banner placement. This exception applies only to banner load failures after SDK readiness, not initialization/configuration failures or rewarded ads.
+
+This extra-cycle change is source-only: compilation and runtime timing tests have not been performed. Existing 1.0.6 (24) artifacts do not include it.
 
 After a successful load: SDK refresh failure leaves the existing ad view mounted. It does not start app retry timers, remount, or display a terminal failure over the existing ad. Further automatic refresh is controlled by the SDK and AdMob Console configuration. No Console settings were changed. The app's three-request limit applies to initial app-controlled loads, not the SDK's own refresh mechanism.
 
@@ -50,9 +52,9 @@ node scripts/start-web-ad-diagnostics.cjs
 
 This sets `EXPO_PUBLIC_WEB_AD_DIAGNOSTICS=1`; both that flag and `__DEV__` are required. The main screen shows a clearly labeled web-only panel. Choose Preparing, Ready/success, Ready/show failure, or Final load failure; then open the reward modal and use a fresh enabled Watch Ad action. Only selected success grants the existing two-hour Pro simulation. No real video or ad impression is implied.
 
-Settings displays a labeled 150px banner reservation in diagnostic mode. The reward expiry uses web page memory only, never the native reward storage key, and is cleared by reload. Web reward clicks do not emit the native WatchAd analytics event. The existing native ProDebugFab shortcut is no longer imported/rendered.
+Settings displays a labeled 150px banner reservation in diagnostic mode. The reward expiry uses web page memory only, never the native reward storage key, and is cleared by reload. Web reward clicks do not emit the native WatchAd analytics event. The 1.0.6 (24) snapshot excluded ProDebugFab. Subsequent remote main commits restored its import and render under __DEV__; those commits are preserved. The current source requires a new release-bundle check and must not inherit the older artifact exclusion result.
 
-Implementation lives in `.web.ts/.web.tsx` files. The native diagnostic component contains no imports or reward implementation. Metro rejects project-owned `.web` source resolving into Android/iOS and rejects native bundling when the diagnostic flag is enabled. EAS/local native build entrypoints also reject diagnostic configuration. Actual native source-map/artifact exclusion remains a check for the next authorized build; source guards alone are not proof of an already generated artifact.
+Implementation lives in `.web.ts/.web.tsx` files. The native diagnostic component contains no imports or reward implementation. Metro rejects project-owned `.web` source resolving into Android/iOS and rejects native bundling when the diagnostic flag is enabled. EAS/local native build entrypoints also reject diagnostic configuration. Android 1.0.6 (24) source-map and APK/AAB verification confirmed exclusion; future artifacts need their own verification.
 
 ## Local logs and measurement limits
 
@@ -61,3 +63,11 @@ Implementation lives in `.web.ts/.web.tsx` files. The native diagnostic componen
 App-controlled banner requests record their view-request boundary time and completion/error time. SDK automatic refresh exposes completion/failure callbacks but not a request-start callback in this wrapper: its requestedAt/elapsed time are explicitly null, never fabricated. This is not network latency measurement. Next device checks should inspect Settings content scroll area, footer, ad dimensions and Safe Area at portrait/landscape phone/tablet sizes, plus controlled initial/refresh/initialization failure paths.
 
 Official references: [large adaptive banners and refresh](https://developers.google.com/admob/android/banner), [Android test ads](https://developers.google.com/admob/android/test-ads), [iOS test ads](https://developers.google.com/admob/ios/test-ads).
+
+## Popup content visibility — source update
+
+The rewarded popup places the close control, badge, benefits, reserved status text, retry action and Watch Ad in one vertical ScrollView. Card padding belongs to its scroll content; the card can grow to the safe viewport rather than retaining a 380/560 width cap. Required text and touch targets are not reduced. Status/button variants still reserve their longest text in the initial layout. A drag starting on a control suppresses its action; normal taps retain the existing dismissal and next-frame ad sequence. The development CSV sheet uses the same full-content scroll arrangement and safe insets. Platform photo permission/picker windows remain OS-owned; fullscreen LED playback remains a playback surface, not a scrolling text popup.
+
+These layout/gesture changes are not included in the existing APK/AAB. No compilation, lint, tests or device gesture/localization verification was run. Other project checkouts were not modified; the shared mobile skill already documents this policy for future work across apps/games.
+
+Settings footer alignment: the Sunny logo/Innovation Lab artwork is left-aligned and Terms/Privacy are right-aligned using space-between, preserving 20px horizontal padding and existing artwork/text sizes. Source change only; no new build or device verification.

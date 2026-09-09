@@ -41,16 +41,26 @@ if (phase !== 'prepare') {
   process.exit(0);
 }
 fs.mkdirSync(target, { recursive: true });
-const files = [...new Set(git(['ls-files', '--cached', '--others', '--exclude-standard', '-z']).split('\0'))]
-  .filter(name => name && !excluded(name) && fs.existsSync(safePath(root, name))).sort();
-const app = readJson(path.join(root, 'app.json'));
+const requestedRevision = process.env.LEDPOP_BUILD_REVISION;
+const sourceRevision = requestedRevision ? git(['rev-parse', '--verify', requestedRevision + '^{commit}']).trim() : null;
+const sourceOverrides = JSON.parse(process.env.LEDPOP_BUILD_OVERRIDES || '[]');
+if (!Array.isArray(sourceOverrides) || sourceOverrides.some(n => typeof n !== 'string')) throw Error('Invalid source overrides');
+sourceOverrides.forEach(n => safePath(root, n));
+const sourceBytes = name => sourceRevision && !sourceOverrides.includes(name)
+  ? execFileSync('git', ['-C', root, 'show', sourceRevision + ':' + name], { maxBuffer: 64 * 1024 * 1024 })
+  : fs.readFileSync(safePath(root, name));
+const files = [...new Set(git(sourceRevision
+  ? ['ls-tree', '-r', '--name-only', '-z', sourceRevision]
+  : ['ls-files', '--cached', '--others', '--exclude-standard', '-z']).split('\0'))]
+  .filter(name => name && !excluded(name) && (sourceRevision || fs.existsSync(safePath(root, name)))).sort();
+const app = JSON.parse(sourceBytes('app.json').toString('utf8'));
 const oldAppPath = path.join(target, 'app.json');
 const versionCode = process.argv[3] ? Number(process.argv[3]) : app.expo.android.versionCode ??
   (fs.existsSync(oldAppPath) ? readJson(oldAppPath).expo.android.versionCode : undefined);
 if (!Number.isSafeInteger(versionCode) || versionCode < 1) throw Error('Supply -VersionCode for the first local build');
 app.expo.android.versionCode = versionCode;
 const contents = new Map(files.map(name => [name, name === 'app.json'
-  ? Buffer.from(JSON.stringify(app, null, 2) + '\n') : fs.readFileSync(safePath(root, name))]));
+  ? Buffer.from(JSON.stringify(app, null, 2) + '\n') : sourceBytes(name)]));
 const dependencyNames = ['package.json', 'package-lock.json', '.npmrc', ...files.filter(n => n.startsWith('patches/'))];
 const nativeAssets = new Set();
 function collectAssets(value) {
@@ -112,8 +122,9 @@ const previousDependencyHash = state?.dependencyHash ?? (bootstrap ? digest(depe
 const previousNativeHash = state?.nativeHash ?? (bootstrap ? hash(digest(nativeNames, false) + environmentHash + toolchainHash) : null);
 const plan = {
   adProfile: process.env.LEDPOP_AD_PROFILE ?? "production",
-  revision: git(['rev-parse', 'HEAD']).trim(),
-  dirty: git(['status', '--porcelain', '-z']).length > 0,
+  revision: sourceRevision ?? git(['rev-parse', 'HEAD']).trim(),
+  dirty: sourceRevision ? sourceOverrides.length > 0 : git(['status', '--porcelain', '-z']).length > 0,
+  sourceOverrides,
   versionCode, dependencyHash, nativeHash,
   installRequired: dependencyHash !== previousDependencyHash || !fs.existsSync(path.join(target, 'node_modules', '.package-lock.json')),
   nativeRequired: nativeHash !== previousNativeHash || !fs.existsSync(path.join(target, 'android', 'app', 'build.gradle')),
@@ -137,5 +148,5 @@ for (const name of previousFiles) {
 fs.writeFileSync(statePath, JSON.stringify({ files, dependencyHash: previousDependencyHash, nativeHash: previousNativeHash }, null, 2));
 fs.writeFileSync(planPath, JSON.stringify(plan, null, 2));
 fs.writeFileSync(path.join(target, 'source-revision.txt'), plan.revision + '\n');
-fs.writeFileSync(path.join(target, 'source-inputs.json'), JSON.stringify({ adProfile: plan.adProfile, revision: plan.revision, dirty: plan.dirty, versionCode, files: Object.fromEntries([...contents].map(([n, b]) => [n, hash(b)])) }, null, 2));
+fs.writeFileSync(path.join(target, 'source-inputs.json'), JSON.stringify({ sourceOverrides: plan.sourceOverrides, adProfile: plan.adProfile, revision: plan.revision, dirty: plan.dirty, versionCode, files: Object.fromEntries([...contents].map(([n, b]) => [n, hash(b)])) }, null, 2));
 console.log(JSON.stringify({ changed: plan.changed.length, removed: plan.removed.length, installRequired: plan.installRequired, nativeRequired: plan.nativeRequired, versionCode }));

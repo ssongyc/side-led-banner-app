@@ -6,6 +6,8 @@ import { recordAdEvent } from "@/utils/adTrace";
 import { initializeMobileAds, useMobileAdsState } from "@/utils/initializeMobileAds";
 
 const REQUEST_OPTIONS = { requestNonPersonalizedAdsOnly: true };
+const UNAVAILABLE_MESSAGE_MS = 10_000;
+const EXTRA_CYCLE_WAIT_MS = 60_000;
 type Props = { style?: StyleProp<ViewStyle>; unavailableLabel: string };
 export default function BannerAdComponent({ style, unavailableLabel }: Props) {
   const sdkState = useMobileAdsState();
@@ -16,6 +18,7 @@ export default function BannerAdComponent({ style, unavailableLabel }: Props) {
   const [config] = useState(() => { try { return getAdConfiguration(); } catch { return null; } });
   const cycle = useRef({ alive: true, attempt: 1, handled: false, loaded: false, startedAt: Date.now() });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const extraCycleUsed = useRef(false);
   const terminal = failed || sdkState === "failed" || sdkState === "configuration" || !config;
   useEffect(() => {
     cycle.current.alive = true;
@@ -24,9 +27,27 @@ export default function BannerAdComponent({ style, unavailableLabel }: Props) {
   }, []);
   useEffect(() => {
     if (!terminal) { setMessageVisible(true); return; }
-    const id = setTimeout(() => setMessageVisible(false), 10_000);
+    const id = setTimeout(() => setMessageVisible(false), UNAVAILABLE_MESSAGE_MS);
     return () => clearTimeout(id);
   }, [terminal]);
+  useEffect(() => {
+    if (!failed || sdkState !== "ready" || !config || extraCycleUsed.current) return;
+    recordAdEvent("banner", "extra_cycle_scheduled", {
+      delayMs: UNAVAILABLE_MESSAGE_MS + EXTRA_CYCLE_WAIT_MS,
+    });
+    const id = setTimeout(() => {
+      const current = cycle.current;
+      if (!current.alive || current.loaded || extraCycleUsed.current) return;
+      extraCycleUsed.current = true;
+      // Increasing identities reject callbacks from the previous cycle.
+      current.attempt += 1;
+      current.handled = false;
+      recordAdEvent("banner", "extra_cycle_started", { attempt: current.attempt });
+      setAttempt(current.attempt);
+      setFailed(false);
+    }, UNAVAILABLE_MESSAGE_MS + EXTRA_CYCLE_WAIT_MS);
+    return () => clearTimeout(id);
+  }, [failed, sdkState, config]);
   useEffect(() => {
     if (sdkState !== "ready" || terminal || width <= 0) return;
     cycle.current.startedAt = Date.now();
@@ -56,7 +77,7 @@ export default function BannerAdComponent({ style, unavailableLabel }: Props) {
           if (current.handled) return;
           current.handled = true;
           recordAdEvent("banner", "load_failed", { attempt, elapsedMs: Date.now() - current.startedAt }, error);
-          const delay = [3000, 6000][attempt - 1];
+          const delay = [3000, 6000][(attempt - 1) % 3];
           if (delay === undefined) { setFailed(true); return; }
           recordAdEvent("banner", "retry_scheduled", { attempt: attempt + 1, delayMs: delay });
           timer.current = setTimeout(() => {

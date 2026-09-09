@@ -248,9 +248,8 @@ export function RewardAdModal({
   isAdReady,
 }: Props) {
   const { rewardAdLabel, resolvedAppLocale } = useSettingsRest();
-  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const isTablet = Math.min(width, height) >= 600;
+  const drag = useRef({ x: 0, y: 0, moved: false });
   const watchAdFontFamily =
     resolvedAppLocale === "ko" || resolvedAppLocale === "en"
       ? appFontFamilyForText("noto_sans_kr", "bold")
@@ -326,7 +325,7 @@ export function RewardAdModal({
   const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
 
   const handleWatchAd = () => {
-    if (!visible || !adReady || !onWatchAd || pendingAfterCloseRef.current || (isAdReady && !isAdReady())) return;
+    if (drag.current.moved || !visible || !adReady || !onWatchAd || pendingAfterCloseRef.current || (isAdReady && !isAdReady())) return;
     if (shouldTrackAdInteraction()) amplitude.track("WatchAd_clicked");
     // 닫힘 애니메이션이 실제로 끝난 뒤(추측 딜레이 아님) 광고를 띄운다.
     pendingAfterCloseRef.current = onWatchAd ?? null;
@@ -337,7 +336,7 @@ export function RewardAdModal({
 
   return (
     <Animated.View
-      style={[styles.root, { paddingLeft: 12 + insets.left, paddingRight: 12 + insets.right }, overlayStyle]}
+      style={[styles.root, { paddingTop: 12 + insets.top, paddingBottom: 12 + insets.bottom, paddingLeft: 12 + insets.left, paddingRight: 12 + insets.right }, overlayStyle]}
       pointerEvents={visible ? "auto" : "none"}
     >
       <Pressable
@@ -346,7 +345,22 @@ export function RewardAdModal({
       />
       <FireworksBurst visible={visible} />
 
-      <View style={[styles.card, { maxWidth: isTablet ? 560 : 380 }]}>
+      <View style={styles.card}>
+        <ScrollView style={styles.modalBody} contentContainerStyle={styles.modalBodyContent}
+          keyboardShouldPersistTaps="handled" canCancelContentTouches
+          onTouchStart={event => {
+            drag.current = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY, moved: false };
+          }}
+          onTouchMove={event => {
+            if (Math.hypot(event.nativeEvent.pageX - drag.current.x, event.nativeEvent.pageY - drag.current.y) > 8) drag.current.moved = true;
+          }}
+          onScrollBeginDrag={() => { drag.current.moved = true; }}
+          showsVerticalScrollIndicator>
+          <TouchableOpacity style={styles.closeButton}
+            onPress={() => { if (!drag.current.moved) handleCancel(); }}
+            accessibilityRole="button" accessibilityLabel="Close">
+            <Ionicons name="close" size={22} color="#8A8A8A" />
+          </TouchableOpacity>
         <View style={styles.appIconContainer}>
           <Image
             source={PRO_BADGE}
@@ -356,18 +370,6 @@ export function RewardAdModal({
           />
         </View>
 
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={handleCancel}
-            hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-          >
-            <Ionicons name="close" size={22} color="#8A8A8A" />
-          </TouchableOpacity>
-
-          <ScrollView style={styles.modalBody} contentContainerStyle={styles.modalBodyContent}
-            showsVerticalScrollIndicator>
           <View style={styles.contentContainer}>
             <Text
               style={styles.headerBadge}
@@ -400,12 +402,11 @@ export function RewardAdModal({
             textStyle={styles.adStatusText}
           />
         </View>
-        </ScrollView>
 
         <View style={styles.modalActions}>
           <View style={styles.adRetryArea}>
             {canRetry && onRetry && (
-              <TouchableOpacity onPress={() => { if (visible && canRetry) onRetry(); }}
+              <TouchableOpacity onPress={() => { if (!drag.current.moved && visible && canRetry) onRetry(); }}
                 accessibilityRole="button" style={styles.adRetryButton}>
                 <Text style={styles.adRetryText} allowFontScaling={false}>{rewardAdLabel("rewardAdRetry")}</Text>
               </TouchableOpacity>
@@ -445,6 +446,7 @@ export function RewardAdModal({
           </View>
         </TouchableOpacity>
         </View>
+        </ScrollView>
       </View>
     </Animated.View>
   );
