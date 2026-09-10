@@ -413,3 +413,6 @@ main 전달 범위: QA 보고서·광고 만료 방어·picture/paint 재사용�
 [Android 1.0.7(25) 릴리스 기록](docs/ANDROID_RELEASE_1.0.7_25.md): compile-ok. 기존 서명/실제 AdMob APK·AAB와 매핑 검증 완료. Play 업로드 및 새 APK 실기기 QA는 미실행.
 
 APK 전달 파일명은 실제 versionName 기준 `<AppName>V<점 없는 버전>.apk`를 사용합니다(1.0.7 → `LedPopV107.apk`). 빌드별 디렉터리에서 원본 서명과 해시를 보존하며 AAB 파일명은 유지합니다.
+
+
+[1.0.7 네비게이션 바 실기기 조사](docs/QA_NAVIGATION_1.0.7.md): 재생 화면의 하단 바 노출 확인. Expo JS hidden 캐시로 재적용 호출이 생략되는 경로를 SystemChrome에서 직접 네이티브 호출로 수정했습니다. 수정 후 빌드/실기기 검증은 미실행입니다.
