@@ -155,7 +155,10 @@ android {
   if($LASTEXITCODE -ne 0 -or $expectedR8 -notmatch '^\d+\.\d+\.\d+$'){throw 'Expected R8 version is invalid'}
   $apk=Join-Path $resolved 'android/app/build/outputs/apk/release/app-release.apk'
   if(-not (Test-Path -LiteralPath $apk)){throw 'Gradle succeeded but APK is missing'}
-  Copy-Item -LiteralPath $apk -Destination (Join-Path $record 'app-release.apk')
+  $deliveryApk = & (Join-Path $PSScriptRoot 'new-apk-delivery-path.ps1') -Apk $apk -AppName 'LedPop' -OutputDirectory $record
+  Copy-Item -LiteralPath $apk -Destination $deliveryApk -ErrorAction Stop
+  if((Get-FileHash -LiteralPath $apk).Hash -ne (Get-FileHash -LiteralPath $deliveryApk).Hash){throw 'APK delivery hash mismatch'}
+  Write-Output ('APK: '+$deliveryApk)
   $mapping=Join-Path $resolved 'android/app/build/outputs/mapping/release/mapping.txt'
   if(-not (Test-Path -LiteralPath $mapping) -or (Get-Item -LiteralPath $mapping).Length -eq 0){throw 'Optimized release mapping is missing'}
   if(-not (Select-String -LiteralPath $mapping -Pattern ('^# compiler_version: '+[regex]::Escape($expectedR8)+'$') -Quiet)){throw 'Mapping compiler version does not match the pinned R8 version'}
@@ -175,7 +178,7 @@ android {
     if($embeddedHash -ne (Get-FileHash -LiteralPath $mapping -Algorithm SHA256).Hash){throw 'AAB mapping differs from same-build mapping'}
    } finally {$zip.Dispose()}
   }
-  @{ adProfile=$AdProfile; aabSha256=$aabHash; mappingSha256=(Get-FileHash -LiteralPath $mapping -Algorithm SHA256).Hash; elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=(Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash; revision=$plan.revision; dirty=$plan.dirty; versionCode=$plan.versionCode } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
+  @{ apk=$deliveryApk; adProfile=$AdProfile; aabSha256=$aabHash; mappingSha256=(Get-FileHash -LiteralPath $mapping -Algorithm SHA256).Hash; elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=(Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash; revision=$plan.revision; dirty=$plan.dirty; versionCode=$plan.versionCode } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
   Write-Output ('Gradle '+($tasks -join ', ')+' completed; independent artifact verification still required. Record: '+$record)
  } finally { Pop-Location }
 } finally {

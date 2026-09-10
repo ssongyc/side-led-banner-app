@@ -408,3 +408,8 @@ main 전달 범위: QA 보고서·광고 만료 방어·picture/paint 재사용�
 하트 배경 연속 스크롤, 전체 화면 네비게이션 바 재적용, 사진 contain 표시 및 설치 APK QA 기록을 함께 전달합니다. 일반 사진 배경 Blur는 미리보기/전체 화면에서 `backgroundBlur / 8`로 연결되어 있습니다. Pixel 배경에는 Blur 값 전달/렌더링이 없으며 이번 변경에서 구현하지 않았습니다. contain 변경은 일반 Blur 연결을 유지합니다. 이는 소스 확인 결과이며 실제 Blur 재생 검증은 미실행입니다.
 
 이번 소스 수정 이후 컴파일·린트·테스트·새 APK는 실행하지 않았습니다. QA 보고서는 수정 이전 설치 APK의 결과입니다. 별도로 보존 중인 RootLayout 스플래시 수정과 APK 파일명 변경 스크립트는 이번 커밋 범위에서 제외합니다.
+
+
+[Android 1.0.7(25) 릴리스 기록](docs/ANDROID_RELEASE_1.0.7_25.md): compile-ok. 기존 서명/실제 AdMob APK·AAB와 매핑 검증 완료. Play 업로드 및 새 APK 실기기 QA는 미실행.
+
+APK 전달 파일명은 실제 versionName 기준 `<AppName>V<점 없는 버전>.apk`를 사용합니다(1.0.7 → `LedPopV107.apk`). 빌드별 디렉터리에서 원본 서명과 해시를 보존하며 AAB 파일명은 유지합니다.
