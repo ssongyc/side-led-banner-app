@@ -127,11 +127,13 @@ export function bubbleGlyphs(params: {
   const baseY = blockTop - metrics.ascent;
   const rowStep = rowH + gap;
 
+  // Align the entire text block once so every row enters the marquee together.
+  const blockWidth = rows.reduce((max, row) => Math.max(max, row.width), 0);
+  const x0 = safeLeft + (safeW - blockWidth) / 2;
   const out: BubbleGlyph[] = [];
   for (let i = 0; i < n; i++) {
     const row = rows[i]!;
     const y = baseY + i * rowStep;
-    const x0 = safeLeft + (safeW - row.width) / 2;
     for (const g of row.glyphs) {
       out.push({ x: x0 + g.x, y, text: g.text });
     }

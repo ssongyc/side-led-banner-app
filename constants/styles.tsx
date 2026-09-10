@@ -248,7 +248,7 @@ export const styles = StyleSheet.create({
   },
   accessoryClose: {
     fontSize: moderateScale(16),
-    color: "#007AFF",
+    color: "#ffffff",
     fontWeight: "600",
   },
 });

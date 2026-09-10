@@ -24,16 +24,14 @@ import { Image } from "expo-image";
 import { type Href, useRouter } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, Text, TouchableOpacity, View, useColorScheme } from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAvoidingView, KeyboardToolbar } from "react-native-keyboard-controller";
 import { initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
 
 
 function DismissLabel() {
-  const isDark = useColorScheme() === "dark";
-  const color = isDark ? "#ffffff" : "#000000";
   return (
-    <Text allowFontScaling={false} style={[styles.accessoryClose, { color }]}>✔</Text>
+    <Text allowFontScaling={false} style={styles.accessoryClose}>✔</Text>
   );
 }
 
