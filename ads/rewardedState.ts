@@ -372,7 +372,8 @@ export function showRewarded() {
       try {
         await beginRewardedPresentation(flow);
         pendingSubscription.remove();
-        if (cancelled || AppState.currentState !== "active" || slots.current.ad !== ad || slots.current.state !== "showing") {
+        if (cancelled || AppState.currentState !== "active" || slots.current.ad !== ad || slots.current.state !== "showing" ||
+          !ad.loaded || current.loadedAt === null || Date.now() - current.loadedAt > AD_VALID_MS) {
           endImmersiveAd(flow);
           onShowError(new Error("Rewarded presentation cancelled"));
           return;

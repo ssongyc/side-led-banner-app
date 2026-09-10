@@ -31,7 +31,7 @@ import {
     View,
 } from "react-native";
 import { Canvas } from "@shopify/react-native-skia";
-import { buildCanvas } from "./animation/buildCanvas";
+import { useMarqueeCanvasProps } from "./animation/useMarqueeCanvasProps";
 import { buildPixelBackground } from "./animation/buildPixelBackground";
 import { PixelBackgroundCanvas } from "./animation/PixelBackgroundCanvas";
 
@@ -150,7 +150,7 @@ export const LedBannerFullScreen = ({
     speechBubbleLayout: speechBubbleCanvasLayout,
   });
 
-  const marqueeCanvasProps = buildCanvas({
+  const marqueeCanvasProps = useMarqueeCanvasProps({
     canvas,
     effects,
     blinkOpacity,

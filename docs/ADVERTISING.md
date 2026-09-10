@@ -2,6 +2,8 @@
 
 ## Status
 
+2026-09-10: the 06f8847 APK includes the source changes below. Galaxy SM-M336K QA observed bounded banner cycles and rewarded failure/manual recovery without autoplay. Twenty-one isolated regression tests pass. A new show-time readiness/expiry guard is source-only. Actual rewarded playback/reward/immersive transitions remain unverified. See [QA evidence](QA_20260910.md). The following September 9 build status is historical.
+
 Initial source delivery was followed by the user-requested Android 1.0.6 (24) production APK/AAB build. TypeScript compilation, native build and local artifact/profile/JS isolation/signing/mapping checks passed; see [release evidence](ANDROID_RELEASE_1.0.6_24.md). The native module required defaultConfig version fields during compilation. The separate splash edit remains excluded. No real-device ad/layout/lifecycle test, iOS build, AdMob Console change or Play upload was performed.
 
 ## Native profiles
@@ -26,7 +28,7 @@ Uses react-native-google-mobile-ads 16.5.0 `LARGE_ANCHORED_ADAPTIVE_BANNER` and 
 
 Before the first success: an initial three-request cycle uses 6-second/12-second failure retries; stale/duplicate callbacks are ignored. After all three fail, remove the failed view and show the localized unavailable message for 10 seconds. After it disappears, wait another 60 seconds, then start exactly one additional three-request cycle with the same 6-second/12-second retries (at most six app-controlled requests across remounts before success or process restart). If that cycle also fails, show the message for 10 seconds and stop without another automatic cycle. Success stops app retries; unmount cancels timers. Increasing request identities reject callbacks from the previous cycle. Settings remounts retain the same process-level budget and absolute deadlines in ads/bannerState.ts. Only a previously confirmed successful placement allows a fresh budget on later entry; terminal failure does not reset on remount. This exception applies only to banner load failures after SDK readiness, not initialization/configuration failures or rewarded ads.
 
-This extra-cycle change is source-only: compilation and runtime timing tests have not been performed. Existing 1.0.6 (24) artifacts do not include it.
+This extra-cycle change is included in the September 10 06f8847 APK and was observed during offline device QA. September 9 artifacts do not include it despite sharing version 1.0.6 (24). Exact timer boundaries are covered by deterministic tests; device UI polling has limited time resolution.
 
 After a successful load: SDK refresh failure leaves the existing ad view mounted. It does not start app retry timers, remount, or display a terminal failure over the existing ad. Further automatic refresh is controlled by the SDK and AdMob Console configuration. No Console settings were changed. The app's bounded two-cycle limit applies to initial app-controlled loads, not the SDK's own refresh mechanism.
 

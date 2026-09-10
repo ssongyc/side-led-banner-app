@@ -1,6 +1,6 @@
 import { DOT_MATRIX_TEXT_SKSL } from "@/components/animation/dotMatrixTextShader";
 import { usePreviewPanelCanvas } from "@/hooks/usePreviewPanelCanvas";
-import { useTilePicture } from "@/hooks/useTilePicture";
+import type { useTilePicture } from "@/hooks/useTilePicture";
 import {
     Canvas,
     Group,
@@ -13,6 +13,7 @@ import React, { useMemo } from "react";
 import { useDerivedValue, type SharedValue } from "react-native-reanimated";
 
 export interface MarqueeCanvasProps {
+  tilePaints: ReturnType<typeof useTilePicture>;
   canvas: ReturnType<typeof usePreviewPanelCanvas>;
   isPixelEffect: boolean;
   /** false면 Pixel이어도 글자는 도트 셰이더 없이 벡터 */
@@ -135,25 +136,15 @@ const OUTLINE_RING_DOT_SKSL = `
 `;
 
 export function MarqueeCanvas({
+  tilePaints,
   canvas,
   isPixelEffect,
   isPixelTextDots,
-  isPixelColorMix,
   pixelShaderSize,
   pixelTextShaderUniforms,
-  pixelMaskDilateRadius,
-  pixelMaskErodeRadius,
-  pixelGlyphPadCells,
-  pixelContentUpscaleFactor,
-  hasBgPhoto,
   blinkOpacity,
-  spacer,
   isGlowEffect,
-  glowBlurRadius,
-  glowLayerColor,
-  skiaStrokeWidthPx,
   pixelOutlineRings,
-  dropShadow,
   previewTextColor,
   backgroundColor,
 }: MarqueeCanvasProps) {
@@ -167,39 +158,11 @@ export function MarqueeCanvas({
     if (!source) throw new Error("Failed to compile outline ring dot shader.");
     return source;
   }, []);
-  const blob = canvas.skiaTextBlob;
-  const strokeWidthPx = skiaStrokeWidthPx;
-  const dropShadowBlur = Math.round((dropShadow / 100) * 5);
   const layout = canvas.skiaCanvasLayout;
   const splitGlowFromDots = isPixelTextDots && isGlowEffect;
-  const recordTextAsPixel = isPixelTextDots;
   const hasPixelOutlineDots = pixelOutlineRings > 0;
 
-  const { stripPaint, glowStripPaint, stripWidth } = useTilePicture({
-    blob,
-    textBlobs: canvas.skiaTextBlobs,
-    textWidthPx: canvas.skiaTextWidth,
-    spacerPx: spacer,
-    canvasWidthPx: layout.width,
-    canvasHeightPx: layout.height,
-    previewTextColor,
-    glowLayerColor,
-    isGlowEffect,
-    isPixelEffect: recordTextAsPixel,
-    isPixelColorMix: recordTextAsPixel && isPixelColorMix,
-    pixelShaderSize,
-    pixelGlyphPadCells,
-    glowBlurRadius,
-    strokeWidthPx,
-    dropShadow,
-    dropShadowBlur,
-    glyphPositions: canvas.skiaGlyphPositions,
-    font: canvas.skiaFont,
-    backgroundColor,
-    pixelMaskDilateRadius,
-    pixelMaskErodeRadius,
-    pixelContentUpscaleFactor,
-  });
+  const { stripPaint, glowStripPaint, stripWidth } = tilePaints;
 
   const rectX = useDerivedValue(
     () => -canvas.marqueeOffsetX.value,

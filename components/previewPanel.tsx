@@ -47,7 +47,7 @@ import {
   View
 } from "react-native";
 import { BackgroundEffectLayer } from "./animation/BackgroundEffectLayer";
-import { buildCanvas } from "./animation/buildCanvas";
+import { useMarqueeCanvasProps } from "./animation/useMarqueeCanvasProps";
 import { buildPixelBackground } from "./animation/buildPixelBackground";
 import { MarqueeCanvas } from "./animation/MarqueeCanvas";
 import { PixelBackgroundCanvas } from "./animation/PixelBackgroundCanvas";
@@ -175,7 +175,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
 
   const { opacity: blinkOpacity } = useBlinkOpacityStyle(isAnimationActive);
 
-  const marqueeCanvasProps = buildCanvas({
+  const marqueeCanvasProps = useMarqueeCanvasProps({
     canvas,
     effects,
     blinkOpacity,

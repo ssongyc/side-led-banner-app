@@ -1,3 +1,4 @@
+import { useTilePicture } from "@/hooks/useTilePicture";
 import type { useEffects } from "@/hooks/useEffects";
 import type { usePreviewPanelCanvas } from "@/hooks/usePreviewPanelCanvas";
 import type { SharedValue } from "react-native-reanimated";
@@ -6,7 +7,7 @@ import type { MarqueeCanvasProps } from "./MarqueeCanvas";
 type SkiaEffects = ReturnType<typeof useEffects>;
 type BuiltMarqueeCanvasProps = MarqueeCanvasProps;
 
-export function buildCanvas(params: {
+export function useMarqueeCanvasProps(params: {
   canvas: ReturnType<typeof usePreviewPanelCanvas>;
   effects: SkiaEffects;
   blinkOpacity: number | SharedValue<number>;
@@ -16,7 +17,7 @@ export function buildCanvas(params: {
   dropShadow: number;
   backgroundColor: string;
 }): BuiltMarqueeCanvasProps {
-  return {
+  const props = {
     canvas: params.canvas,
     isPixelEffect: params.effects.isPixelEffect,
     isPixelTextDots: params.effects.isPixelTextDots,
@@ -39,4 +40,33 @@ export function buildCanvas(params: {
     previewTextColor: params.previewTextColor,
     backgroundColor: params.backgroundColor,
   };
+  // Keep the current picture/shader with the screen, across child Canvas remounts.
+  // useTilePicture replaces it when text, geometry or appearance changes.
+  const tilePaints = useTilePicture({
+    blob: props.canvas.skiaTextBlob,
+    textBlobs: props.canvas.skiaTextBlobs,
+    textWidthPx: props.canvas.skiaTextWidth,
+    spacerPx: props.spacer,
+    canvasWidthPx: props.canvas.skiaCanvasLayout.width,
+    canvasHeightPx: props.canvas.skiaCanvasLayout.height,
+    previewTextColor: props.previewTextColor,
+    glowLayerColor: props.glowLayerColor,
+    isGlowEffect: props.isGlowEffect,
+    isPixelEffect: props.isPixelTextDots,
+    isPixelColorMix: props.isPixelTextDots && props.isPixelColorMix,
+    pixelShaderSize: props.pixelShaderSize,
+    pixelGlyphPadCells: props.pixelGlyphPadCells,
+    glowBlurRadius: props.glowBlurRadius,
+    strokeWidthPx: props.skiaStrokeWidthPx,
+    dropShadow: props.dropShadow,
+    dropShadowBlur: Math.round((props.dropShadow / 100) * 5),
+    glyphPositions: props.canvas.skiaGlyphPositions,
+    font: props.canvas.skiaFont,
+    backgroundColor: props.backgroundColor,
+    pixelMaskDilateRadius: props.pixelMaskDilateRadius,
+    pixelMaskErodeRadius: props.pixelMaskErodeRadius,
+    pixelContentUpscaleFactor: props.pixelContentUpscaleFactor,
+  });
+  return { ...props, tilePaints };
+
 }

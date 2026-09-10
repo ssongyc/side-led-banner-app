@@ -1,5 +1,5 @@
 import type { SkFont, SkTextBlob } from "@shopify/react-native-skia";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { LayoutChangeEvent } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 import { useDerivedValue, useSharedValue } from "react-native-reanimated";
@@ -373,10 +373,14 @@ export function usePreviewPanelCanvas({
     });
   }, [marqueePeriodPx, onTextLayout]);
 
-  const onSkiaCanvasLayout = (e: LayoutChangeEvent) => {
+  const onSkiaCanvasLayout = useCallback((e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
-    setSkiaCanvasLayout({ width, height });
-  };
+    setSkiaCanvasLayout((previous) =>
+      previous.width === width && previous.height === height
+        ? previous
+        : { width, height },
+    );
+  }, []);
 
   return {
     skiaFont,
