@@ -55,9 +55,9 @@ I am a solo mobile app/game and Microsoft Windows app developer.
 
 ## Mobile Advertising Request Policy
 
-- Apply the following bounded load sequence to both banner and rewarded-video ads in every mobile app and game: make the initial request at app startup for startup placements, or immediately when a later screen-specific banner becomes visible; retry once after 3 seconds when it fails, and retry one final time after 6 seconds when the second request fails.
+- Apply the following bounded load sequence to both banner and rewarded-video ads in every mobile app and game: make the initial request at app startup for startup placements, or immediately when a later screen-specific banner becomes visible; retry once after 6 seconds when it fails, and retry one final time after 12 seconds when the second request fails.
 - Show `Ad Unavailable` only after all three requests fail. Do not display a terminal unavailable state between attempts.
-- Stop automatically after the third failed request. Prevent duplicate callbacks, concurrent retry timers, render-triggered requests, and any further automatic retry loop.
+- Rewarded ads stop automatically after the third failure. Banner ads display unavailable for 10 seconds, wait 60 additional seconds, and permit exactly one extra bounded cycle. Preserve banner budgets and deadlines across remounts; after the extra cycle fails, stop. Prevent duplicate callbacks, concurrent timers and repeated automatic retry loops.
 - A user-initiated manual retry may start a new bounded three-request cycle only when the app explicitly provides that control.
 
 ## Incremental local APK workflow

@@ -1,4 +1,4 @@
-import { requireNativeModule } from "expo-modules-core";
+import { getNativeAdAppId } from "./AdClient";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 import profiles from "@/advertising.config.json";
@@ -13,7 +13,7 @@ export function getAdConfiguration() {
   if (!actual || actual.platform !== Platform.OS || actual.appId !== expected.appId || actual.banner !== expected.banner || actual.rewarded !== expected.rewarded) {
     throw new Error("Advertising platform/profile mismatch");
   }
-  const nativeAppId: string = requireNativeModule("LedPopAdImmersive").getAppId();
+  const nativeAppId: string = getNativeAdAppId();
   if (nativeAppId !== expected.appId) throw new Error("Native AdMob App ID does not match the JS advertising profile");
   return { ...expected, profile };
 }

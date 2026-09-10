@@ -49,7 +49,7 @@ export function resolveBubbleCanvasOpts(params: {
   return Object.keys(opts).length > 0 ? opts : {};
 }
 
-export function splitEnterRows(text: string): string[] {
+function splitEnterRows(text: string): string[] {
   return text.replace(/\r\n?/g, "\n").split("\n");
 }
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View, type StyleProp, type ViewStyle } from "react-native";
-import { WEB_AD_DIAGNOSTICS } from "@/utils/webAdDiagnostics.web";
+import { WEB_AD_DIAGNOSTICS } from "@/ads/webAdDiagnostics.web";
 import { adUnavailableReason } from "@/utils/adAvailability";
 import { useSettingsRest } from "@/contexts/settingsContext";
 export default function BannerAdComponent({ style }: { style?: StyleProp<ViewStyle>; unavailableLabel: string }) {

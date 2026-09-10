@@ -16,7 +16,7 @@ Initial source delivery was followed by the user-requested Android 1.0.6 (24) pr
 
 ## SDK initialization
 
-One shared in-flight initialization serves root rewarded preload and the Settings banner. It makes the initial attempt, retries 3 seconds after failure, then 6 seconds after a second failure, and stops after three failures. A resolved result with no ready adapter is treated as failure; adapter status is logged. Load timers begin only after initialization succeeds, so initialization and placement retry timers do not overlap.
+One shared in-flight initialization serves root rewarded preload and the Settings banner. It makes the initial attempt, retries 6 seconds after failure, then 12 seconds after a second failure, and stops after three failures. A resolved result with no ready adapter is treated as failure; adapter status is logged. Load timers begin only after initialization succeeds, so initialization and placement retry timers do not overlap.
 
 Cancellation/ads ineligibility invalidates callbacks and cancels the shared timer. A terminal initialization failure stays terminal through screen re-entry. The existing rewarded manual retry can start one new bounded initialization/load cycle; it never queues a show. Configuration mismatch is not manually retried.
 
@@ -24,15 +24,15 @@ Cancellation/ads ineligibility invalidates callbacks and cancels the shared time
 
 Uses react-native-google-mobile-ads 16.5.0 `LARGE_ANCHORED_ADAPTIVE_BANNER` and measured container width. The wrapper has no fixed 60dp height; the SDK's size drives content height. Left/right/bottom Safe Area are owned once by Settings. At usable viewport heights below 480 logical units, the footer is part of the Settings scroll body so it does not consume a fixed band beside the anchored ad. Other sizes retain the anchored footer. Actual phone/tablet/rotation measurements are pending.
 
-Before the first success: an initial three-request cycle uses 3-second/6-second failure retries; stale/duplicate callbacks are ignored. After all three fail, remove the failed view and show the localized unavailable message for 10 seconds. After it disappears, wait another 60 seconds, then start exactly one additional three-request cycle with the same 3-second/6-second retries (at most six app-controlled requests per mount). If that cycle also fails, show the message for 10 seconds and stop without another automatic cycle. Success stops app retries; unmount cancels timers. Increasing request identities reject callbacks from the previous cycle. A later Settings mount is a new visible banner placement. This exception applies only to banner load failures after SDK readiness, not initialization/configuration failures or rewarded ads.
+Before the first success: an initial three-request cycle uses 6-second/12-second failure retries; stale/duplicate callbacks are ignored. After all three fail, remove the failed view and show the localized unavailable message for 10 seconds. After it disappears, wait another 60 seconds, then start exactly one additional three-request cycle with the same 6-second/12-second retries (at most six app-controlled requests across remounts before success or process restart). If that cycle also fails, show the message for 10 seconds and stop without another automatic cycle. Success stops app retries; unmount cancels timers. Increasing request identities reject callbacks from the previous cycle. Settings remounts retain the same process-level budget and absolute deadlines in ads/bannerState.ts. Only a previously confirmed successful placement allows a fresh budget on later entry; terminal failure does not reset on remount. This exception applies only to banner load failures after SDK readiness, not initialization/configuration failures or rewarded ads.
 
 This extra-cycle change is source-only: compilation and runtime timing tests have not been performed. Existing 1.0.6 (24) artifacts do not include it.
 
-After a successful load: SDK refresh failure leaves the existing ad view mounted. It does not start app retry timers, remount, or display a terminal failure over the existing ad. Further automatic refresh is controlled by the SDK and AdMob Console configuration. No Console settings were changed. The app's three-request limit applies to initial app-controlled loads, not the SDK's own refresh mechanism.
+After a successful load: SDK refresh failure leaves the existing ad view mounted. It does not start app retry timers, remount, or display a terminal failure over the existing ad. Further automatic refresh is controlled by the SDK and AdMob Console configuration. No Console settings were changed. The app's bounded two-cycle limit applies to initial app-controlled loads, not the SDK's own refresh mechanism.
 
 ## Rewarded ads and immersive navigation
 
-Preserves the existing current/next slots, 3/6-second load retries, inline modal messages, manual retry only after final load/show failure, and no automatic playback. A ready user action confirms modal removal and crosses one animation frame before requesting presentation. Initialization completion only changes readiness.
+Preserves the existing current/next slots, 6/12-second load retries, inline modal messages, manual retry only after final load/show failure, and no automatic playback. A ready user action confirms modal removal and crosses one animation frame before requesting presentation. Initialization completion only changes readiness.
 
 Android presentation uses `immersiveModeEnabled=true` and the local `LedPopAdImmersive` Expo module. During the owned ad flow, it hides navigation bars on app/SDK-owned Activity creation/start/resume/post-resume and window focus, and on host dismissal/show failure. A flow token prevents stale cleanup from ending another presentation. Listeners are removed when the flow ends. It does not poll, add fixed presentation delays, hide with overlays, or modify external app windows.
 
@@ -58,7 +58,7 @@ Implementation lives in `.web.ts/.web.tsx` files. The native diagnostic componen
 
 ## Local logs and measurement limits
 
-`utils/adTrace.ts` keeps the most recent 120 records and writes local console diagnostics: timestamp, platform, placement, stage, attempt, dimensions/profile where available, and SDK error code/domain/original message. No diagnostic upload is added.
+`ads/adTrace.ts` keeps the most recent 120 records and writes local console diagnostics only under __DEV__: timestamp, platform, placement, stage, attempt, dimensions/profile where available, and SDK error code/domain/original message. No diagnostic upload is added.
 
 App-controlled banner requests record their view-request boundary time and completion/error time. SDK automatic refresh exposes completion/failure callbacks but not a request-start callback in this wrapper: its requestedAt/elapsed time are explicitly null, never fabricated. This is not network latency measurement. Next device checks should inspect Settings content scroll area, footer, ad dimensions and Safe Area at portrait/landscape phone/tablet sizes, plus controlled initial/refresh/initialization failure paths.
 
@@ -71,3 +71,26 @@ The rewarded popup places the close control, badge, benefits, reserved status te
 These layout/gesture changes are not included in the existing APK/AAB. No compilation, lint, tests or device gesture/localization verification was run. Other project checkouts were not modified; the shared mobile skill already documents this policy for future work across apps/games.
 
 Settings footer alignment: the Sunny logo/Innovation Lab artwork is left-aligned and Terms/Privacy are right-aligned using space-between, preserving 20px horizontal padding and existing artwork/text sizes. Source change only; no new build or device verification.
+
+## Web diagnostic event parity — source update
+
+Following decibella 2's web AdClient design, LED POP's ads/AdClient.web.ts emits LOADED when an explicit ready diagnostic is selected, then OPENED, EARNED and CLOSED in separate microtasks only after a fresh user show action. The web rewarded hook grants the existing two-hour simulation once only after all three presentation events in order. A selected show failure or final load failure emits ERROR and grants nothing. Disposal, backgrounding and state replacement invalidate pending presentation events; loading never auto-shows. These are simulated events, not a real ad impression. Ordinary web remains unsupported, and the native resolution guard continues to exclude .web sources. The subsequent native boundary extraction is described below; analytics identity is unchanged.
+
+recordAdEvent still retains its bounded 120-entry local trace, but the [LEDPOP Ads] console output and JSON serialization now run only under __DEV__. Amplitude assignment, payloads, identity persistence and event collection were not changed or live-verified. Compilation, tests, device verification, commit and push were deferred to the subsequent main delivery.
+
+## Advertising module boundaries — source refactor
+
+Compared with C:/dev/decibella 2/ads/AdClient.tsx and its web implementation, native SDK creation, initialization, adaptive banner rendering, app-ID lookup, show and immersive calls now live in ads/AdClient.tsx. ads/rewardedState.ts owns current/next slots, callback guards, reward eligibility, retry timers, expiry and the presentation watchdog. hooks/useRewardedAd.ts only subscribes to that state and connects the existing reward callback. Native configuration, initialization, tracing and web diagnostics now reside under ads/; existing platform-specific hook and banner entry points remain intact. No second service layer was added.
+
+The working tree's separately updated 6/12-second retry values were retained during extraction. This refactor does not change the timing policy or grant rewards from load completion. The earlier web event simulation and development-only console changes are retained. Amplitude identity and event payloads are unchanged.
+
+The reference iOS return cover depends on its audio-visual animation freeze plus InteractionManager and two animation frames. LED POP has no verified equivalent rendering defect; that visual cover and extra scheduling were not copied. Native iOS return stability remains unverified.
+
+Static import/call-site inspection only: no compile, lint, tests, device QA, commit, push or new artifacts were run. Existing artifact verification belongs to its original source and does not verify this refactor.
+## Banner remount budget preservation — source update
+
+The placement state owns request IDs, attempts, extra-cycle consumption and absolute retry/message deadlines outside React. Component cleanup removes timers; remount resumes the remaining delay, or requests once when an existing deadline has passed. No requests run while the placement is absent. The existing 6/12-second retry intervals and 10-second message plus 60-second wait remain unchanged. Final failure and the extra-cycle limit survive remounts until process restart. Successful loading clears deadlines; SDK refresh failure still keeps the existing ad.
+
+An unmounted in-flight request consumes its attempt. A later entry may use only the next remaining attempt after its delay. If the third/sixth request is destroyed before receiving a result, stop without fabricating a failed callback, unavailable message or another cycle. Owner tokens and increasing request IDs reject old callbacks and concurrent ownership. There is no disk persistence or new manual retry UI.
+
+This correction was inspected statically only. No compile, lint, tests or new APK/AAB was performed. The source and documentation are included in the subsequent main delivery.

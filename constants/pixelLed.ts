@@ -9,7 +9,7 @@ export const PIXEL_LED_REF_FONT_PX = 100;
 
 export type PixelFontCircleGrid = "galmuri11";
 
-export function resolveReferencePixelLedDotPx(
+function resolveReferencePixelLedDotPx(
   playOption: "one" | "multi",
   _locale?: AppLocaleKey,
 ): number {
@@ -19,11 +19,11 @@ export function resolveReferencePixelLedDotPx(
 }
 
 /** playOption별 도트 최솟값*/
-export function resolvePixelDotMinPx(playOption: "one" | "multi"): number {
+function resolvePixelDotMinPx(playOption: "one" | "multi"): number {
   return playOption === "one" ? 3 : 1;
 }
 
-export function scalePixelLedDotByFontSize(
+function scalePixelLedDotByFontSize(
   referenceDotPx: number,
   fontSizePx: number,
   minDotPx = 1,

@@ -20,7 +20,7 @@ import {
   configureAndroidNavigationBarHidden,
   hideAndroidNavigationBar,
 } from "@/utils/SystemChrome";
-import { suspendMobileAdsInitialization } from "@/utils/initializeMobileAds";
+import { suspendMobileAdsInitialization } from "@/ads/initializeMobileAds";
 import { disableAppTextScaling } from "@/utils/TextScaling";
 import * as amplitude from "@amplitude/analytics-react-native";
 import {

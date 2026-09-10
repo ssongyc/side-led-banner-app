@@ -1,4 +1,4 @@
-import { WEB_AD_DIAGNOSTICS } from "./webAdDiagnostics.web";
+import { WEB_AD_DIAGNOSTICS } from "@/ads/webAdDiagnostics.web";
 // Memory only: simulation never reads/writes the real reward key or survives reload.
 let diagnosticExpiry: number | null = null;
 export async function readProModeExpiry(): Promise<number | null> { return WEB_AD_DIAGNOSTICS ? diagnosticExpiry : null; }

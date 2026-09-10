@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import mobileAds from "react-native-google-mobile-ads";
+import { initializeAdSdk } from "./AdClient";
 import { getAdConfiguration } from "./adConfiguration";
 import { recordAdEvent } from "./adTrace";
 
@@ -29,7 +29,7 @@ export function initializeMobileAds(): Promise<void> {
       const startedAt = Date.now();
       recordAdEvent("sdk", "initialize_request", { attempt });
       try {
-        const adapters = await mobileAds().initialize();
+        const adapters = await initializeAdSdk();
         if (token !== generation) return;
         recordAdEvent("sdk", "adapter_status", { attempt, adapters });
         if (!adapters.some(adapter => adapter.state === 1)) {
@@ -41,7 +41,7 @@ export function initializeMobileAds(): Promise<void> {
       } catch (error) {
         if (token !== generation) return;
         recordAdEvent("sdk", "initialize_failed", { attempt, elapsedMs: Date.now() - startedAt }, error);
-        const delay = [3000, 6000][attempt - 1];
+        const delay = [6000, 12000][attempt - 1];
         if (delay !== undefined) { timer = setTimeout(() => { timer = null; void run(attempt + 1); }, delay); return; }
         lastError = error; pending = null; rejectPending = null; notify("failed"); reject(error);
       }

@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, Text, ScrollView, useWindowDimensions } from "react-native";
-import { WEB_AD_DIAGNOSTICS, selectWebAdState, useWebAdState } from "@/utils/webAdDiagnostics.web";
+import { WEB_AD_DIAGNOSTICS, selectWebAdState, useWebAdState } from "@/ads/webAdDiagnostics.web";
 import { useSettingsRest } from "@/contexts/settingsContext";
 export default function AdDiagnostics() {
   const state = useWebAdState();

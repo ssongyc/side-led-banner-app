@@ -6,7 +6,7 @@ export async function readPresetSlotsJson(): Promise<string | null> {
   return AsyncStorage.getItem(PRESET_SLOTS_STORAGE_KEY);
 }
 
-export async function writePresetSlotsJson(json: string): Promise<void> {
+async function writePresetSlotsJson(json: string): Promise<void> {
   await AsyncStorage.setItem(PRESET_SLOTS_STORAGE_KEY, json);
 }
 

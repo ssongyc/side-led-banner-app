@@ -365,7 +365,7 @@ const SKIA_ONLY_FONTS = new Set<FontId>([
   "fusion_pixel_zh_hant",
 ]);
 
-export function isSkiaOnlyFont(appearanceFont: string): boolean {
+function isSkiaOnlyFont(appearanceFont: string): boolean {
   const id = normalizeFontId(appearanceFont);
   return id != null && SKIA_ONLY_FONTS.has(id);
 }
@@ -383,7 +383,7 @@ export function supportsBold(appearanceFont: string): boolean {
   return !FONTS_WITHOUT_BOLD.has(id);
 }
 
-export function isFontId(value: string): value is FontId {
+function isFontId(value: string): value is FontId {
   return Object.prototype.hasOwnProperty.call(APP_FONT_FACE_SETS, value);
 }
 

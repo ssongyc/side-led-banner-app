@@ -315,7 +315,7 @@ export function computeMarqueeTilePeriod(params: {
   );
 }
 
-export function makeMarqueePictureShader(
+function makeMarqueePictureShader(
   picture: SkPicture,
   tileWidth: number,
   tileHeight: number,

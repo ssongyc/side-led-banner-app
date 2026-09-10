@@ -8,6 +8,6 @@ export function recordAdEvent(placement: string, stage: string, detail: Record<s
     ...(error === undefined ? {} : { errorCode: e?.code ?? null, errorMessage: e?.message ?? String(error), errorDomain: e?.domain ?? null }) };
   events.push(item);
   if (events.length > 120) events.shift();
-  console.info("[LEDPOP Ads]", JSON.stringify(item));
+  if (__DEV__) console.info("[LEDPOP Ads]", JSON.stringify(item));
 }
 export function getAdTrace() { return events.slice(); }

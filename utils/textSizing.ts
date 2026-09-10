@@ -74,7 +74,7 @@ function getSpeechTextLayout(
     : SPEECH_BG_TEXT_LAYOUT[speechBubbleId].landscape;
 }
 
-export function getSpeechBubbleId(effectId: string): SpeechBubbleId | null {
+function getSpeechBubbleId(effectId: string): SpeechBubbleId | null {
   return isSpeechBubblePreset(effectId) ? effectId : null;
 }
 
@@ -185,7 +185,7 @@ function resolveMaxFontSizeForBox(params: {
   return Math.min(ratioMax, skiaMax);
 }
 
-export function fontSizeFromSliderPercent(params: {
+function fontSizeFromSliderPercent(params: {
   maxFontSizeForBox: number;
   sizePct: number;
 }): number {
@@ -372,7 +372,7 @@ export function scaleFontSizeByHeight(params: {
   return Math.max(1, Math.floor(scaled));
 }
 
-export function resolvePctWidthPx(
+function resolvePctWidthPx(
   width: number | string,
   basisPx: number,
 ): number {
