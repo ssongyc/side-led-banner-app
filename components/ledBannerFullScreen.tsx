@@ -1,3 +1,4 @@
+import { useHeartBackgroundScroll } from "@/hooks/useHeartBackgroundScroll";
 import { BackgroundEffectLayer } from "@/components/animation/BackgroundEffectLayer";
 import { MarqueeCanvas } from "@/components/animation/MarqueeCanvas";
 import { GradientBackdrop } from "@/components/skia/GradientBackdrop";
@@ -49,11 +50,6 @@ export const LedBannerFullScreen = ({
   const { backgroundColor, backgroundImageUri, backgroundBlur } = config.background;
   const hasBgPhoto = backgroundImageUri != null && backgroundImageUri.length > 0;
 
-  useEffect(() => {
-    if (!visible) return;
-    hideAndroidNavigationBar();
-  }, [visible]);
-
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const stageWidth = stageSize.width > 0 ? stageSize.width : windowWidth;
@@ -71,6 +67,12 @@ export const LedBannerFullScreen = ({
   );
 
   const isAnimationActive = usePlaybackActive(visible);
+  useEffect(() => {
+    if (!isAnimationActive) return;
+    // Reapply after rotation/resume; the Modal owns a separate Android window.
+    hideAndroidNavigationBar();
+  }, [isAnimationActive, windowWidth, windowHeight, stageWidth, stageHeight]);
+
   const backgroundEdgeEffectAnim = useBackgroundAnimation(isAnimationActive);
   const sizingPolicy = useMemo(
     () => getSizingPolicy({ effectId: backgroundEdgeEffectAnim.id }),
@@ -116,6 +118,8 @@ export const LedBannerFullScreen = ({
       sizingPolicy.speechBubbleId,
     ],
   );
+
+  const backgroundTranslateX = useHeartBackgroundScroll(isAnimationActive);
 
   const marqueeViewportWidthPx =
     speechBubble.speechBoxPx?.widthPx ?? stageWidth;
@@ -172,7 +176,7 @@ export const LedBannerFullScreen = ({
         backgroundImageUri: backgroundImageUri ?? null,
         gradientBackgroundPreset,
         backgroundEffect: backgroundEdgeEffectAnim,
-        translateX,
+        translateX: backgroundTranslateX,
         isPortrait,
         mode: "fullscreen",
       }),
@@ -185,7 +189,7 @@ export const LedBannerFullScreen = ({
       backgroundImageUri,
       gradientBackgroundPreset,
       backgroundEdgeEffectAnim,
-      translateX,
+      backgroundTranslateX,
       isPortrait,
     ],
   );
@@ -193,6 +197,7 @@ export const LedBannerFullScreen = ({
   return (
     <Modal
       visible={visible}
+      onShow={hideAndroidNavigationBar}
       animationType="fade"
       presentationStyle="fullScreen"
       supportedOrientations={["portrait", "landscape"]}
@@ -209,7 +214,7 @@ export const LedBannerFullScreen = ({
               styles.flex,
               {
                 backgroundColor:
-                  hasBgPhoto || effects.isPixelEffect
+                  effects.isPixelEffect
                     ? undefined
                     : backgroundColor,
                 justifyContent: "flex-start",
@@ -222,7 +227,7 @@ export const LedBannerFullScreen = ({
               <Image
                 source={{ uri: backgroundImageUri }}
                 style={StyleSheet.absoluteFill}
-                contentFit="cover"
+                contentFit="contain"
                 blurRadius={backgroundBlur / 8}
               />
             ) : null}
@@ -244,7 +249,7 @@ export const LedBannerFullScreen = ({
             ) : null}
             <BackgroundEffectLayer
               effect={backgroundEdgeEffectAnim}
-              translateX={translateX}
+              translateX={backgroundTranslateX}
               isPortrait={isPortrait}
               mode="fullscreen"
               suppressPixelManagedBackgrounds={effects.isPixelEffect}

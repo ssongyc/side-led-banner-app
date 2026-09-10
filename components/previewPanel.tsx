@@ -1,3 +1,4 @@
+import { useHeartBackgroundScroll } from "@/hooks/useHeartBackgroundScroll";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { isSignBoardPreset } from "@/constants/signBoardPresets";
 import { DeleteAllButton } from "@/assets/svg/deleteAllButton";
@@ -140,6 +141,8 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
 
   const effects = useEffects({ fontSizePx: previewFontSize });
 
+  const backgroundTranslateX = useHeartBackgroundScroll(isAnimationActive);
+
   const marqueeViewportWidthPx =
     speechBubble.speechBoxPx?.widthPx ?? previewBox.width;
 
@@ -197,7 +200,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
         backgroundImageUri: backgroundImageUri ?? null,
         gradientBackgroundPreset,
         backgroundEffect: backgroundEdgeEffectAnim,
-        translateX,
+        translateX: backgroundTranslateX,
         isPortrait,
         mode: "preview",
       }),
@@ -210,7 +213,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
       backgroundImageUri,
       gradientBackgroundPreset,
       backgroundEdgeEffectAnim,
-      translateX,
+      backgroundTranslateX,
       isPortrait,
     ],
   );
@@ -334,7 +337,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
             justifyContent: "center",
             overflow: "hidden",
             backgroundColor:
-              hasBgPhoto || effects.isPixelEffect ? undefined : backgroundColor,
+              effects.isPixelEffect ? undefined : backgroundColor,
           },
         ]}
         onLayout={onPreviewLayout}
@@ -343,7 +346,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
           <Image
             source={{ uri: backgroundImageUri }}
             style={StyleSheet.absoluteFill}
-            contentFit="cover"
+            contentFit="contain"
             blurRadius={backgroundBlur / 8}
           />
         ) : null}
@@ -370,7 +373,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
         ) : null}
         <BackgroundEffectLayer
           effect={backgroundEdgeEffectAnim}
-          translateX={translateX}
+          translateX={backgroundTranslateX}
           isPortrait={isPortrait}
           mode="preview"
           suppressPixelManagedBackgrounds={effects.isPixelEffect}

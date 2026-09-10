@@ -59,7 +59,7 @@ function PixelBackgroundImage({
   height,
   fit = "cover",
 }: {
-  fit?: "cover" | "fill";
+  fit?: "cover" | "contain" | "fill";
   uri: string | number;
   width: number;
   height: number;
@@ -129,6 +129,7 @@ export function PixelBackgroundCanvas({
           <Group layer={photoBackgroundShaderLayer}>
             <PixelBackgroundImage
               uri={backgroundImageUri!}
+              fit="contain"
               width={width}
               height={height}
             />
