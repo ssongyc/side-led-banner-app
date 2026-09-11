@@ -1,8 +1,6 @@
 import { uiThemeFontStyle } from "@/constants/appFonts";
 import { moderateScale } from "@/constants/scale";
-import { Dimensions, Platform, StyleSheet } from "react-native";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+import { Platform, StyleSheet } from "react-native";
 
 export const CONTENTS_INPUT_FONT_SIZE = moderateScale(18);
 export const CONTENTS_INPUT_LINE_HEIGHT = Math.round(
@@ -23,7 +21,6 @@ export const styles = StyleSheet.create({
   },
 
   previewContainer: {
-    height: (SCREEN_WIDTH - 18) * (355 / 373),
     flexDirection: "column",
     padding: 5,
     marginHorizontal: 9,

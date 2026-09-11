@@ -9,6 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
+      "requireFullScreen": true,
       "icon": "./assets/images/LOGO_05_Final.png",
       "bundleIdentifier": "com.minkyokim.sideledbannerapp",
       "infoPlist": {

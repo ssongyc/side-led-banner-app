@@ -11,6 +11,7 @@ import { useSettingsRest } from "@/contexts/settingsContext";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { type Href, useRouter } from "expo-router";
+import * as ScreenOrientation from "expo-screen-orientation";
 import { loadRewardedAd } from "@/hooks/useRewardedAd";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -52,6 +53,15 @@ export default function SettingsScreen() {
   } = useSettingsRest();
   const compactHeight = windowH - insets.top - insets.bottom < 480;
   const rootPaddingTop = Platform.OS === "web" ? 0 : insets.top;
+
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    void ScreenOrientation.lockAsync(
+      ScreenOrientation.OrientationLock.PORTRAIT_UP,
+    ).catch((error) => {
+      if (__DEV__) console.error("[Settings] Portrait lock failed", error);
+    });
+  }, []);
 
   const languageDropdownItems = useMemo(
     () => [

@@ -54,6 +54,8 @@ import { MarqueeCanvas } from "./animation/MarqueeCanvas";
 import { PixelBackgroundCanvas } from "./animation/PixelBackgroundCanvas";
 
 const inputAccessoryViewID = "doneAccessory";
+const EDITOR_DISPLAY_HEIGHT_RATIO = 0.31;
+const INPUT_AREA_VERTICAL_SPACE = 12;
 
 type LayoutEvent = {
   nativeEvent: { layout: { height: number; width: number } };
@@ -246,6 +248,11 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
     moveCursorDown,
   } = useTextInput({ inputScrollViewportW, textInputRef });
 
+  const previewContainerHeight =
+    Math.round(windowHeight * EDITOR_DISPLAY_HEIGHT_RATIO) +
+    inputViewportHeightPx +
+    INPUT_AREA_VERTICAL_SPACE;
+
   const history = useTextHistory(previewText);
 
   useEffect(() => {
@@ -327,7 +334,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
   };
 
   return (
-    <View style={styles.previewContainer}>
+    <View style={[styles.previewContainer, { height: previewContainerHeight }]}>
       {/* preview */}
       <View
         collapsable={false}
@@ -555,9 +562,13 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
                 </TouchableOpacity>
               </View>
               <TouchableOpacity onPress={Keyboard.dismiss} hitSlop={8}>
-                <Text allowFontScaling={false} style={styles.accessoryClose}>
-                  ✔
-                </Text>
+                <MaterialIcons
+                  allowFontScaling={false}
+                  name="check"
+                  size={styles.accessoryClose.fontSize}
+                  color={toolbarBtn}
+                  style={{ opacity: 1 }}
+                />
               </TouchableOpacity>
             </View>
           </InputAccessoryView>
