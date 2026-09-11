@@ -5,10 +5,21 @@ param(
  [ValidateSet("production", "test")][string]$AdProfile="production",
  [Nullable[int]]$VersionCode,
  [string]$BundletoolJar=(Join-Path $PSScriptRoot '../artifacts/bundletool-all-1.18.3.jar'),
+ [string]$PythonExecutable="python",
  [switch]$MeasureBuild
 )
 $ErrorActionPreference='Stop'
 if($IncludeBundle -and $AdProfile -ne 'production'){throw 'Store AAB requires production ads'}
+$verificationScript=Join-Path $PSScriptRoot 'verify-store-release.py'
+if($IncludeBundle){
+ if(-not (Test-Path -LiteralPath $verificationScript -PathType Leaf)){throw 'Store verifier is missing'}
+ $PythonExecutable=(Get-Command $PythonExecutable -CommandType Application -ErrorAction Stop).Source
+ & $PythonExecutable -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)"
+ if($LASTEXITCODE -ne 0){throw 'Store verification requires Python 3.11 or newer'}
+ foreach($tool in @('apksigner.bat','aapt.exe','zipalign.exe')){
+  if(-not (Test-Path -LiteralPath (Join-Path 'C:/Users/ssong/AppData/Local/Android/Sdk/build-tools/36.1.0' $tool))){throw ('Store verification tool missing: '+$tool)}
+ }
+}
 if($env:EXPO_PUBLIC_WEB_AD_DIAGNOSTICS -eq '1'){throw 'Web diagnostics cannot be included in native builds'}
 
 $resolved=[IO.Path]::GetFullPath($BuildRoot).TrimEnd('\')
@@ -165,7 +176,7 @@ android {
   $started=Get-Date
   $tasks=if($IncludeBundle){@(':app:bundleRelease')}else{@(':app:assembleRelease')}
   $gradleArguments=@('-p','android')+$tasks+@('--build-cache','--no-daemon','--max-workers=1','-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=1024m','--stacktrace')
-  if($MeasureBuild){$gradleArguments+='--profile'}
+  if($MeasureBuild){$gradleArguments+=@('--profile','--info')}
   & ./android/gradlew.bat @gradleArguments > gradle-release.log 2>&1
   $buildExit=$LASTEXITCODE
   Copy-Item -LiteralPath (Join-Path $resolved 'gradle-release.log') -Destination $record
@@ -228,7 +239,14 @@ android {
   if($apkHash -ne (Get-FileHash -LiteralPath $deliveryApk -Algorithm SHA256).Hash){throw 'APK delivery hash mismatch'}
   Write-Output ('APK: '+$deliveryApk)
   @{ apk=$deliveryApk; apkSource=$apkSource; aab=$deliveryAab; adProfile=$AdProfile; aabSha256=$aabHash; bundletoolVersion=$bundletoolVersion; gradleTasks=$tasks; mappingSha256=$mappingHash; elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=$apkHash; revision=$plan.revision; dirty=$plan.dirty; versionName=$buildVersionName; versionCode=$plan.versionCode; apkExportedAtUtc=$apkExportedAtUtc; aabExportedAtUtc=$aabExportedAtUtc; measureBuild=[bool]$MeasureBuild } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
-  Write-Output ('Gradle '+($tasks -join ', ')+' completed; independent artifact verification still required. Record: '+$record)
+  if($IncludeBundle){
+   # One verification entrypoint; it never invokes Gradle or repeats APK packaging.
+   & $PythonExecutable $verificationScript --record $record --build-root $resolved --bundletool $BundletoolJar --sdk $env:ANDROID_HOME --java-home $env:JAVA_HOME --r8 $expectedR8
+   if($LASTEXITCODE -ne 0){throw 'Store artifact verification failed; inspect release-verification record'}
+   Write-Output ('Store static checks completed; review warnings and runtime/Play status separately. Record: '+$record)
+  }else{
+   Write-Output ('Gradle '+($tasks -join ', ')+' completed; independent artifact verification still required. Record: '+$record)
+  }
  } finally { Pop-Location }
 } finally {
  $env:LEDPOP_AD_PROFILE=$previousAdProfile

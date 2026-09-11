@@ -39,3 +39,29 @@ A bundletool universal APK is suitable for local installation and QA. Google Pla
 - Real-device smoke/QA, live ad impression/reward verification, Google Play upload, Play App Signing output, and Play mapping registration remain separate and were not performed.
 
 The exact artifacts, hashes and verification boundary are recorded in [ANDROID_RELEASE_1.0.9_27.md](ANDROID_RELEASE_1.0.9_27.md).
+
+## R8 investigation and unified verification — 2026-09-12
+
+The retained 1.0.9(27) run changed the version from 1.0.8(26). Its log records app generateReleaseBuildConfig, processReleaseMainManifest and minifyReleaseWithR8 as executed. The generated BuildConfig contains VERSION_CODE=27 and VERSION_NAME="1.0.9"; version changes therefore affect native compiler inputs even when Android prebuild is unnecessary. This is evidence consistent with necessary R8 invalidation, not proof that every JavaScript-only edit runs R8. The old log lacks the exact up-to-date invalidation reason. No unnecessary R8 input has yet been proven, so no optimization task or input tracking was disabled.
+
+- MeasureBuild now adds --info alongside --profile. On the next authorized build, inspect the minifyReleaseWithR8 "not up-to-date because" input-property/file reasons. The new verification report retains a bounded excerpt; absent reasons are reported as not recorded.
+- Existing write-if-changed build.gradle/local.properties handling, source synchronization, native cache policy, worker limits and R8 settings remain.
+- scripts/verify-store-release.py is the single post-export entrypoint for IncludeBundle. It replaces the sequence of historical verify-apk.py, verify-store-artifacts.ps1, verify-store-metadata.py, verify-store-native.py and verify-record.py commands; historical evidence files remain untouched.
+- Each SDK signature/manifest/alignment/bundletool command runs once. Python opens each APK/AAB ZIP once and reuses native, DEX, Hermes, config and mapping bytes for related checks. Export-integrity hashes and the wrapper's same-build mapping gate remain separate deliberate checks.
+- Version, revision, dirty state, source inventory and artifact hashes come from the current build record, with packaged values independently checked. No fixed 1.0.9/27 or fixed source revision remains in the verifier. SDK build-tools 36.1.0, Billing 9.1.0, bundletool 1.18.3 and the existing certificate are explicit current policy checks, not automatically relaxed.
+- Preserved checks cover signer, package/version, SDK, permissions, production AdMob config, native ad classes, Billing, four ABIs, 16 KiB alignment, APK/AAB contents, R8 mapping, source inventory/source maps, hidden Premium/web diagnostics exclusion and exact Sunny icons. Same-build JS maps and native symbols are retained; required symbol absence fails.
+- Each verification run writes a new release-verification/<unique-id>/verification.json with tool durations, failures and warning findings. A failing check exits nonzero; successful static checks do not claim human log review, installability/runtime QA, live ads or Play registration.
+- Python 3.11+ and the inspected Android build-tools are required before a store build. PythonExecutable can name an explicit installed interpreter. The verifier does not install dependencies, compile, package, sign, install an app or upload anything.
+- The previous build-result.json records 738.86 seconds from Gradle start through export; total-build-timing records about 760.69 seconds from the run record to completion. Both exclude subsequent independent verification. Future comparisons must use matching intervals and include the new verifier's elapsedSeconds separately.
+
+### Remaining validation (not executed in this change)
+
+1. Run one authorized production IncludeBundle/MeasureBuild with the new verifier; confirm no duplicate SDK calls or packaging tasks.
+2. Confirm R8 reasons for the actual edit. A version-changing run cannot establish JS-only invalidation; use an authorized same-version JS comparison if needed.
+3. Confirm all static checks and same-build symbol retention on the real artifacts; inspect complete logs and warnings.
+4. Compare Gradle, export and verification durations separately. Additional speedup is unmeasured.
+5. Verify failure paths (wrong hashes/certificate/version, missing tools/mapping/symbols) only when tests are authorized.
+
+No build, lint or test was performed for this change.
+
+References: https://docs.gradle.org/current/userguide/incremental_build.html and https://docs.gradle.org/current/userguide/continuous_builds.html
