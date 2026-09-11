@@ -1,4 +1,4 @@
-﻿# LED POP (LED Banner App)
+# LED POP (LED Banner App)
 
 입력한 텍스트를 한 줄 또는 여러 줄 LED 배너로 표시하는 Expo/React Native 앱입니다. 텍스트·배경·움직임·Pixel/Gradient/Glow 효과와 프리셋을 지원하며 Android와 iOS를 대상으로 합니다.
 
@@ -447,4 +447,4 @@ APK 전달 파일명은 실제 versionName 기준 `<AppName>V<점 없는 버전>
 
 ## iPad 슬라이더 드래그 후속 수정
 
-공통 슬라이더의 드래그 중 외부 값 재설정과 Text·Background·Effects 스크롤 뷰의 iOS 터치 취소 경로를 보완했습니다. 실시간 값 전달과 Pro 잠금은 유지합니다. 이 변경은 위 1.0.9(27) 출시 파일에 포함되지 않으며 빌드·린트·테스트와 실기기 확인은 미실행입니다. [변경 내용과 확인할 항목](docs/UI_INTERACTION_1.0.9_27.md)을 참고하세요.
+공통 슬라이더의 드래그 중 외부 값 재설정과 Text·Background·Effects 스크롤 뷰의 iOS 터치 취소 경로를 보완했습니다. 후속 개선은 iPhone·iPad·Android 전체에 적용되며, 손잡이는 연속적으로 이동하고 실제 설정 값이 바뀔 때만 갱신을 전달합니다. 손을 떼면 기존 증감 단위의 최종 값으로 정렬합니다. 실시간 값 전달과 Pro 잠금은 유지하며 실제 반응 속도 개선량은 미측정입니다. 이 변경은 위 1.0.9(27) 출시 파일에 포함되지 않으며 빌드·린트·테스트와 실기기 확인은 미실행입니다. [변경 내용과 확인할 항목](docs/UI_INTERACTION_1.0.9_27.md)을 참고하세요.

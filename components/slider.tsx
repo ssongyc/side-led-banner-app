@@ -7,7 +7,7 @@ import {
   sliderLockStyles as lockStyles,
 } from "@/constants/styles";
 import { Slider } from "@miblanchard/react-native-slider";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Image, TouchableOpacity, View } from "react-native";
 
 const LOCK_ICON = require("@/assets/images/icon_lock_type2.png");
@@ -34,12 +34,29 @@ export const SliderComponent = ({
   const [isSliding, setIsSliding] = useState(false);
   const dragStartValue = useRef(value);
 
-  const normalizeValue = useCallback(
-    (nextValue: number | number[]) =>
-      Math.round(
-        Array.isArray(nextValue) ? (nextValue[0] ?? value) : nextValue,
-      ),
-    [value],
+  const controlledValue = isSliding ? dragStartValue.current : value;
+  // A new array at release also snaps a sub-step drag back to its stored value.
+  const sliderValue = useMemo(() => [controlledValue], [controlledValue, isSliding]);
+
+  const lastEmittedValue = useRef(value);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  if (!isSliding) lastEmittedValue.current = value;
+
+  // Keep thumb motion continuous without rebuilding the preview for the same step.
+  const handleValueChange = useCallback(
+    (values: number[]) => {
+      const raw = values[0];
+      if (raw === undefined || !Number.isFinite(raw)) return;
+      const stepped = step > 0
+        ? minimumValue + Math.round((raw - minimumValue) / step) * step
+        : raw;
+      const next = Math.max(minimumValue, Math.min(maximumValue, Math.round(stepped)));
+      if (next === lastEmittedValue.current) return;
+      lastEmittedValue.current = next;
+      onChangeRef.current(next);
+    },
+    [minimumValue, maximumValue, step],
   );
 
   const handleSlidingStart = useCallback(() => {
@@ -47,9 +64,10 @@ export const SliderComponent = ({
     setIsSliding(true);
   }, [value]);
 
-  const handleSlidingComplete = useCallback(() => {
+  const handleSlidingComplete = useCallback((values: number[]) => {
+    handleValueChange(values);
     setIsSliding(false);
-  }, []);
+  }, [handleValueChange]);
 
   return (
     <View style={styles.sliderContainer}>
@@ -68,11 +86,11 @@ export const SliderComponent = ({
         thumbStyle={styles.sliderThumb}
         maximumValue={maximumValue}
         minimumValue={minimumValue}
-        step={step}
-        value={isSliding ? dragStartValue.current : value}
+        step={0}
+        value={sliderValue}
         onSlidingStart={handleSlidingStart}
         onSlidingComplete={handleSlidingComplete}
-        onValueChange={(nextValue) => onChange(normalizeValue(nextValue))}
+        onValueChange={handleValueChange}
         minimumTrackTintColor="#FF6E00"
       />
       <TouchableOpacity
