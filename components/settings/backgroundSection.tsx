@@ -18,6 +18,7 @@ import { SettingsSliderBlock } from "./settingsSliderBlock";
 const LOCK_ICON = require("@/assets/images/icon_lock_type2.png");
 const COLS = 9;
 const ROW1_SWATCHES = COLS - 1;
+const PHOTO_BUTTON_HIT_SLOP = { top: 6, right: 6, bottom: 6, left: 6 } as const;
 
 // The palette is fixed; build its display rows once per module load.
 const colors = backgroundColorPalette;
@@ -73,6 +74,7 @@ export const BackgroundSection = () => {
     <>
       <ScrollView
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={base.scrollViewContainer}
       >
         <View
@@ -87,7 +89,10 @@ export const BackgroundSection = () => {
           <View style={chip.colorPickerRow}>
             <TouchableOpacity
               style={chip.colorPickerItemButton}
+              hitSlop={PHOTO_BUTTON_HIT_SLOP}
+              activeOpacity={0.65}
               onPress={() => void openAlbum()}
+              accessibilityRole="button"
               accessibilityLabel="Background photo"
             >
               {hasBgPhoto ? (

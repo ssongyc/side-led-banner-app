@@ -11,6 +11,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   AppState,
   BackHandler,
+  Image as NativeImage,
+  Platform,
   Pressable,
   ScrollView,
   type StyleProp,
@@ -422,12 +424,22 @@ export function RewardAdModal({
           accessibilityState={{ disabled: !adReady }}
           style={[styles.ctaButton, !adReady && { opacity: 0.4 }]}
         >
-          <Image
-            source={WATCH_AD_BUTTON}
-            style={styles.ctaButtonBg}
-            contentFit="fill"
-            accessibilityIgnoresInvertColors
-          />
+          {Platform.OS === "ios" ? (
+            <NativeImage
+              source={WATCH_AD_BUTTON}
+              style={styles.ctaButtonBg}
+              resizeMode="stretch"
+              capInsets={{ top: 27, left: 27, bottom: 27, right: 27 }}
+              accessibilityIgnoresInvertColors
+            />
+          ) : (
+            <Image
+              source={WATCH_AD_BUTTON}
+              style={styles.ctaButtonBg}
+              contentFit="fill"
+              accessibilityIgnoresInvertColors
+            />
+          )}
           <View style={styles.ctaButtonContent}>
             <Image
               source={PLAY_BG}

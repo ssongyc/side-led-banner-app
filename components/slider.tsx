@@ -40,13 +40,14 @@ export const SliderComponent = ({
         <SliderMinusButton />
       </TouchableOpacity>
       <Slider
-        animateTransitions
         disabled={disabled || locked}
-        trackClickable={true}
+        trackClickable
+        containerStyle={styles.slider}
         trackStyle={styles.sliderTrack}
         thumbStyle={styles.sliderThumb}
         maximumValue={maximumValue}
         minimumValue={minimumValue}
+        step={step}
         value={value}
         onValueChange={(nextValue) =>
           onChange(

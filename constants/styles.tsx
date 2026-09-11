@@ -424,9 +424,12 @@ export const rewardAdModalStyles = StyleSheet.create({
     minHeight: 56,
     flexShrink: 0,
     alignSelf: "center",
+    borderRadius: 28,
+    overflow: "hidden",
   },
   ctaButtonBg: {
     ...StyleSheet.absoluteFill,
+    borderRadius: 28,
   },
   ctaButtonContent: {
     minHeight: 56,
@@ -561,22 +564,22 @@ export const sliderLockStyles = StyleSheet.create({
   },
 });
 
-const SLIDER_WIDTH = SCREEN_WIDTH - 100;
 export const sliderComponentStyles = StyleSheet.create({
   sliderContainer: {
-    height: 40,
+    minHeight: 58,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 15,
-    paddingBottom: 30,
     marginHorizontal: 10,
     marginBottom: 5,
+    paddingVertical: 4,
     borderBottomWidth: 2,
     borderBottomColor: "#DDDDDD",
   },
+  slider: {
+    flex: 1,
+    height: 48,
+  },
   sliderTrack: {
-    width: SLIDER_WIDTH,
     backgroundColor: "#8F8D8A",
     borderRadius: 4,
     height: 4,
