@@ -1,4 +1,4 @@
-# LED POP Android local signing
+﻿# LED POP Android local signing
 
 - Application ID: com.minkyokim.sideledbannerapp.
 - Existing EAS credential: Build Credentials FIxh6TZalE, downloaded with user authorization on 2026-09-08.
@@ -34,6 +34,7 @@ The short-path build completed successfully (40m 57s) for main 85a61d6. The deli
 - Before every authorized build, synchronize the current main working source, including additions and deletions, into that directory. Use a source-file inventory and compare content; copy only changed files. Never mirror the whole repository into its own artifacts subfolder or overwrite generated output/credentials. Record the source revision and any uncommitted changes used.
 - Compare package.json and package-lock.json with the last build inputs. Run dependency installation only if inputs changed or the installation is missing/inconsistent. Do not routinely run npm ci for UI-only changes.
 - Compare Expo config, config plugins, native modules, toolchain and native-affecting assets/settings with the previous inputs. Reuse native output with -ResumeNative when these inputs are unchanged. Regenerate only when native inputs actually require it, using the signing-verified procedure; never resume stale native configuration merely to save time.
+- Treat versionName/versionCode and iOS/web-only Expo configuration as non-structural for Android. Synchronize those source values, patch exactly one generated Android version field of each kind at the build boundary, and stop if the expected generated template is absent or ambiguous.
 - Preserve previous APKs, verification evidence and complete logs under unique build identifiers before another run. Keep the active build directory at the same path.
 - The release wrapper explicitly enables the local Gradle build cache. Do not routinely clean, delete .cxx, reinstall dependencies or rewrite unchanged generated configuration. Invalidate only the identified stale output when an actual error requires it.
 - Keep all four existing Android ABIs. ARM64-only builds require a separate explicit request and device compatibility confirmation. Retain signing, API level and artifact verification requirements.
@@ -54,7 +55,7 @@ The edaf82b application source built successfully in 7m 5s (83 executed, 1105 up
 
 ## Store APK and AAB workflow
 
-Use the same signing boundary: scripts/build-local-apk.ps1 -IncludeBundle -VersionCode <unused-code>. The switch invokes assembleRelease and bundleRelease in one Gradle run, retaining the APK, AAB, exact mapping and SHA-256 identities in artifacts/apk-runs/<run-id>. Previous AAB/mapping are archived before build preparation.
+Use the same signing boundary: scripts/build-local-apk.ps1 -IncludeBundle -VersionCode <unused-code>. The switch invokes only bundleRelease, retains the AAB and exact mapping, then uses pinned bundletool 1.18.3 to derive one local universal APK from that exact AAB with the existing upload key and alias. Passwords use access-restricted temporary files outside the repository and are deleted after conversion. Previous AAB/mapping/universal APK are archived before build preparation. APK-only runs continue to use assembleRelease.
 
 The withAndroidRelease config plugin enables R8 and resource shrinking and selects proguard-android-optimize.txt. Existing framework/SDK consumer rules are retained; no blanket keep rule or warning suppression was added. The wrapper requires a nonempty application mapping and verifies byte-identical mapping content in AAB BUNDLE-METADATA. Independent signing, manifest, SDK, ABI, Billing, native alignment and bundle validation are still required. An optimized build is not runtime QA or Play upload/registration verification.
 

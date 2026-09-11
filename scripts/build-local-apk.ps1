@@ -3,7 +3,9 @@ param(
  [switch]$ResumeNative,
  [switch]$IncludeBundle,
  [ValidateSet("production", "test")][string]$AdProfile="production",
- [Nullable[int]]$VersionCode
+ [Nullable[int]]$VersionCode,
+ [string]$BundletoolJar=(Join-Path $PSScriptRoot '../artifacts/bundletool-all-1.18.3.jar'),
+ [switch]$MeasureBuild
 )
 $ErrorActionPreference='Stop'
 if($IncludeBundle -and $AdProfile -ne 'production'){throw 'Store AAB requires production ads'}
@@ -33,6 +35,13 @@ $env:CI='1'
 try {
  $previousAdProfile=$env:LEDPOP_AD_PROFILE
  $env:LEDPOP_AD_PROFILE=$AdProfile
+ $bundletoolVersion=$null
+ if($IncludeBundle){
+  $BundletoolJar=[IO.Path]::GetFullPath($BundletoolJar)
+  if(-not (Test-Path -LiteralPath $BundletoolJar -PathType Leaf)){throw 'Pinned bundletool jar is missing'}
+  $bundletoolVersion=((& "$env:JAVA_HOME/bin/java.exe" -jar $BundletoolJar version 2>&1)-join [Environment]::NewLine).Trim()
+  if($LASTEXITCODE -ne 0 -or $bundletoolVersion -ne '1.18.3'){throw 'Pinned bundletool version verification failed'}
+ }
  $check=& "$env:JAVA_HOME/bin/keytool.exe" -list -v -keystore $key.keystorePath -alias $key.keyAlias -storepass:env LEDPOP_STORE_PASSWORD 2>&1
  if($LASTEXITCODE -ne 0 -or (($check -join '') -replace ':','') -notmatch $expected){throw 'Keystore fingerprint verification failed'}
  $cert=[Security.Cryptography.X509Certificates.X509Certificate2]::CreateFromPem([IO.File]::ReadAllText((Join-Path $signing 'upload_certificate.pem')))
@@ -49,7 +58,8 @@ try {
  }
  foreach($item in @(
   @{Source='android/app/build/outputs/bundle/release/app-release.aab'; Name='previous.aab'},
-  @{Source='android/app/build/outputs/mapping/release/mapping.txt'; Name='previous-mapping.txt'}
+  @{Source='android/app/build/outputs/mapping/release/mapping.txt'; Name='previous-mapping.txt'},
+  @{Source='android/app/build/outputs/bundle/release/app-release-universal.apk'; Name='previous-universal.apk'}
  )){
   $previous=Join-Path $resolved $item.Source
   if(Test-Path -LiteralPath $previous){Copy-Item -LiteralPath $previous -Destination (Join-Path $record $item.Name)}
@@ -135,6 +145,15 @@ android {
 }
 "@
   }
+  $appConfig=Get-Content app.json -Raw|ConvertFrom-Json
+  $buildVersionName=[string]$appConfig.expo.version
+  $buildVersionCode=[int]$plan.versionCode
+  if($buildVersionName -notmatch '^\d+(?:\.\d+)*$' -or $buildVersionCode -lt 1){throw 'Invalid Android release version'}
+  $versionCodePattern='(?m)^(\s*)versionCode\s+\d+\s*$'
+  $versionNamePattern='(?m)^(\s*)versionName\s+"[^"]*"\s*$'
+  if([regex]::Matches($gradle,$versionCodePattern).Count -ne 1 -or [regex]::Matches($gradle,$versionNamePattern).Count -ne 1){throw 'Unexpected generated Android version fields'}
+  $gradle=[regex]::Replace($gradle,$versionCodePattern,[Text.RegularExpressions.MatchEvaluator]{param($match) $match.Groups[1].Value+'versionCode '+$buildVersionCode},1)
+  $gradle=[regex]::Replace($gradle,$versionNamePattern,[Text.RegularExpressions.MatchEvaluator]{param($match) $match.Groups[1].Value+'versionName "'+$buildVersionName+'"'},1)
   $gradlePath=Join-Path $resolved 'android/app/build.gradle'
   if([IO.File]::ReadAllText($gradlePath) -cne $gradle){[IO.File]::WriteAllText($gradlePath,$gradle)}
   $propertiesPath=Join-Path $resolved 'android/local.properties'
@@ -144,41 +163,58 @@ android {
   if($LASTEXITCODE -ne 0){throw 'Native state recording failed'}
   Copy-Item -LiteralPath (Join-Path $resolved 'source-inputs.json') -Destination $record
   $started=Get-Date
-  $tasks=@(':app:assembleRelease')
-  if($IncludeBundle){$tasks+= ':app:bundleRelease'}
-  & ./android/gradlew.bat -p android @tasks --build-cache --no-daemon --max-workers=1 "-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=1024m" --stacktrace > gradle-release.log 2>&1
+  $tasks=if($IncludeBundle){@(':app:bundleRelease')}else{@(':app:assembleRelease')}
+  $gradleArguments=@('-p','android')+$tasks+@('--build-cache','--no-daemon','--max-workers=1','-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=1024m','--stacktrace')
+  if($MeasureBuild){$gradleArguments+='--profile'}
+  & ./android/gradlew.bat @gradleArguments > gradle-release.log 2>&1
   $buildExit=$LASTEXITCODE
   Copy-Item -LiteralPath (Join-Path $resolved 'gradle-release.log') -Destination $record
+  if($MeasureBuild){
+   $profileDirectory=Join-Path $resolved 'android/build/reports/profile'
+   if(Test-Path -LiteralPath $profileDirectory){Copy-Item -LiteralPath $profileDirectory -Destination (Join-Path $record 'gradle-profile') -Recurse}
+  }
   if($buildExit -ne 0){throw 'Gradle build failed; inspect gradle-release.log'}
   if(Select-String -LiteralPath 'gradle-release.log' -SimpleMatch 'An error occurred when parsing kotlin metadata' -Quiet){throw 'R8 Kotlin metadata compatibility failure'}
   $expectedR8=(& node -p "require('./plugins/withAndroidRelease').R8_VERSION").Trim()
   if($LASTEXITCODE -ne 0 -or $expectedR8 -notmatch '^\d+\.\d+\.\d+$'){throw 'Expected R8 version is invalid'}
-  $apk=Join-Path $resolved 'android/app/build/outputs/apk/release/app-release.apk'
-  if(-not (Test-Path -LiteralPath $apk)){throw 'Gradle succeeded but APK is missing'}
-  $deliveryApk = & (Join-Path $PSScriptRoot 'new-apk-delivery-path.ps1') -Apk $apk -AppName 'LedPop' -OutputDirectory $record
-  Copy-Item -LiteralPath $apk -Destination $deliveryApk -ErrorAction Stop
-  if((Get-FileHash -LiteralPath $apk).Hash -ne (Get-FileHash -LiteralPath $deliveryApk).Hash){throw 'APK delivery hash mismatch'}
-  Write-Output ('APK: '+$deliveryApk)
   $mapping=Join-Path $resolved 'android/app/build/outputs/mapping/release/mapping.txt'
   if(-not (Test-Path -LiteralPath $mapping) -or (Get-Item -LiteralPath $mapping).Length -eq 0){throw 'Optimized release mapping is missing'}
   if(-not (Select-String -LiteralPath $mapping -Pattern ('^# compiler_version: '+[regex]::Escape($expectedR8)+'$') -Quiet)){throw 'Mapping compiler version does not match the pinned R8 version'}
+  $mappingHash=(Get-FileHash -LiteralPath $mapping -Algorithm SHA256).Hash
   Copy-Item -LiteralPath $mapping -Destination (Join-Path $record 'mapping.txt')
   $aabHash=$null
+  $deliveryAab=$null
+  $apkSource='gradle-assemble'
   if($IncludeBundle){
    $aab=Join-Path $resolved 'android/app/build/outputs/bundle/release/app-release.aab'
    if(-not (Test-Path -LiteralPath $aab)){throw 'Gradle succeeded but AAB is missing'}
-   Copy-Item -LiteralPath $aab -Destination (Join-Path $record 'app-release.aab')
+   $deliveryAab=Join-Path $record 'app-release.aab'
+   Copy-Item -LiteralPath $aab -Destination $deliveryAab -ErrorAction Stop
    $aabHash=(Get-FileHash -LiteralPath $aab -Algorithm SHA256).Hash
+   if($aabHash -ne (Get-FileHash -LiteralPath $deliveryAab -Algorithm SHA256).Hash){throw 'AAB delivery hash mismatch'}
+   Write-Output ('AAB: '+$deliveryAab)
+   Add-Type -AssemblyName System.IO.Compression.FileSystem
    $zip=[IO.Compression.ZipFile]::OpenRead($aab)
    try {
     $entry=$zip.GetEntry('BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map')
     if($null -eq $entry){throw 'AAB mapping metadata is missing'}
     $stream=$entry.Open()
     try {$embeddedHash=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($stream))} finally {$stream.Dispose()}
-    if($embeddedHash -ne (Get-FileHash -LiteralPath $mapping -Algorithm SHA256).Hash){throw 'AAB mapping differs from same-build mapping'}
+    if($embeddedHash -ne $mappingHash){throw 'AAB mapping differs from same-build mapping'}
    } finally {$zip.Dispose()}
+   $apk=Join-Path $resolved 'android/app/build/outputs/bundle/release/app-release-universal.apk'
+   & (Join-Path $PSScriptRoot 'new-universal-apk-from-aab.ps1') -Aab $aab -OutputApk $apk -BundletoolJar $BundletoolJar -Keystore $key.keystorePath -KeyAlias $key.keyAlias -LogPath (Join-Path $record 'bundletool-build-apks.log') -MaxThreads 2
+   $apkSource='bundletool-universal'
+  }else{
+   $apk=Join-Path $resolved 'android/app/build/outputs/apk/release/app-release.apk'
   }
-  @{ apk=$deliveryApk; adProfile=$AdProfile; aabSha256=$aabHash; mappingSha256=(Get-FileHash -LiteralPath $mapping -Algorithm SHA256).Hash; elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=(Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash; revision=$plan.revision; dirty=$plan.dirty; versionCode=$plan.versionCode } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
+  if(-not (Test-Path -LiteralPath $apk)){throw 'Release APK is missing'}
+  $apkHash=(Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash
+  $deliveryApk = & (Join-Path $PSScriptRoot 'new-apk-delivery-path.ps1') -Apk $apk -AppName 'LedPop' -OutputDirectory $record
+  Copy-Item -LiteralPath $apk -Destination $deliveryApk -ErrorAction Stop
+  if($apkHash -ne (Get-FileHash -LiteralPath $deliveryApk -Algorithm SHA256).Hash){throw 'APK delivery hash mismatch'}
+  Write-Output ('APK: '+$deliveryApk)
+  @{ apk=$deliveryApk; apkSource=$apkSource; aab=$deliveryAab; adProfile=$AdProfile; aabSha256=$aabHash; bundletoolVersion=$bundletoolVersion; gradleTasks=$tasks; mappingSha256=$mappingHash; elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=$apkHash; revision=$plan.revision; dirty=$plan.dirty; versionName=$buildVersionName; versionCode=$plan.versionCode; measureBuild=[bool]$MeasureBuild } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
   Write-Output ('Gradle '+($tasks -join ', ')+' completed; independent artifact verification still required. Record: '+$record)
  } finally { Pop-Location }
 } finally {

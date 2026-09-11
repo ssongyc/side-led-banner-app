@@ -8,6 +8,7 @@ const target = path.join(root, 'artifacts', 'b');
 const statePath = path.join(target, '.source-state.json');
 const planPath = path.join(target, '.source-plan.json');
 const phase = process.argv[2];
+const nativeHashSchema = 2;
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 const git = args => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -34,9 +35,17 @@ if (phase !== 'prepare') {
   const state = readJson(statePath);
   const plan = readJson(planPath);
   if (phase === 'install-start') state.dependencyHash = null;
-  else if (phase === 'native-start') state.nativeHash = null;
+  else if (phase === 'native-start') {
+    state.nativeHash = null;
+    state.nativeHashSchema = null;
+    state.adProfile = null;
+  }
   else if (phase === 'installed') state.dependencyHash = plan.dependencyHash;
-  else state.nativeHash = plan.nativeHash;
+  else {
+    state.nativeHash = plan.nativeHash;
+    state.nativeHashSchema = plan.nativeHashSchema;
+    state.adProfile = plan.adProfile;
+  }
   fs.writeFileSync(statePath, JSON.stringify(state, null, 2));
   process.exit(0);
 }
@@ -54,6 +63,14 @@ const files = [...new Set(git(sourceRevision
   : ['ls-files', '--cached', '--others', '--exclude-standard', '-z']).split('\0'))]
   .filter(name => name && !excluded(name) && (sourceRevision || fs.existsSync(safePath(root, name)))).sort();
 const app = JSON.parse(sourceBytes('app.json').toString('utf8'));
+function androidNativeAppConfig(value) {
+  const normalized = JSON.parse(JSON.stringify(value));
+  delete normalized.expo.version;
+  if (normalized.expo.android) delete normalized.expo.android.versionCode;
+  delete normalized.expo.ios;
+  delete normalized.expo.web;
+  return normalized;
+}
 const oldAppPath = path.join(target, 'app.json');
 const versionCode = process.argv[3] ? Number(process.argv[3]) : app.expo.android.versionCode ??
   (fs.existsSync(oldAppPath) ? readJson(oldAppPath).expo.android.versionCode : undefined);
@@ -68,8 +85,8 @@ function collectAssets(value) {
   else if (Array.isArray(value)) value.forEach(collectAssets);
   else if (value && typeof value === 'object') Object.values(value).forEach(collectAssets);
 }
-collectAssets(app);
-if (fs.existsSync(oldAppPath)) collectAssets(readJson(oldAppPath));
+collectAssets(androidNativeAppConfig(app));
+if (fs.existsSync(oldAppPath)) collectAssets(androidNativeAppConfig(readJson(oldAppPath)));
 const nativeFile = name => /^(?:app\.config\.|react-native\.config\.|expo-module\.config\.)/.test(name) ||
   /^(?:plugins|modules|patches)\//.test(name) || nativeAssets.has(name);
 const state = fs.existsSync(statePath) ? readJson(statePath) : null;
@@ -92,11 +109,14 @@ dependencyNames.push(...previousFiles.filter(n => n.startsWith('patches/')));
 const nativeNames = [...new Set(['app.json', 'advertising.config.json', ...dependencyNames, ...files.filter(nativeFile), ...previousFiles.filter(nativeFile)])].sort();
 // Config/plugin changes conservatively invalidate native output. Dynamic config may read any asset.
 if (files.some(n => n.startsWith('app.config.'))) nativeNames.push(...files.filter(n => n.startsWith('assets/')));
-function digest(names, fromSource) {
+function digest(names, fromSource, normalizeNativeConfig = false) {
   return hash(JSON.stringify([...new Set(names)].sort().map(name => {
     const file = safePath(target, name);
     let content = fromSource ? contents.get(name) : fs.existsSync(file) ? fs.readFileSync(file) : undefined;
-    if (name === 'app.json' && content) content = Buffer.from(JSON.stringify(JSON.parse(content.toString())));
+    if (name === 'app.json' && content) {
+      const parsed = JSON.parse(content.toString());
+      content = Buffer.from(JSON.stringify(normalizeNativeConfig ? androidNativeAppConfig(parsed) : parsed));
+    }
     return [name, content ? hash(content) : null];
   })));
 }
@@ -117,21 +137,31 @@ const toolchainHash = hash(JSON.stringify([
     return [file, hash(fs.readFileSync(file))];
   }),
 ]));
-const nativeHash = hash(digest(nativeNames, true) + environmentHash + toolchainHash + (process.env.LEDPOP_AD_PROFILE ?? "production"));
+const adProfile = process.env.LEDPOP_AD_PROFILE ?? 'production';
+const nativeHash = hash(digest(nativeNames, true, true) + environmentHash + toolchainHash + adProfile);
 const previousDependencyHash = state?.dependencyHash ?? (bootstrap ? digest(dependencyNames, false) : null);
-const previousNativeHash = state?.nativeHash ?? (bootstrap ? hash(digest(nativeNames, false) + environmentHash + toolchainHash) : null);
+const previousPlan = fs.existsSync(planPath) ? readJson(planPath) : null;
+const recordedProfile = state?.adProfile ??
+  (state?.nativeHash && previousPlan?.nativeHash === state.nativeHash ? previousPlan.adProfile : null);
+let previousNativeHash = null;
+if (state?.nativeHashSchema === nativeHashSchema && state?.nativeHash) {
+  previousNativeHash = state.nativeHash;
+} else if (state?.nativeHash && recordedProfile === adProfile && fs.existsSync(path.join(target, 'android', 'app', 'build.gradle'))) {
+  // Migrate an old successful stamp by hashing the actual preserved Android inputs.
+  previousNativeHash = hash(digest(nativeNames, false, true) + environmentHash + toolchainHash + adProfile);
+}
 const plan = {
-  adProfile: process.env.LEDPOP_AD_PROFILE ?? "production",
+  adProfile,
   revision: sourceRevision ?? git(['rev-parse', 'HEAD']).trim(),
   dirty: sourceRevision ? sourceOverrides.length > 0 : git(['status', '--porcelain', '-z']).length > 0,
   sourceOverrides,
-  versionCode, dependencyHash, nativeHash,
+  versionCode, dependencyHash, nativeHash, nativeHashSchema,
   installRequired: dependencyHash !== previousDependencyHash || !fs.existsSync(path.join(target, 'node_modules', '.package-lock.json')),
   nativeRequired: nativeHash !== previousNativeHash || !fs.existsSync(path.join(target, 'android', 'app', 'build.gradle')),
   changed: [], removed: [],
 };
 // Persist an inventory BEFORE mutation, retaining successful dependency/native stamps on failure.
-fs.writeFileSync(statePath, JSON.stringify({ files: [...new Set([...previousFiles, ...files])], dependencyHash: previousDependencyHash, nativeHash: previousNativeHash }, null, 2));
+fs.writeFileSync(statePath, JSON.stringify({ files: [...new Set([...previousFiles, ...files])], dependencyHash: previousDependencyHash, nativeHash: previousNativeHash, nativeHashSchema: previousNativeHash ? nativeHashSchema : null, adProfile: previousNativeHash ? adProfile : null }, null, 2));
 for (const name of files) {
   const dest = safePath(target, name);
   const content = contents.get(name);
@@ -145,7 +175,7 @@ for (const name of previousFiles) {
   const dest = safePath(target, name);
   if (fs.existsSync(dest)) { fs.unlinkSync(dest); plan.removed.push(name); }
 }
-fs.writeFileSync(statePath, JSON.stringify({ files, dependencyHash: previousDependencyHash, nativeHash: previousNativeHash }, null, 2));
+fs.writeFileSync(statePath, JSON.stringify({ files, dependencyHash: previousDependencyHash, nativeHash: previousNativeHash, nativeHashSchema: previousNativeHash ? nativeHashSchema : null, adProfile: previousNativeHash ? adProfile : null }, null, 2));
 fs.writeFileSync(planPath, JSON.stringify(plan, null, 2));
 fs.writeFileSync(path.join(target, 'source-revision.txt'), plan.revision + '\n');
 fs.writeFileSync(path.join(target, 'source-inputs.json'), JSON.stringify({ sourceOverrides: plan.sourceOverrides, adProfile: plan.adProfile, revision: plan.revision, dirty: plan.dirty, versionCode, files: Object.fromEntries([...contents].map(([n, b]) => [n, hash(b)])) }, null, 2));

@@ -1,10 +1,10 @@
-# LED POP (LED Banner App)
+﻿# LED POP (LED Banner App)
 
 입력한 텍스트를 한 줄 또는 여러 줄 LED 배너로 표시하는 Expo/React Native 앱입니다. 텍스트·배경·움직임·Pixel/Gradient/Glow 효과와 프리셋을 지원하며 Android와 iOS를 대상으로 합니다.
 
 - 메인 저장소: [ssongyc/side-led-banner-app](https://github.com/ssongyc/side-led-banner-app)
 - 메인 작업 폴더: `C:/dev/Led Banner`
-- 작업 지침: [AGENTS.md](AGENTS.md), 서명·빌드: [SIGNING_POLICY.md](docs/SIGNING_POLICY.md), 이전 기록: [BUILD_HISTORY.md](docs/BUILD_HISTORY.md)
+- 작업 지침: [AGENTS.md](AGENTS.md), 서명·빌드: [SIGNING_POLICY.md](docs/SIGNING_POLICY.md), 이전 기록: [BUILD_HISTORY.md](docs/BUILD_HISTORY.md), Android 빌드 최적화: [ANDROID_BUILD_OPTIMIZATION.md](docs/ANDROID_BUILD_OPTIMIZATION.md)
 - 컴파일·린트·테스트·커밋·푸시·배포는 사용자가 요청할 때만 실행합니다. 이 문서의 명령과 절차 자체는 실행 승인이 아닙니다.
 
 ## 현재 문서의 기준
@@ -132,6 +132,8 @@ Upgrade to Pro 설정 항목과 `/premium` 라우트는 제외했습니다. 구�
 - 패키지·lockfile·npm 설정·patch 변경 또는 설치 기록 누락 시에만 `npm ci`를 실행합니다. Expo 설정·플러그인·로컬 모듈·설정에서 참조하는 이미지·빌드 환경 파일·Node 버전·JDK/Android SDK 설치 메타데이터를 비교하고, 네이티브 입력 변경 또는 재설치 시에만 네이티브 출력을 재생성합니다. 기존 네이티브 폴더는 `artifacts/native-archives/<실행 ID>/`에 보관하며 자동 복원하지 않습니다.
 - 단계 완료 기록은 설치·네이티브 준비가 성공한 뒤에만 갱신합니다. 실패한 준비를 다음 실행에서 완료 상태로 재사용하지 않습니다.
 - 기본 versionCode는 소스 app.json 값을 사용하며 `-VersionCode`로 명시적으로 지정할 수 있습니다. 자동 증가는 하지 않습니다. 최초 준비 시 소스와 빌드 폴더 모두 versionCode가 없으면 `-VersionCode <정수>`를 지정해야 합니다. `-ResumeNative`는 선택 사항이며 재설치·재생성이 필요하면 중단합니다.
+- Android 버전 이름·versionCode만 바뀌거나 iOS/web 전용 Expo 설정만 바뀐 경우 Android 네이티브 출력을 재생성하지 않습니다. 동기화 후 생성된 android/app/build.gradle의 버전 필드만 정확히 한 번 갱신하며, 예상한 생성 형식이 아니면 중단합니다.
+- 출시용 -IncludeBundle은 bundleRelease로 AAB를 한 번 만든 뒤 고정된 bundletool 1.18.3과 기존 업로드 키로 로컬 설치용 universal APK를 파생합니다. Play 검수 제출물은 AAB이며, APK는 로컬 설치·QA용입니다. -MeasureBuild를 지정하면 Gradle 프로파일을 실행 기록에 보존합니다.
 - `--build-cache`, 네 가지 ABI, 현재 worker 제한을 유지합니다. 결과 APK·Gradle 로그·소스 해시·커밋 및 미커밋 여부·컴파일 시간을 실행별로 기록합니다.
 
 자동화 첫 실행에서 SDK 메타데이터 경로 오류를 수정했으며, 재실행은 재설치·재생성 없이 7분 5초에 성공했습니다. 최초 실행은 기존 성공 로그와 source-revision 기록을 바탕으로 이전 소스 목록을 구성합니다. 최초 기준 기록 이전의 도구 변경과 설치/생성 파일의 수동 수정은 입력 파일 비교만으로 완전히 검증되지 않으므로 별도 확인이 필요합니다. 완성 APK의 서명·버전·SDK·ABI·내장 번들·광고/Billing·정렬 검증과 전체 로그 검토는 별도로 수행해야 합니다.
