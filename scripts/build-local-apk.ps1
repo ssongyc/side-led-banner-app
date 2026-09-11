@@ -6,7 +6,10 @@ param(
  [Nullable[int]]$VersionCode,
  [string]$BundletoolJar=(Join-Path $PSScriptRoot '../artifacts/bundletool-all-1.18.3.jar'),
  [string]$PythonExecutable="python",
- [switch]$MeasureBuild
+ [switch]$MeasureBuild,
+ [switch]$ConfigurationCache,
+ [switch]$ReuseDaemon,
+ [ValidateSet(1, 2)][int]$GradleWorkers=1
 )
 $ErrorActionPreference='Stop'
 if($IncludeBundle -and $AdProfile -ne 'production'){throw 'Store AAB requires production ads'}
@@ -53,7 +56,14 @@ try {
   $bundletoolVersion=((& "$env:JAVA_HOME/bin/java.exe" -jar $BundletoolJar version 2>&1)-join [Environment]::NewLine).Trim()
   if($LASTEXITCODE -ne 0 -or $bundletoolVersion -ne '1.18.3'){throw 'Pinned bundletool version verification failed'}
  }
- $check=& "$env:JAVA_HOME/bin/keytool.exe" -list -v -keystore $key.keystorePath -alias $key.keyAlias -storepass:env LEDPOP_STORE_PASSWORD 2>&1
+ $previousErrorActionPreference=$ErrorActionPreference
+ try {
+  # keytool may emit a successful JKS notice on stderr; validate its exit code and fingerprint explicitly.
+  $ErrorActionPreference='Continue'
+  $check=& "$env:JAVA_HOME/bin/keytool.exe" -list -v -keystore $key.keystorePath -alias $key.keyAlias -storepass:env LEDPOP_STORE_PASSWORD 2>&1
+ } finally {
+  $ErrorActionPreference=$previousErrorActionPreference
+ }
  if($LASTEXITCODE -ne 0 -or (($check -join '') -replace ':','') -notmatch $expected){throw 'Keystore fingerprint verification failed'}
  $cert=[Security.Cryptography.X509Certificates.X509Certificate2]::CreateFromPem([IO.File]::ReadAllText((Join-Path $signing 'upload_certificate.pem')))
  if($cert.GetCertHashString([Security.Cryptography.HashAlgorithmName]::SHA256) -ne $expected){throw 'Public certificate mismatch'}
@@ -175,7 +185,12 @@ android {
   Copy-Item -LiteralPath (Join-Path $resolved 'source-inputs.json') -Destination $record
   $started=Get-Date
   $tasks=if($IncludeBundle){@(':app:bundleRelease')}else{@(':app:assembleRelease')}
-  $gradleArguments=@('-p','android')+$tasks+@('--build-cache','--no-daemon','--max-workers=1','-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=1024m','--stacktrace')
+  $daemonArgument=if($ReuseDaemon){'--daemon'}else{'--no-daemon'}
+  $cacheArgument=if($ConfigurationCache){'--configuration-cache'}else{'--no-configuration-cache'}
+  $gradleArguments=@('-p','android')+$tasks+@('--build-cache',$daemonArgument,$cacheArgument,('--max-workers='+$GradleWorkers),'-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=1024m','--stacktrace')
+  if($ConfigurationCache){$gradleArguments+='--configuration-cache-problems=fail'}
+  # Record the selected settings before execution, including failed compatibility trials.
+  @{ configurationCache=[bool]$ConfigurationCache; reuseDaemon=[bool]$ReuseDaemon; gradleWorkers=$GradleWorkers; appCmakeCompilePool=1; appCmakeLinkPool=1; measureBuild=[bool]$MeasureBuild; arguments=$gradleArguments } | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath (Join-Path $record 'build-options.json')
   if($MeasureBuild){$gradleArguments+=@('--profile','--info')}
   & ./android/gradlew.bat @gradleArguments > gradle-release.log 2>&1
   $buildExit=$LASTEXITCODE
@@ -238,7 +253,7 @@ android {
   $apkExportedAtUtc=$verifiedExportedAtUtc.ToString('o')
   if($apkHash -ne (Get-FileHash -LiteralPath $deliveryApk -Algorithm SHA256).Hash){throw 'APK delivery hash mismatch'}
   Write-Output ('APK: '+$deliveryApk)
-  @{ apk=$deliveryApk; apkSource=$apkSource; aab=$deliveryAab; adProfile=$AdProfile; aabSha256=$aabHash; bundletoolVersion=$bundletoolVersion; gradleTasks=$tasks; mappingSha256=$mappingHash; elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=$apkHash; revision=$plan.revision; dirty=$plan.dirty; versionName=$buildVersionName; versionCode=$plan.versionCode; apkExportedAtUtc=$apkExportedAtUtc; aabExportedAtUtc=$aabExportedAtUtc; measureBuild=[bool]$MeasureBuild } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
+  @{ apk=$deliveryApk; apkSource=$apkSource; aab=$deliveryAab; adProfile=$AdProfile; aabSha256=$aabHash; bundletoolVersion=$bundletoolVersion; gradleTasks=$tasks; mappingSha256=$mappingHash; elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=$apkHash; revision=$plan.revision; dirty=$plan.dirty; versionName=$buildVersionName; versionCode=$plan.versionCode; apkExportedAtUtc=$apkExportedAtUtc; aabExportedAtUtc=$aabExportedAtUtc; measureBuild=[bool]$MeasureBuild; configurationCache=[bool]$ConfigurationCache; reuseDaemon=[bool]$ReuseDaemon; gradleWorkers=$GradleWorkers } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
   if($IncludeBundle){
    # One verification entrypoint; it never invokes Gradle or repeats APK packaging.
    & $PythonExecutable $verificationScript --record $record --build-root $resolved --bundletool $BundletoolJar --sdk $env:ANDROID_HOME --java-home $env:JAVA_HOME --r8 $expectedR8

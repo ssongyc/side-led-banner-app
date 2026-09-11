@@ -38,7 +38,7 @@
 
 ## 85a61d6 → edaf82b 변경 비교 (과거 기록)
 
-현재 package.json의 Expo 선언 범위는 **~57.0.20**이며, React Native **0.86.3**, React **19.2.3**, 앱 버전 **1.0.9**입니다. Settings의 App Version은 Expo 앱 설정을 읽어 **V1.0.9**로 표시합니다. 소스 버전·APK의 versionCode·스토어 배포 버전은 별개입니다.
+현재 package.json의 Expo 선언 범위는 **~57.0.20**이며, React Native **0.86.3**, React **19.2.3**, 앱 버전 **1.1.0**입니다. Settings의 App Version은 Expo 앱 설정을 읽어 **V1.1.0**로 표시합니다. 소스 버전·APK의 versionCode·스토어 배포 버전은 별개입니다.
 
 | 항목 | edaf82b 생성 전 소스 당시 상태 | 85a61d6 APK |
 | --- | --- | --- |
@@ -452,3 +452,11 @@ APK 전달 파일명은 실제 versionName 기준 `<AppName>V<점 없는 버전>
 ## 출시 검증 통합 및 R8 조사 — 2026-09-12
 
 IncludeBundle 출시 빌드는 새 단일 검증 스크립트로 기존 서명·매니페스트·광고·SDK/Billing·ABI·정렬·동일 빌드 매핑 검사를 수행하도록 연결했습니다. 반복 SDK 호출과 압축 파일 분석을 통합하며 Python 3.11 이상이 필요합니다. MeasureBuild에서는 R8 재실행 입력 사유를 추가 기록합니다. 최근 R8 실행에는 버전 변경이 포함됐으며, 불필요한 R8 실행으로 확정하지 않았습니다. 이번 변경은 빌드·린트·테스트 미실행 상태이고 추가 단축 효과는 미측정입니다. [상세 변경과 다음 확인 항목](docs/ANDROID_BUILD_OPTIMIZATION.md)을 참고하세요.
+
+출시 빌드 비교용 선택 옵션 `-ConfigurationCache`, `-ReuseDaemon`, `-GradleWorkers 1|2`를 추가했습니다. 기본값은 기존 단일 worker와 비재사용 Daemon이며 Configuration Cache는 꺼져 있습니다. 적용 검증 순서는 5 → 3 → 4이며, 호환성·메모리·속도 비교는 아직 실행하지 않았습니다. [비교 절차](docs/ANDROID_BUILD_OPTIMIZATION.md)를 참고하세요.
+
+## 버전 변경 — V1.1.0
+
+Expo 앱 버전을 1.1.0, Android versionCode를 28로 변경했습니다. Settings는 Expo 설정을 읽어 V1.1.0으로 표시합니다. iOS buildNumber는 별도로 변경하지 않았습니다. 기존 APK/AAB는 1.0.9(27)이며 이번 버전의 빌드·스토어 업로드는 아직 실행하지 않았습니다.
+
+2026-09-12 출시 후속 기록: main 2b6dc16의 1.0.9(27)은 `20260912-002428-05bfeae8` 실행에서 APK/AAB 생성과 통합 정적 검증을 완료했습니다. 위 구현 당시의 미빌드 문구와 구분합니다. 슬라이더 후속 변경은 해당 산출물에 포함되며 실기기 검증은 미실행입니다. Gradle 5분, 73 executed / 1122 up-to-date, R8 UP-TO-DATE였습니다. keytool의 정상 stderr 안내 처리만 빌드 래퍼에서 보완했고 종료 코드·인증서 검증은 유지했습니다. 새 V1.1.0 및 선택 빌드 옵션은 이 산출물에 포함되지 않습니다.

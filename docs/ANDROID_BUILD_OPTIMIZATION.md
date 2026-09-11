@@ -65,3 +65,21 @@ The retained 1.0.9(27) run changed the version from 1.0.8(26). Its log records a
 No build, lint or test was performed for this change.
 
 References: https://docs.gradle.org/current/userguide/incremental_build.html and https://docs.gradle.org/current/userguide/continuous_builds.html
+
+## Optional comparison sequence: 5 → 3 → 4
+
+The wrapper now accepts `-ConfigurationCache`, `-ReuseDaemon`, and `-GradleWorkers 1|2`. Defaults remain configuration cache off, a single-use daemon, and one Gradle worker. Configuration-cache problems fail the run (`--configuration-cache-problems=fail`); the wrapper never retries with different settings or suppresses incompatibility. Existing signing, production ads, R8, ABI coverage and artifact verification gates remain. App CMake compile/link pools remain one; this does not assert a global limit for every dependency's native build.
+
+For the next explicitly authorized comparison, keep source revision, version, environment and release settings identical and change one option at a time:
+
+1. **5 — Configuration Cache:** use `-IncludeBundle -AdProfile production -ResumeNative -MeasureBuild -ConfigurationCache` twice. Inspect the compatibility report and confirm reuse on the second run. Failure means incompatibility, not permission to continue with warnings. Keep configuration-cache files local: Gradle can serialize sensitive signing configuration; do not publish/cache-upload them.
+2. **3 — Daemon:** after step 5 passes, add `-ReuseDaemon` and compare consecutive warm runs. Reuse requires matching JDK/JVM settings. To explicitly stop daemons after the batch, use the fixed build's `android/gradlew.bat --stop` with the same JAVA_HOME and Gradle user home. This stops all matching Gradle-version daemons in that user home, including other projects; do not do it automatically.
+3. **4 — workers:** with the other settings held constant, compare `-GradleWorkers 1` and `-GradleWorkers 2`. Measure peak RAM, committed memory and page-file pressure during each run; an idle snapshot or a system-wide historical page-file peak is not build-specific evidence. Adopt two only if time and memory stability improve. Do not raise CMake concurrency in this comparison.
+
+`build-options.json` records selected flags before Gradle, including failed trials; successful `build-result.json` also records them. Use each run's Gradle log/profile and verification time to compare equivalent intervals. These options have been added but not compiled or tested; no additional APK/AAB was generated for these options.
+
+Baseline from run `20260912-002428-05bfeae8`: Gradle 5m0.25s, startup 19.318s, configuration 1m14.83s, 73 executed / 1122 up-to-date, and R8 UP-TO-DATE. Export interval 332.85s and separate unified verification 31.44s. These measurements precede the optional flags and do not prove their benefit.
+
+References: [Configuration Cache](https://docs.gradle.org/current/userguide/configuration_cache.html), [Gradle Daemon](https://docs.gradle.org/current/userguide/gradle_daemon.html).
+
+The release wrapper also preserves successful keytool JKS notices on stderr without treating them as a failure; a nonzero exit code or mismatched certificate still stops the build. This correction was exercised by run 20260912-002428-05bfeae8. Version 1.1.0(28) and the optional comparison flags have not been built.
