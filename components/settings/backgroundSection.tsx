@@ -75,6 +75,9 @@ export const BackgroundSection = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        directionalLockEnabled
+        delaysContentTouches={false}
+        canCancelContentTouches={false}
         contentContainerStyle={base.scrollViewContainer}
       >
         <View

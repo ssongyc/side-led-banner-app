@@ -33,3 +33,12 @@
 ## 검증 범위
 
 JSON 구문과 Git diff 공백 오류를 정적으로 확인했습니다. 컴파일·린트·테스트·새 APK/AAB·iPad 실기기 검증은 실행하지 않았습니다. 실제 iPad에서는 Watch Ad 양끝, 사진 버튼 첫 탭, 각 설정 슬라이더의 누름·드래그·해제 동작을 새 빌드로 확인해야 합니다.
+
+## iPad 슬라이더 드래그 후속 수정
+
+- 1.0.9(27) 출시 산출물 생성 이후 iPad에서 드래그가 잘 시작되지 않거나 끊긴다는 제보에 대응한 소스 변경입니다. 기존 APK/AAB에는 포함되지 않습니다.
+- 공통 Slider는 드래그 시작 값을 보관하고, 드래그 중 value prop을 고정하여 상위 설정 갱신이 내부 thumb 위치를 반복 재설정하는 경로를 차단합니다. onValueChange는 계속 전달하므로 설정 값과 숫자 표시는 실시간으로 갱신하고, 드래그 종료 시 외부 값 동기화를 재개합니다.
+- Text, Background, Effects의 ScrollView에 directionalLockEnabled, delaysContentTouches=false, canCancelContentTouches=false를 적용했습니다. Text와 Effects에도 keyboardShouldPersistTaps="handled"를 적용했습니다.
+- Size의 Pro 잠금, 값 범위와 step은 유지합니다. 잠금 표시 상태의 Size는 의도적으로 조작할 수 없습니다.
+- 라이브러리와 앱 소스에서 확인한 값 재설정 및 iOS 터치 취소 경로를 보완한 것입니다. 실제 iPad에서 원인이 재현되거나 개선 효과가 확인된 결과는 아닙니다.
+- 이번 후속 변경에서는 빌드·린트·테스트를 실행하지 않았습니다. 다음 승인된 iPad QA에서는 트랙/손잡이 누르기, 양방향 드래그, 해제 시 위치, 세로 스크롤 및 버튼 영역에서 시작하는 드래그, 키보드 표시 상태와 Pro 잠금/해제를 확인해야 합니다. iPhone·Android 회귀 확인도 남아 있습니다.

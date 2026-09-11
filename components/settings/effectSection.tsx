@@ -17,6 +17,10 @@ export const EffectSection = () => {
       id="effectSection"
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollViewContainer}
+      keyboardShouldPersistTaps="handled"
+      directionalLockEnabled
+      delaysContentTouches={false}
+      canCancelContentTouches={false}
     >
       <TextEffects
         config={config}

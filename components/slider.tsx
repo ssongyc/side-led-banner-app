@@ -7,6 +7,7 @@ import {
   sliderLockStyles as lockStyles,
 } from "@/constants/styles";
 import { Slider } from "@miblanchard/react-native-slider";
+import { useCallback, useRef, useState } from "react";
 import { Image, TouchableOpacity, View } from "react-native";
 
 const LOCK_ICON = require("@/assets/images/icon_lock_type2.png");
@@ -30,6 +31,26 @@ export const SliderComponent = ({
   locked?: boolean;
   onLockedPress?: () => void;
 }) => {
+  const [isSliding, setIsSliding] = useState(false);
+  const dragStartValue = useRef(value);
+
+  const normalizeValue = useCallback(
+    (nextValue: number | number[]) =>
+      Math.round(
+        Array.isArray(nextValue) ? (nextValue[0] ?? value) : nextValue,
+      ),
+    [value],
+  );
+
+  const handleSlidingStart = useCallback(() => {
+    dragStartValue.current = value;
+    setIsSliding(true);
+  }, [value]);
+
+  const handleSlidingComplete = useCallback(() => {
+    setIsSliding(false);
+  }, []);
+
   return (
     <View style={styles.sliderContainer}>
       <TouchableOpacity
@@ -48,14 +69,10 @@ export const SliderComponent = ({
         maximumValue={maximumValue}
         minimumValue={minimumValue}
         step={step}
-        value={value}
-        onValueChange={(nextValue) =>
-          onChange(
-            Math.round(
-              Array.isArray(nextValue) ? (nextValue[0] ?? value) : nextValue,
-            ),
-          )
-        }
+        value={isSliding ? dragStartValue.current : value}
+        onSlidingStart={handleSlidingStart}
+        onSlidingComplete={handleSlidingComplete}
+        onValueChange={(nextValue) => onChange(normalizeValue(nextValue))}
         minimumTrackTintColor="#FF6E00"
       />
       <TouchableOpacity

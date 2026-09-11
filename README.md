@@ -444,3 +444,7 @@ APK 전달 파일명은 실제 versionName 기준 `<AppName>V<점 없는 버전>
 [1.0.9(27) UI 상호작용 변경 기록](docs/UI_INTERACTION_1.0.9_27.md)에 iPad Watch Ad 버튼의 고정 곡률, 사진 불러오기 버튼의 44×44 유효 터치 영역과 첫 탭 처리, 공통 설정 슬라이더의 실시간 드래그·반응형 폭 개선을 기록했습니다. Settings는 V1.0.9를 표시합니다.
 
 [Android 1.0.9(27) 릴리스 기록](docs/ANDROID_RELEASE_1.0.9_27.md): **compile-ok**. main `85dbc1c`에서 실제 AdMob production 설정, 기존 업로드 서명, SDK 36, Billing 9.1.0, 4개 ABI, R8 8.13.23 매핑 및 16 KiB 정렬을 검증한 AAB와 동일 AAB에서 생성한 universal APK를 보존했습니다. Gradle은 `bundleRelease`만 실행해 11분 49초가 걸렸으며 1.0.8(26)의 1시간 7분 52초보다 약 82.6% 단축됐습니다. 실기기 QA, 실제 광고 노출·보상 확인과 Play 업로드·매핑 등록은 수행하지 않았습니다.
+
+## iPad 슬라이더 드래그 후속 수정
+
+공통 슬라이더의 드래그 중 외부 값 재설정과 Text·Background·Effects 스크롤 뷰의 iOS 터치 취소 경로를 보완했습니다. 실시간 값 전달과 Pro 잠금은 유지합니다. 이 변경은 위 1.0.9(27) 출시 파일에 포함되지 않으며 빌드·린트·테스트와 실기기 확인은 미실행입니다. [변경 내용과 확인할 항목](docs/UI_INTERACTION_1.0.9_27.md)을 참고하세요.

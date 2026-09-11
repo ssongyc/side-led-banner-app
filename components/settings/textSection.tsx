@@ -140,6 +140,10 @@ export const TextSection = () => {
     <ScrollView
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollViewContainer}
+      keyboardShouldPersistTaps="handled"
+      directionalLockEnabled
+      delaysContentTouches={false}
+      canCancelContentTouches={false}
     >
       {/* text - font select */}
       <View style={styles.settingsRow}>
