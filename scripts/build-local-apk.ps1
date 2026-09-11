@@ -184,12 +184,19 @@ android {
   Copy-Item -LiteralPath $mapping -Destination (Join-Path $record 'mapping.txt')
   $aabHash=$null
   $deliveryAab=$null
+  $aabExportedAtUtc=$null
   $apkSource='gradle-assemble'
   if($IncludeBundle){
    $aab=Join-Path $resolved 'android/app/build/outputs/bundle/release/app-release.aab'
    if(-not (Test-Path -LiteralPath $aab)){throw 'Gradle succeeded but AAB is missing'}
-   $deliveryAab=Join-Path $record 'app-release.aab'
+   $deliveryAab = & (Join-Path $PSScriptRoot 'new-aab-delivery-path.ps1') -Aab $aab -AppName 'LedPop' -OutputDirectory $record
    Copy-Item -LiteralPath $aab -Destination $deliveryAab -ErrorAction Stop
+   # Stamp final export time without changing signed archive bytes.
+   $artifactExportedAtUtc=[DateTime]::UtcNow
+   [IO.File]::SetLastWriteTimeUtc($deliveryAab,$artifactExportedAtUtc)
+   $verifiedExportedAtUtc=[IO.File]::GetLastWriteTimeUtc($deliveryAab)
+   if([Math]::Abs(($verifiedExportedAtUtc-$artifactExportedAtUtc).TotalSeconds) -gt 2){throw 'Final AAB timestamp verification failed'}
+   $aabExportedAtUtc=$verifiedExportedAtUtc.ToString('o')
    $aabHash=(Get-FileHash -LiteralPath $aab -Algorithm SHA256).Hash
    if($aabHash -ne (Get-FileHash -LiteralPath $deliveryAab -Algorithm SHA256).Hash){throw 'AAB delivery hash mismatch'}
    Write-Output ('AAB: '+$deliveryAab)
@@ -212,9 +219,15 @@ android {
   $apkHash=(Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash
   $deliveryApk = & (Join-Path $PSScriptRoot 'new-apk-delivery-path.ps1') -Apk $apk -AppName 'LedPop' -OutputDirectory $record
   Copy-Item -LiteralPath $apk -Destination $deliveryApk -ErrorAction Stop
+  # Stamp final export time without changing signed archive bytes.
+  $artifactExportedAtUtc=[DateTime]::UtcNow
+  [IO.File]::SetLastWriteTimeUtc($deliveryApk,$artifactExportedAtUtc)
+  $verifiedExportedAtUtc=[IO.File]::GetLastWriteTimeUtc($deliveryApk)
+  if([Math]::Abs(($verifiedExportedAtUtc-$artifactExportedAtUtc).TotalSeconds) -gt 2){throw 'Final APK timestamp verification failed'}
+  $apkExportedAtUtc=$verifiedExportedAtUtc.ToString('o')
   if($apkHash -ne (Get-FileHash -LiteralPath $deliveryApk -Algorithm SHA256).Hash){throw 'APK delivery hash mismatch'}
   Write-Output ('APK: '+$deliveryApk)
-  @{ apk=$deliveryApk; apkSource=$apkSource; aab=$deliveryAab; adProfile=$AdProfile; aabSha256=$aabHash; bundletoolVersion=$bundletoolVersion; gradleTasks=$tasks; mappingSha256=$mappingHash; elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=$apkHash; revision=$plan.revision; dirty=$plan.dirty; versionName=$buildVersionName; versionCode=$plan.versionCode; measureBuild=[bool]$MeasureBuild } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
+  @{ apk=$deliveryApk; apkSource=$apkSource; aab=$deliveryAab; adProfile=$AdProfile; aabSha256=$aabHash; bundletoolVersion=$bundletoolVersion; gradleTasks=$tasks; mappingSha256=$mappingHash; elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=$apkHash; revision=$plan.revision; dirty=$plan.dirty; versionName=$buildVersionName; versionCode=$plan.versionCode; apkExportedAtUtc=$apkExportedAtUtc; aabExportedAtUtc=$aabExportedAtUtc; measureBuild=[bool]$MeasureBuild } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
   Write-Output ('Gradle '+($tasks -join ', ')+' completed; independent artifact verification still required. Record: '+$record)
  } finally { Pop-Location }
 } finally {

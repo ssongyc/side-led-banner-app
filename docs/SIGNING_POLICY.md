@@ -57,9 +57,13 @@ The edaf82b application source built successfully in 7m 5s (83 executed, 1105 up
 
 Use the same signing boundary: scripts/build-local-apk.ps1 -IncludeBundle -VersionCode <unused-code>. The switch invokes only bundleRelease, retains the AAB and exact mapping, then uses pinned bundletool 1.18.3 to derive one local universal APK from that exact AAB with the existing upload key and alias. Passwords use access-restricted temporary files outside the repository and are deleted after conversion. Previous AAB/mapping/universal APK are archived before build preparation. APK-only runs continue to use assembleRelease.
 
+Final delivered APK/AAB names use the built `versionName` with periods removed: `LedPopV109.apk` and `LedPopV109.aab` for 1.0.9. Each delivery is placed in a unique build directory. Immediately after each final copy, the wrapper sets and reads back `LastWriteTimeUtc`, records it in `build-result.json`, and verifies the signed bytes with SHA-256; it does not unpack, repack, or re-sign the artifact.
+
 The withAndroidRelease config plugin enables R8 and resource shrinking and selects proguard-android-optimize.txt. Existing framework/SDK consumer rules are retained; no blanket keep rule or warning suppression was added. The wrapper requires a nonempty application mapping and verifies byte-identical mapping content in AAB BUNDLE-METADATA. Independent signing, manifest, SDK, ABI, Billing, native alignment and bundle validation are still required. An optimized build is not runtime QA or Play upload/registration verification.
 
 This changes native inputs, so the first optimized build requires verified native regeneration; later unchanged builds reuse the fixed artifacts/b directory. Existing internal APK evidence remains valid only for its own build. No store upload is performed by this wrapper.
+
+The authorized 1.0.9(27) production run completed `bundleRelease` in 11m 49s with 90 executed and 1,105 up-to-date tasks, without dependency installation, Expo prebuild, Gradle clean, or a separate `assembleRelease`. The exact AAB-derived APK, hashes, signer, production advertising, SDK/Billing, ABI, alignment and mapping checks are recorded in [ANDROID_RELEASE_1.0.9_27.md](ANDROID_RELEASE_1.0.9_27.md). Runtime QA and Play registration remain unverified.
 
 ### Kotlin/R8 compatibility correction
 

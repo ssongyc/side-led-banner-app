@@ -2,7 +2,7 @@
 
 ## Scope
 
-This review inspected the local release wrapper and retained build logs only. No compile, dependency installation, prebuild, lint, test, APK/AAB generation, signing operation, upload, or deployment was run for this change.
+The initial review inspected the local release wrapper and retained build logs without running a build. A later user-authorized production build measured the applied changes; its result is recorded below. No lint, test, upload, deployment, or Play Console change was run as part of the documentation update.
 
 ## Evidence and causes
 
@@ -28,12 +28,14 @@ For a store run, building an APK and AAB as separate top-level Gradle targets du
 
 A bundletool universal APK is suitable for local installation and QA. Google Play review still uses the AAB and generates device-specific APK splits. If Play App Signing is enabled, Play-delivered APKs are signed by the Play app-signing key rather than the local upload key.
 
-## Required verification on the next authorized build
+## Measured production result — 1.0.9(27)
 
-1. Run the production store wrapper with -IncludeBundle -VersionCode <unused-code> -MeasureBuild.
-2. Confirm preparation reports no npm ci and no Android prebuild for a version-only/iOS-only change, while a real Android/plugin/toolchain/ad-profile change still requires regeneration.
-3. Confirm the generated Android fields and both artifacts report the requested version name/code.
-4. Confirm the Gradle task list records only :app:bundleRelease for the store run, then compare total time and executed/from-cache/up-to-date counts with the 1.0.8 (26) baseline.
-5. Confirm bundletool creates exactly one nonempty universal APK from the same AAB and that no password file remains.
-6. Perform the existing independent checks: upload certificate, package/version, target/compile SDK 36 or higher, Billing version, four ABIs, 16 KiB native/ZIP alignment, production AdMob metadata, native modules, web-diagnostic and hidden-Pro exclusion, AAB validation, APK installability, and byte-identical same-build R8 mapping in the AAB.
-7. Run real-device smoke/QA after installation. Local static review cannot establish runtime behavior, Play registration, or the actual time saved.
+- The wrapper completed in 760.69 seconds. Gradle reported `BUILD SUCCESSFUL in 11m 49s` with 1,195 actionable tasks: 90 executed and 1,105 up-to-date.
+- The store run invoked only `:app:bundleRelease`; it did not run `npm ci`, Expo prebuild, Gradle clean, or `:app:assembleRelease`.
+- The 1.0.8(26) Gradle baseline was 1h 7m 52s. The measured reduction is 56m 3s, or about 82.6 percent.
+- bundletool 1.18.3 generated one universal APK from the exact release AAB. The AAB and APK both report 1.0.9(27), and their DEX, native libraries and Hermes bundle match.
+- Independent checks passed for the existing upload certificate, application ID, SDK 36, Billing 9.1.0, production AdMob configuration, four ABIs, 108 native libraries, APK ZIP/ELF and AAB 16 KiB alignment, R8 8.13.23 mapping, bundle validation, and release exclusions.
+- Gradle profiling attributed 5m 0.84s to R8 and 1m 26.66s to JavaScript bundling. These remain the largest measured tasks.
+- Real-device smoke/QA, live ad impression/reward verification, Google Play upload, Play App Signing output, and Play mapping registration remain separate and were not performed.
+
+The exact artifacts, hashes and verification boundary are recorded in [ANDROID_RELEASE_1.0.9_27.md](ANDROID_RELEASE_1.0.9_27.md).

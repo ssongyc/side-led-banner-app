@@ -328,3 +328,15 @@ README에 누적돼 있던 이전 작업 기록입니다. 각 절의 “현재�
 - 이동 전후 APK 및 app.json 해시가 일치하며, 배포용으로 복사한 APK는 기존 `artifacts/LedPop-V1.0.6-Expo57-local.apk` 위치에 유지합니다.
 - 빌드 스크립트는 메인 폴더 아래 `artifacts/local-builds`만 허용합니다. 이동한 복사본은 절대 경로 캐시가 남은 보관본이므로 재개를 차단했습니다. 다음 빌드는 최신 메인 소스로 새 복사본을 준비해야 합니다. 상세 절차는 `docs/SIGNING_POLICY.md`를 참고하세요.
 - 서명 키는 기존 외부 경로 `C:/AndroidSigning/com.minkyokim.sideledbannerapp`에 유지합니다. 이번 통합에서는 컴파일·린트·테스트·커밋·푸시를 실행하지 않았습니다.
+
+## 2026-09-11 production APK/AAB: V1.0.9 / 27
+
+- Source: main `85dbc1c8a8d321d5f663efe9fa81bdbc5ce02605`, no source overrides.
+- Build record: `artifacts/apk-runs/20260911-151146-911dd2e5`.
+- Result: **compile-ok**, Gradle `BUILD SUCCESSFUL in 11m 49s`; 1,195 actionable tasks, 90 executed and 1,105 up-to-date.
+- Store path: `:app:bundleRelease` only. No `npm ci`, Expo prebuild, Gradle clean, or separate `assembleRelease`; bundletool 1.18.3 produced the universal APK from the exact AAB.
+- APK: `LedPopV109.apk`, SHA-256 `586DAC8F15376F1F14775ED8C6386322581A6B1846BC6616F0783A4758260194`.
+- AAB: `LedPopV109.aab`, SHA-256 `D5F5F7E9434651760E8EE96D67CE8B9D744B9449DE4194E90698307A228BBB1C`.
+- The existing upload signer, 1.0.9(27), production AdMob configuration, SDK 36, Billing 9.1.0, four ABIs, R8 8.13.23 mapping, AAB validation and 16 KiB alignment passed local artifact verification.
+- Compared with the 1.0.8(26) Gradle duration of 1h 7m 52s, the measured reduction was 56m 3s, or about 82.6 percent.
+- Device runtime QA, live ad impression/reward validation, Google Play upload and Play mapping registration were not performed. See [ANDROID_RELEASE_1.0.9_27.md](ANDROID_RELEASE_1.0.9_27.md).
