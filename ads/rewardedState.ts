@@ -136,6 +136,7 @@ function createRewardedAd(slotName: SlotName): RewardedAdHandle {
     ad.addAdEventListener(rewardedAdEvents.opened, () => {
       const activeSlotName = resolveSlotName(ad);
       if (activeSlotName !== "current" || slots.current.state !== "showing") return;
+      if (openedCurrentAd) return;
       clearOpenWatchdog();
       openedCurrentAd = true;
       trace(activeSlotName, "opened");
@@ -147,6 +148,11 @@ function createRewardedAd(slotName: SlotName): RewardedAdHandle {
     ad.addAdEventListener(rewardedAdEvents.earnedReward, () => {
       const activeSlotName = resolveSlotName(ad);
       if (activeSlotName !== "current" || slots.current.state !== "showing") return;
+      if (!openedCurrentAd) {
+        trace(activeSlotName, "reward_ignored_before_opened");
+        return;
+      }
+      if (earnedRewardCurrentAd) return;
       earnedRewardCurrentAd = true;
       trace(activeSlotName, "earned_reward");
     }),
@@ -263,10 +269,15 @@ export function suspendRewardedAds() {
   notifySubscribers();
 }
 
-export function loadRewardedAd() {
+export function loadRewardedAd(options?: { restartFailed?: boolean }) {
   if (getPremiumSnapshot().entitlement !== "free") return;
-  // Screen re-entry must not restart a terminally failed cycle.
-  if (slots.current.state === "failed") return;
+  // Only an explicit Settings entry may restart a retryable terminal failure.
+  if (slots.current.state === "failed") {
+    if (!options?.restartFailed || !getCanRetryState()) return;
+    retryMobileAdsInitialization();
+    disposeSlot("current");
+    disposeSlot("next");
+  }
   const configError = getRewardedAdConfigurationError();
   if (configError) {
     slots.current.failure = "configuration";

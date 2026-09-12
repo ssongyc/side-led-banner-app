@@ -77,7 +77,7 @@ export const BackgroundSection = () => {
         keyboardShouldPersistTaps="handled"
         directionalLockEnabled
         delaysContentTouches={false}
-        canCancelContentTouches={false}
+        canCancelContentTouches
         contentContainerStyle={base.scrollViewContainer}
       >
         <View

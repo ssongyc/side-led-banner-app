@@ -20,7 +20,7 @@ export const EffectSection = () => {
       keyboardShouldPersistTaps="handled"
       directionalLockEnabled
       delaysContentTouches={false}
-      canCancelContentTouches={false}
+      canCancelContentTouches
     >
       <TextEffects
         config={config}

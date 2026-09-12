@@ -19,7 +19,7 @@ import { btnStyles } from "@/constants/btnStyles";
 import { styles, toolbarStyles } from "@/constants/styles";
 import { TabType, useSettings } from "@/contexts/settingsContext";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
-import * as amplitude from "@amplitude/analytics-react-native";
+import { trackAnalyticsEvent } from "@/utils/ApiClient";
 import { Image } from "expo-image";
 import { type Href, useRouter } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
@@ -81,7 +81,7 @@ export default function Index() {
   }, [isPlaying]);
 
   const handlePlay = async () => {
-    amplitude.track("Play_clicked", {
+    trackAnalyticsEvent("Play_clicked", {
       play_mode: playOption,
       font: config.appearance.font,
       fontSize: config.appearance.fontSize,
@@ -110,7 +110,7 @@ export default function Index() {
 
   const handleTabPress = (tab: TabType) => {
     if (tab === "TEXT") {
-      amplitude.track("Text_clicked", {
+      trackAnalyticsEvent("Text_clicked", {
         font: config.appearance.font,
         fontSize: config.appearance.fontSize,
         textMoveSpeed: config.motion.textMoveSpeed,
@@ -121,13 +121,13 @@ export default function Index() {
         dropShadow: config.appearance.dropShadow,
       });
     } else if (tab === "BACKGROUND") {
-      amplitude.track("BG_clicked", {
+      trackAnalyticsEvent("BG_clicked", {
         backgroundColor: config.background.backgroundColor,
         backgroundBlur: config.background.backgroundBlur,
         has_photo: config.background.backgroundImageUri != null,
       });
     } else if (tab === "EFFECT") {
-      amplitude.track("Effects_clicked", {
+      trackAnalyticsEvent("Effects_clicked", {
         effects: config.appearance.effectSelectedItems.join(","),
         backgroundEffect: config.appearance.backgroundEffectPreset,
         gradientPreset: config.appearance.effectSelectedItems.includes("Gradient")
@@ -181,7 +181,7 @@ export default function Index() {
           <TouchableOpacity
             style={[btnStyles.playBarSideSlot, { width: playBarSizes.icon }]}
             onPress={() => {
-              amplitude.track("OneL_clicked");
+              trackAnalyticsEvent("OneL_clicked");
               updateConfig("content", { playOption: "one" });
             }}
           >
@@ -191,7 +191,7 @@ export default function Index() {
           <TouchableOpacity
             style={[btnStyles.playBarSideSlot, { width: playBarSizes.icon }]}
             onPress={() => {
-              amplitude.track("ThreeL_clicked");
+              trackAnalyticsEvent("ThreeL_clicked");
               updateConfig("content", { playOption: "multi" });
             }}
           >
@@ -208,7 +208,7 @@ export default function Index() {
           <TouchableOpacity
             style={[btnStyles.playBarSideSlot, { width: playBarSizes.icon }]}
             onPress={() => {
-              amplitude.track("Setting_clicked");
+              trackAnalyticsEvent("Setting_clicked");
               router.push("/settings" as Href);
             }}
             accessibilityLabel={textSectionLabel("settingsTitle")}

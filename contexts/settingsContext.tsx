@@ -1,3 +1,5 @@
+import { StartupRecovery } from "@/components/StartupRecovery";
+import { SplashLoadingScreen } from "@/components/SplashLoadingScreen";
 import { useSettingsLocalization } from "./settings/useSettingsLocalization";
 import {
   type BannerConfig, type PresetSnapshot, PRESET_SLOT_COUNT, DEFAULT_BANNER_CONFIG,
@@ -177,6 +179,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   /** AsyncStorage에서 슬롯 복원 완료 전에는 자식을 마운트하지 않음(로드 전 저장·조작 레이스 방지) */
   const [presetsStorageReady, setPresetsStorageReady] = useState(false);
+  const [storageLoadFailed, setStorageLoadFailed] = useState(false);
+  const [storageLoadAttempt, setStorageLoadAttempt] = useState(0);
   /** state 커밋 전에도 “복원 완료” 여부를 동기적으로 알기 위함(저장 콜백에서 사용) */
   const presetsStorageReadyRef = useRef(false);
 
@@ -266,12 +270,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     );
     (async () => {
       try {
-        let storedAppLanguage: AppLanguagePreference | null = null;
-        try {
-          storedAppLanguage = await readAppLanguage();
-        } catch (err) {
-          if (__DEV__) console.error("[settings] saved appLanguage is invalid", err);
-        }
+        const storedAppLanguage = await readAppLanguage();
 
         const [raw, storedProModeExpiry] = await Promise.all([
           readPresetSlotsJson(),
@@ -279,6 +278,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         ]);
         if (cancelled) return;
 
+        // Validate before applying state or permitting any automatic writes.
+        let slots = blankSlots;
+        if (raw !== null) {
+          const parsed: unknown = JSON.parse(raw);
+          if (!Array.isArray(parsed) || parsed.length !== PRESET_SLOT_COUNT ||
+              parsed.some(item => !item || typeof item !== "object" || Array.isArray(item))) {
+            throw new Error("Invalid saved preset slots");
+          }
+          slots = parsed.map(item => normalizePresetSlot(item));
+        }
         if (storedAppLanguage) {
           setUI((prev) => ({ ...prev, appLanguage: storedAppLanguage }));
         }
@@ -287,13 +296,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
             setUI((prev) => ({ ...prev, proMode: storedProModeExpiry }));
           } else {
             void writeProModeExpiry(null).catch(() => {});
-          }
-        }
-        let slots = blankSlots;
-        if (raw) {
-          const parsed = JSON.parse(raw) as unknown;
-          if (Array.isArray(parsed) && parsed.length === PRESET_SLOT_COUNT) {
-            slots = parsed.map((item) => normalizePresetSlot(item));
           }
         }
         setPresetSlots(slots);
@@ -306,34 +308,20 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
             );
           }
         }
-      } catch {
+        presetsStorageReadyRef.current = true;
+        setPresetsStorageReady(true);
+      } catch (error) {
         if (!cancelled) {
-          setPresetSlots(blankSlots);
-          const active = activePresetRef.current;
-          if (active >= 0 && active < blankSlots.length) {
-            const chosen = blankSlots[active];
-            if (chosen) {
-              setConfig(
-                configFromPreset(chosen, configRef.current.content.playOption),
-              );
-            }
-          }
-          void persistPresetSlotsSnapshot(blankSlots).catch((err) => {
-            if (__DEV__)
-              console.warn("[presets] persist after load error", err);
-          });
-        }
-      } finally {
-        if (!cancelled) {
-          presetsStorageReadyRef.current = true;
-          setPresetsStorageReady(true);
+          // Never replace unreadable data or enable autosave after a read failure.
+          setStorageLoadFailed(true);
+          if (__DEV__) console.error("[settings] saved settings load failed", error);
         }
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [storageLoadAttempt]);
 
   // config 업데이트 함수
   const updateConfig = useCallback(
@@ -649,7 +637,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   return (
     <RestContext.Provider value={restValue}>
       <ContentContext.Provider value={contentValue}>
-        {presetsStorageReady ? children : null}
+        {presetsStorageReady ? children : storageLoadFailed ? (
+          <StartupRecovery locale={resolvedAppLocale} kind="storage" onRetry={() => {
+            setStorageLoadFailed(false);
+            setStorageLoadAttempt(attempt => attempt + 1);
+          }} />
+        ) : <SplashLoadingScreen />}
       </ContentContext.Provider>
     </RestContext.Provider>
   );

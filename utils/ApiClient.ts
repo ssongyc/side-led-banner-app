@@ -2,6 +2,29 @@ import { PREMIUM_ANDROID_PURCHASE_OPTION_ID, PREMIUM_PRODUCT_IDS } from "@/const
 import type { Product, Purchase } from "expo-iap";
 import { requireNativeModule } from "expo";
 import { Platform } from "react-native";
+import * as amplitude from "@amplitude/analytics-react-native";
+
+export async function initializeAnalytics(): Promise<void> {
+  const key = process.env.EXPO_PUBLIC_AMPLITUDE_API_KEY ?? "";
+  if (!key) return;
+  try {
+    await amplitude.init(key, undefined, {
+      disableCookies: true,
+    }).promise;
+    const deviceId = amplitude.getDeviceId();
+    if (deviceId) amplitude.setUserId(deviceId);
+  } catch (e) {
+    if (__DEV__) console.warn("[App] Amplitude init failed:", e);
+  }
+}
+
+export function trackAnalyticsEvent(...args: Parameters<typeof amplitude.track>) {
+  return amplitude.track(...args);
+}
+
+export function flushAnalytics() {
+  return amplitude.flush();
+}
 
 export async function fetchText(url: string): Promise<string> {
   const response = await fetch(url);

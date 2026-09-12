@@ -6,7 +6,7 @@ import {
   sliderComponentStyles as styles,
   sliderLockStyles as lockStyles,
 } from "@/constants/styles";
-import { Slider } from "@miblanchard/react-native-slider";
+import { ScrollFriendlySlider } from "@/components/settings/ScrollFriendlySlider";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Image, TouchableOpacity, View } from "react-native";
 
@@ -78,7 +78,7 @@ export const SliderComponent = ({
       >
         <SliderMinusButton />
       </TouchableOpacity>
-      <Slider
+      <ScrollFriendlySlider
         disabled={disabled || locked}
         trackClickable
         containerStyle={styles.slider}

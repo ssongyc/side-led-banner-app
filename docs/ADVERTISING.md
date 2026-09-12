@@ -20,7 +20,7 @@ Initial source delivery was followed by the user-requested Android 1.0.6 (24) pr
 
 One shared in-flight initialization serves root rewarded preload and the Settings banner. It makes the initial attempt, retries 6 seconds after failure, then 12 seconds after a second failure, and stops after three failures. A resolved result with no ready adapter is treated as failure; adapter status is logged. Load timers begin only after initialization succeeds, so initialization and placement retry timers do not overlap.
 
-Cancellation/ads ineligibility invalidates callbacks and cancels the shared timer. A terminal initialization failure stays terminal through screen re-entry. The existing rewarded manual retry can start one new bounded initialization/load cycle; it never queues a show. Configuration mismatch is not manually retried.
+Cancellation/ads ineligibility invalidates callbacks and cancels the shared timer. A terminal initialization failure stays terminal until an explicit Settings focus entry or the existing rewarded manual retry starts one new bounded initialization/load cycle. Active/loading/loaded/showing slots are reused; neither path queues a show. Configuration mismatch is not retried.
 
 ## Settings banner
 
@@ -38,7 +38,7 @@ Preserves the existing current/next slots, 6/12-second load retries, inline moda
 
 Android presentation uses `immersiveModeEnabled=true` and the local `LedPopAdImmersive` Expo module. During the owned ad flow, it hides navigation bars on app/SDK-owned Activity creation/start/resume/post-resume and window focus, and on host dismissal/show failure. A flow token prevents stale cleanup from ending another presentation. Listeners are removed when the flow ends. It does not poll, add fixed presentation delays, hide with overlays, or modify external app windows.
 
-A 15-second show-to-OPENED watchdog stops on OPENED; it does not time the user's viewing/reward duration or retry a show. Pending presentation is cancelled by backgrounding. OPENED + EARNED_REWARD + CLOSED from the same ad remains required for a reward.
+A 15-second show-to-OPENED watchdog stops on OPENED; it does not time the user's viewing/reward duration or retry a show. Pending presentation is cancelled by backgrounding. The same ad must emit OPENED, then an accepted EARNED_REWARD, then CLOSED before a reward is granted. Reward events received before OPENED are ignored and traced. Duplicate OPENED/EARNED_REWARD events are ignored without revoking valid reward eligibility.
 
 The previously observed external `com.android.vending` Google Play Activity navigation bar remains an acknowledged limitation, as approved by the user. Single-frame entry/exit behavior, three-button and gesture navigation still require a real-device recording. No claim of complete navigation-bar suppression is made.
 
@@ -96,3 +96,11 @@ The placement state owns request IDs, attempts, extra-cycle consumption and abso
 An unmounted in-flight request consumes its attempt. A later entry may use only the next remaining attempt after its delay. If the third/sixth request is destroyed before receiving a result, stop without fabricating a failed callback, unavailable message or another cycle. Owner tokens and increasing request IDs reject old callbacks and concurrent ownership. There is no disk persistence or new manual retry UI.
 
 This correction was inspected statically only. No compile, lint, tests or new APK/AAB was performed. The source and documentation are included in the subsequent main delivery.
+
+## Settings preload and analytics consolidation — 2026-09-12
+
+App-root preload remains unchanged. Settings uses a memoized focus effect with `loadRewardedAd({ restartFailed: true })`: a retryable terminal failure may start one new bounded cycle, while an active cycle or ready/showing ad is reused. Retry delays remain 6/12 seconds and configuration failures remain blocked. Settings does not auto-show an ad; the separate Watch Ad action is still required. Web keeps its explicit diagnostic behavior and only accepts the matching optional interface argument.
+
+Amplitude initialization, getDeviceId/setUserId, eight event call sites and flush now pass through the existing utils/ApiClient.ts. Event names/properties, invocation timing, API-key handling, disableCookies setting and SDK identity persistence/restoration configuration are preserved. No identifier masking, raw-ID log removal, new retry, SDK replacement or analytics upload was performed as part of this change. Live Amplitude receipt remains unverified.
+
+These changes have static source/diff review only. No build, lint, tests, device QA or new APK/AAB was run for this delivery. Earlier build/test records above apply to their original versions only.

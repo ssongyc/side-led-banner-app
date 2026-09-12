@@ -143,7 +143,7 @@ export const TextSection = () => {
       keyboardShouldPersistTaps="handled"
       directionalLockEnabled
       delaysContentTouches={false}
-      canCancelContentTouches={false}
+      canCancelContentTouches
     >
       {/* text - font select */}
       <View style={styles.settingsRow}>

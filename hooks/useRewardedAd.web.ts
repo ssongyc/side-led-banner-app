@@ -6,7 +6,7 @@ export function isRewardedAdShowing() { return WEB_AD_DIAGNOSTICS && getWebAdSta
 export function suspendRewardedAds() {
   if (isRewardedAdShowing()) selectWebAdState("loading");
 }
-export function loadRewardedAd() { /* A diagnostic result must be selected explicitly. */ }
+export function loadRewardedAd(_options?: { restartFailed?: boolean }) { /* A diagnostic result must be selected explicitly. */ }
 export function useRewardedAd(onRewardEarned: () => void) {
   const state = useWebAdState();
   const reward = useRef(onRewardEarned);

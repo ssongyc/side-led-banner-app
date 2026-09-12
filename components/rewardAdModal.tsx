@@ -2,7 +2,7 @@ import { adUnavailableReason, shouldTrackAdInteraction } from "@/utils/adAvailab
 import { appFontFamilyForText } from "@/constants/appFonts";
 import { rewardAdModalStyles as styles } from "@/constants/styles";
 import { useSettingsRest } from "@/contexts/settingsContext";
-import * as amplitude from "@amplitude/analytics-react-native";
+import { trackAnalyticsEvent } from "@/utils/ApiClient";
 import { REWARD_AD_STATUS_TEXTS, REWARD_AD_BUTTON_TEXTS, type RewardAdLabelKey } from "@/language/rewardAdLabels";
 import { Ionicons } from "@expo/vector-icons";
 import { Canvas, Group, Path, Rect, Skia } from "@shopify/react-native-skia";
@@ -328,7 +328,7 @@ export function RewardAdModal({
 
   const handleWatchAd = () => {
     if (drag.current.moved || !visible || !adReady || !onWatchAd || pendingAfterCloseRef.current || (isAdReady && !isAdReady())) return;
-    if (shouldTrackAdInteraction()) amplitude.track("WatchAd_clicked");
+    if (shouldTrackAdInteraction()) trackAnalyticsEvent("WatchAd_clicked");
     // 닫힘 애니메이션이 실제로 끝난 뒤(추측 딜레이 아님) 광고를 띄운다.
     pendingAfterCloseRef.current = onWatchAd ?? null;
     onClose();

@@ -10,7 +10,7 @@ import {
 import { useSettingsRest } from "@/contexts/settingsContext";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
-import { type Href, useRouter } from "expo-router";
+import { type Href, useFocusEffect, useRouter } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { loadRewardedAd } from "@/hooks/useRewardedAd";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -110,9 +110,9 @@ export default function SettingsScreen() {
     [],
   );
 
-  useEffect(() => {
-    if (adsAllowed) loadRewardedAd();
-  }, [adsAllowed]);
+  useFocusEffect(useCallback(() => {
+    if (adsAllowed) loadRewardedAd({ restartFailed: true });
+  }, [adsAllowed]));
 
   const openUrl = (url: string) => {
     void Linking.openURL(url).catch((error) => {

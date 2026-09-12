@@ -1,3 +1,5 @@
+import { StartupRecovery } from "@/components/StartupRecovery";
+import { STARTUP_RECOVERY_LABELS } from "@/language/startupRecoveryLabels";
 import { SplashLoadingScreen } from "@/components/SplashLoadingScreen";
 import {
   APP_THEME_FONT_ASSETS,
@@ -22,7 +24,7 @@ import {
 } from "@/utils/SystemChrome";
 import { suspendMobileAdsInitialization } from "@/ads/initializeMobileAds";
 import { disableAppTextScaling } from "@/utils/TextScaling";
-import * as amplitude from "@amplitude/analytics-react-native";
+import { initializeAnalytics, flushAnalytics } from "@/utils/ApiClient";
 import {
   DarkTheme,
   DefaultTheme,
@@ -35,7 +37,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useMemo, useState } from "react";
-import { AppState, Platform } from "react-native";
+import { Alert, AppState, Platform } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -119,13 +121,12 @@ export default function RootLayout() {
 
   //최소 0.75초 스플래쉬 강제
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+  const [splashDismissed, setSplashDismissed] = useState(false);
+  const [splashFailed, setSplashFailed] = useState(false);
+  const [splashAttempt, setSplashAttempt] = useState(0);
   useEffect(() => {
     const timer = setTimeout(() => setMinTimeElapsed(true), 750);
     return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    SplashScreen.hideAsync();
   }, []);
 
   const isReady = fontsLoaded && minTimeElapsed;
@@ -133,26 +134,45 @@ export default function RootLayout() {
   useEffect(() => {
     if (!isReady) return;
 
-    const task = requestIdleCallback(() => {
-      const initAmplitude = async () => {
-        const key = process.env.EXPO_PUBLIC_AMPLITUDE_API_KEY ?? "";
-        if (!key) return;
-        try {
-          await amplitude.init(key, undefined, {
-            disableCookies: true,
-          }).promise;
-          const deviceId = amplitude.getDeviceId();
-          if (deviceId) amplitude.setUserId(deviceId);
-        } catch (e) {
-          if (__DEV__) console.warn("[App] Amplitude init failed:", e);
+    let cancelled = false;
+    let revealFrame: number | null = null;
+    void SplashScreen.hideAsync()
+      .then(() => {
+        if (cancelled) return;
+        revealFrame = requestAnimationFrame(() => {
+          if (!cancelled) setSplashDismissed(true);
+        });
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setSplashFailed(true);
+        if (__DEV__) console.error("[Splash] Native splash dismissal failed", error);
+        // Use native presentation because the splash may still cover the React error UI.
+        if (Platform.OS !== "web") {
+          const labels = STARTUP_RECOVERY_LABELS[deviceAppLocale];
+          Alert.alert(labels.title, labels.splash, [{ text: labels.retry, onPress: () => {
+            if (cancelled) return;
+            setSplashFailed(false);
+            setSplashAttempt(attempt => attempt + 1);
+          } }], { cancelable: false });
         }
-      };
+      });
 
-      initAmplitude();
+    return () => {
+      cancelled = true;
+      if (revealFrame !== null) cancelAnimationFrame(revealFrame);
+    };
+  }, [isReady, splashAttempt, deviceAppLocale]);
+
+  useEffect(() => {
+    if (!isReady) return;
+
+    const task = requestIdleCallback(() => {
+      void initializeAnalytics();
     });
 
     const sub = AppState.addEventListener("change", (state) => {
-      if (state === "background" || state === "inactive") amplitude.flush();
+      if (state === "background" || state === "inactive") flushAnalytics();
     });
 
     return () => {
@@ -170,7 +190,7 @@ export default function RootLayout() {
       <PremiumAwareAds />
       <SettingsProvider>
         <KeyboardProvider>
-        {isReady ? (
+        {isReady && splashDismissed ? (
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="settings" options={{ headerShown: false }} />
@@ -187,9 +207,12 @@ export default function RootLayout() {
               options={{ headerShown: false }}
             />
           </Stack>
-        ) : (
-          <SplashLoadingScreen />
-        )}
+        ) : splashFailed ? (
+          <StartupRecovery locale={deviceAppLocale} kind="splash" onRetry={() => {
+            setSplashFailed(false);
+            setSplashAttempt(attempt => attempt + 1);
+          }} />
+        ) : <SplashLoadingScreen />}
         </KeyboardProvider>
         <StatusBar hidden={Platform.OS === "android"} />
       </SettingsProvider>
