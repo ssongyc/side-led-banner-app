@@ -20,6 +20,7 @@ import type { GradientBackdropId } from "@/constants/gradientBackgroundPresets";
 
 type Props = {
   preset: GradientBackdropId;
+  isActive: boolean;
   width: number;
   height: number;
   /** 사진 배경 위에 올릴 때 살짝만 보이게 */
@@ -32,6 +33,7 @@ type Props = {
  */
 export function GradientBackdrop({
   preset,
+  isActive,
   width,
   height,
   opacity = 1,
@@ -48,15 +50,31 @@ export function GradientBackdrop({
 
   const duration = preset === "pulse" ? 2800 : preset === "flow" ? 4500 : 5200;
 
+  const running = isActive && width > 0 && height > 0;
+
+  // A different preset starts its own cycle; hiding the same preset retains its phase.
   useEffect(() => {
     cancelAnimation(phase);
     phase.value = 0;
-    phase.value = withRepeat(
-      withTiming(Math.PI * 2, { duration, easing: Easing.linear }),
-      -1,
-      false,
-    );
-  }, [phase, duration, preset]);
+  }, [phase, preset]);
+
+  useEffect(() => {
+    cancelAnimation(phase);
+    if (!running) return;
+    const cycle = Math.PI * 2;
+    const progress = Math.min(1, Math.max(0, phase.value / cycle));
+    phase.value = withTiming(cycle,
+      { duration: duration * (1 - progress), easing: Easing.linear },
+      finished => {
+        "worklet";
+        if (!finished) return;
+        phase.value = 0;
+        phase.value = withRepeat(
+          withTiming(cycle, { duration, easing: Easing.linear }), -1, false,
+        );
+      });
+    return () => cancelAnimation(phase);
+  }, [phase, duration, preset, running]);
 
   const w = Math.max(1, width);
   const h = Math.max(1, height);

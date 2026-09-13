@@ -10,7 +10,7 @@ import {
   type SpeechBubblePresetId,
 } from "@/constants/speechBubblePresets";
 import { useSettingsRest } from "@/contexts/settingsContext";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export type BackgroundEffectPreset =
   | "none"
@@ -72,6 +72,7 @@ export function useBackgroundAnimation(isActive = true) {
   const { config } = useSettingsRest();
   const preset: BackgroundEffectPreset = config.appearance.backgroundEffectPreset as BackgroundEffectPreset;
   const [frameIndex, setFrameIndex] = useState(0);
+  const remainingMs = useRef(FRAME_DURATION_MS);
   const isEnabled = preset === "effect1";
   const isHeartEnabled = preset === "heartBgA";
   const isSpeechBubble = isSpeechBubblePreset(preset);
@@ -79,13 +80,23 @@ export function useBackgroundAnimation(isActive = true) {
   useEffect(() => {
     if (!isEnabled) {
       setFrameIndex(0);
+      remainingMs.current = FRAME_DURATION_MS;
       return;
     }
     if (!isActive) return;
-    const id = setInterval(() => {
-      setFrameIndex((prev) => (prev + 1) % FRAME_SEQUENCE.length);
-    }, FRAME_DURATION_MS);
-    return () => clearInterval(id);
+    let deadline = performance.now() + remainingMs.current;
+    let timer: ReturnType<typeof setTimeout>;
+    const advance = () => {
+      setFrameIndex(prev => (prev + 1) % FRAME_SEQUENCE.length);
+      remainingMs.current = FRAME_DURATION_MS;
+      deadline = performance.now() + FRAME_DURATION_MS;
+      timer = setTimeout(advance, FRAME_DURATION_MS);
+    };
+    timer = setTimeout(advance, remainingMs.current);
+    return () => {
+      clearTimeout(timer);
+      remainingMs.current = Math.max(0, Math.min(FRAME_DURATION_MS, deadline - performance.now()));
+    };
   }, [isEnabled, isActive]);
 
   return useMemo<BackgroundEffectAnimationResult>(() => {

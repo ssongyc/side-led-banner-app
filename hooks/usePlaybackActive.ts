@@ -1,10 +1,12 @@
+import { StartupVisibilityContext } from "@/contexts/startupContext";
 import { useIsFocused } from "expo-router";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AppState } from "react-native";
 
 /** Retain the screen state while its animation producers are paused. */
 export function usePlaybackActive(visible: boolean) {
   const isFocused = useIsFocused();
+  const startupVisible = useContext(StartupVisibilityContext);
   const [isForeground, setIsForeground] = useState(
     () => AppState.currentState === "active",
   );
@@ -17,5 +19,5 @@ export function usePlaybackActive(visible: boolean) {
     return () => subscription.remove();
   }, []);
 
-  return visible && isFocused && isForeground;
+  return visible && startupVisible && isFocused && isForeground;
 }

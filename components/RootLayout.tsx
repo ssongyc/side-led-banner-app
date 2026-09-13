@@ -4,20 +4,14 @@ import { SplashLoadingScreen } from "@/components/SplashLoadingScreen";
 import {
   APP_THEME_FONT_ASSETS,
   buildEagerFontAssets,
-  getFontAssetIds,
-  getSkiaFontAssets,
 } from "@/constants/appFonts";
 import { PremiumLifecycle, usePremium } from "@/contexts/premiumContext";
 import { SettingsProvider } from "@/contexts/settingsContext";
-import { preloadSkiaTypefaces } from "@/hooks/useCachedSkiaFont";
+import { StartupPreviewContext, StartupVisibilityContext, type StorageStartupState } from "@/contexts/startupContext";
+import { clearFailedSkiaTypefaces } from "@/hooks/useCachedSkiaFont";
 import { loadRewardedAd, suspendRewardedAds } from "@/hooks/useRewardedAd";
 import { deviceLocaleToAppLocale } from "@/language/deviceLocale";
-import {
-  collectPriorityFontIds,
-  loadFontIds,
-  loadRemainingFonts,
-  prefetchRemoteFonts,
-} from "@/utils/fontPreload";
+import { createDeferredFontPreloadTasks } from "@/utils/fontPreload";
 import {
   configureAndroidNavigationBarHidden,
   hideAndroidNavigationBar,
@@ -30,14 +24,14 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "expo-router";
-import { useFonts } from "expo-font";
+import { loadAsync } from "expo-font";
 import { useKeepAwake } from 'expo-keep-awake';
 import { useLocales } from "expo-localization";
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useMemo, useState } from "react";
-import { Alert, AppState, Platform } from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert, AppState, Platform, StyleSheet, View } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -46,6 +40,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 
 disableAppTextScaling();
 
+SplashScreen.setOptions({ fade: false, duration: 0 });
 SplashScreen.preventAutoHideAsync();
 
 function PremiumAwareAds() {
@@ -79,30 +74,20 @@ export default function RootLayout() {
     () => ({ ...buildEagerFontAssets(deviceAppLocale), ...APP_THEME_FONT_ASSETS }),
     [deviceAppLocale],
   );
-  const [fontsLoaded] = useFonts(eagerFontAssets);
-
-  // 필요한 폰트를 우선 로드하고, 그 다음 나머지는 백그라운드로 로드
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [fontsFailed, setFontsFailed] = useState(false);
+  const [preparationAttempt, setPreparationAttempt] = useState(0);
   useEffect(() => {
-    if (!fontsLoaded) return;
     let cancelled = false;
-    collectPriorityFontIds(deviceAppLocale).then((priorityIds) => {
-      if (cancelled) return;
-      preloadSkiaTypefaces(getFontAssetIds(priorityIds));
-      prefetchRemoteFonts(priorityIds);
-      loadFontIds(priorityIds)
-        .then(() => (cancelled ? undefined : loadRemainingFonts(priorityIds)))
-        .catch((err) => {
-          if (__DEV__) console.warn("[fonts] font preload failed", err);
-        });
+    setFontsFailed(false);
+    void loadAsync(eagerFontAssets).then(() => {
+      if (!cancelled) setFontsLoaded(true);
+    }).catch(error => {
+      if (!cancelled) setFontsFailed(true);
+      if (__DEV__) console.error("[startup] UI fonts failed", error);
     });
-    return () => {
-      cancelled = true;
-    };
-  }, [fontsLoaded, deviceAppLocale]);
-
-  useEffect(() => {
-    preloadSkiaTypefaces(getSkiaFontAssets(deviceAppLocale));
-  }, [deviceAppLocale]);
+    return () => { cancelled = true; };
+  }, [eagerFontAssets, preparationAttempt]);
 
   useEffect(() => {
     configureAndroidNavigationBarHidden();
@@ -119,53 +104,145 @@ export default function RootLayout() {
     };
   }, []);
 
-  //최소 0.75초 스플래쉬 강제
-  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+  const pathname = usePathname();
+  const [storageStartup, setStorageStartup] = useState<StorageStartupState | null>(null);
+  const [loaderLaidOut, setLoaderLaidOut] = useState(false);
+  const [loaderImageReady, setLoaderImageReady] = useState(false);
+  const [loaderImageFailed, setLoaderImageFailed] = useState(false);
+  const [mainLaidOut, setMainLaidOut] = useState(false);
+  const [previewReady, setPreviewReady] = useState(false);
+  const [startupComplete, setStartupComplete] = useState(false);
+  const [preparationTimedOut, setPreparationTimedOut] = useState(false);
   const [splashDismissed, setSplashDismissed] = useState(false);
   const [splashFailed, setSplashFailed] = useState(false);
   const [splashAttempt, setSplashAttempt] = useState(0);
-  useEffect(() => {
-    const timer = setTimeout(() => setMinTimeElapsed(true), 750);
-    return () => clearTimeout(timer);
+  const retrySplash = useCallback(() => {
+    setSplashFailed(false);
+    setSplashAttempt(attempt => attempt + 1);
   }, []);
 
-  const isReady = fontsLoaded && minTimeElapsed;
+  const recoveryVisible = !!storageStartup?.failed || fontsFailed || preparationTimedOut || loaderImageFailed;
+
+  // Hand off to the already mounted React loader, independently of storage/fonts.
+  // The same loader remains in place while the real screen mounts underneath it.
+  useEffect(() => {
+    if (splashDismissed || splashFailed || !loaderLaidOut || (!loaderImageReady && !recoveryVisible)) return;
+    let cancelled = false;
+    void SplashScreen.hideAsync().then(() => {
+      if (!cancelled) setSplashDismissed(true);
+    }).catch(error => {
+      if (cancelled) return;
+      setSplashFailed(true);
+      if (__DEV__) console.error("[Splash] Native splash dismissal failed", error);
+      if (Platform.OS !== "web") {
+        const labels = STARTUP_RECOVERY_LABELS[deviceAppLocale];
+        Alert.alert(labels.title, labels.splash, [{ text: labels.retry, onPress: retrySplash }],
+          { cancelable: false });
+      }
+    });
+    return () => { cancelled = true; };
+  }, [loaderLaidOut, loaderImageReady, recoveryVisible, splashDismissed, splashFailed, splashAttempt, deviceAppLocale, retrySplash]);
+
+  const [preparedLocale, setPreparedLocale] = useState<string | null>(null);
+  const startupLocale = storageStartup?.ready ? storageStartup.locale : null;
+  useEffect(() => {
+    if (startupComplete || !startupLocale) return;
+    let cancelled = false;
+    // Saved-language UI/input fonts stay on the critical path. Expo shares in-flight loads.
+    void loadAsync(buildEagerFontAssets(startupLocale)).then(() => {
+      if (!cancelled) setPreparedLocale(startupLocale);
+    }).catch(error => {
+      if (!cancelled) setFontsFailed(true);
+      if (__DEV__) console.error("[startup] saved-language fonts failed", error);
+    });
+    return () => { cancelled = true; };
+  }, [startupComplete, startupLocale, preparationAttempt]);
+
+  const isReady = fontsLoaded && !!storageStartup?.ready && preparedLocale === startupLocale && mainLaidOut &&
+    (pathname !== "/" || previewReady);
+  useEffect(() => {
+    if (startupComplete || !isReady || !splashDismissed || recoveryVisible) return;
+    // Allow committed layout/font updates to reach a frame before uncovering the screen.
+    let secondFrame: number | undefined;
+    const frame = requestAnimationFrame(() => {
+      secondFrame = requestAnimationFrame(() => setStartupComplete(true));
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      if (secondFrame !== undefined) cancelAnimationFrame(secondFrame);
+    };
+  }, [startupComplete, isReady, splashDismissed, recoveryVisible]);
 
   useEffect(() => {
-    if (!isReady) return;
+    if (startupComplete || storageStartup?.failed || fontsFailed) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const updateTimer = (state: string) => {
+      if (timer !== undefined) clearTimeout(timer);
+      if (state === "active") timer = setTimeout(() => setPreparationTimedOut(true), 30000);
+    };
+    updateTimer(Platform.OS === "web" ? "active" : AppState.currentState);
+    const subscription = AppState.addEventListener("change", updateTimer);
+    return () => {
+      if (timer !== undefined) clearTimeout(timer);
+      subscription.remove();
+    };
+  }, [startupComplete, storageStartup?.failed, fontsFailed, preparationAttempt]);
 
+  useEffect(() => {
+    if (!startupComplete) return;
     let cancelled = false;
-    let revealFrame: number | null = null;
-    void SplashScreen.hideAsync()
-      .then(() => {
-        if (cancelled) return;
-        revealFrame = requestAnimationFrame(() => {
-          if (!cancelled) setSplashDismissed(true);
+    let inFlight = false;
+    let foreground = Platform.OS === "web" || AppState.currentState === "active";
+    let idleTask: ReturnType<typeof requestIdleCallback> | undefined;
+    const queue: Array<() => Promise<unknown>> = [async () => {
+      const tasks = await createDeferredFontPreloadTasks(deviceAppLocale);
+      if (!cancelled) queue.push(...tasks);
+    }];
+    const schedule = () => {
+      if (cancelled || !foreground || inFlight || idleTask !== undefined || queue.length === 0) return;
+      idleTask = requestIdleCallback(() => {
+        idleTask = undefined;
+        if (cancelled || !foreground) return;
+        const task = queue.shift();
+        if (!task) return;
+        inFlight = true;
+        void task().catch(error => {
+          if (__DEV__) console.warn("[fonts] optional preload failed", error);
+        }).finally(() => {
+          inFlight = false;
+          schedule();
         });
-      })
-      .catch((error) => {
-        if (cancelled) return;
-        setSplashFailed(true);
-        if (__DEV__) console.error("[Splash] Native splash dismissal failed", error);
-        // Use native presentation because the splash may still cover the React error UI.
-        if (Platform.OS !== "web") {
-          const labels = STARTUP_RECOVERY_LABELS[deviceAppLocale];
-          Alert.alert(labels.title, labels.splash, [{ text: labels.retry, onPress: () => {
-            if (cancelled) return;
-            setSplashFailed(false);
-            setSplashAttempt(attempt => attempt + 1);
-          } }], { cancelable: false });
-        }
       });
-
+    };
+    const subscription = AppState.addEventListener("change", state => {
+      foreground = state === "active";
+      if (!foreground && idleTask !== undefined) {
+        cancelIdleCallback(idleTask);
+        idleTask = undefined;
+      }
+      schedule();
+    });
+    schedule();
     return () => {
       cancelled = true;
-      if (revealFrame !== null) cancelAnimationFrame(revealFrame);
+      queue.length = 0;
+      if (idleTask !== undefined) cancelIdleCallback(idleTask);
+      subscription.remove();
     };
-  }, [isReady, splashAttempt, deviceAppLocale]);
+  }, [startupComplete, deviceAppLocale]);
+
+  const retryPreparation = () => {
+    clearFailedSkiaTypefaces();
+    setPreviewReady(false);
+    setMainLaidOut(false);
+    setPreparationTimedOut(false);
+    setLoaderImageFailed(false);
+    if (!storageStartup?.ready) storageStartup?.retry();
+    setPreparationAttempt(attempt => attempt + 1);
+  };
 
   useEffect(() => {
-    if (!isReady) return;
+    if (!fontsLoaded) return;
 
     const task = requestIdleCallback(() => {
       void initializeAnalytics();
@@ -179,7 +256,7 @@ export default function RootLayout() {
       cancelIdleCallback(task);
       sub.remove();
     };
-  }, [isReady]);
+  }, [fontsLoaded]);
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
@@ -188,9 +265,19 @@ export default function RootLayout() {
       <SafeAreaProvider onTouchStart={hideAndroidNavigationBar}>
       <PremiumLifecycle>
       <PremiumAwareAds />
-      <SettingsProvider>
+      <View style={{ flex: 1, backgroundColor: "#1a1a1a" }}>
+      <View style={{ flex: 1 }} pointerEvents={startupComplete ? "auto" : "none"}
+        accessibilityElementsHidden={!startupComplete}
+        importantForAccessibility={startupComplete ? "auto" : "no-hide-descendants"}>
+      <SettingsProvider onStartupStateChange={setStorageStartup}>
         <KeyboardProvider>
-        {isReady && splashDismissed ? (
+        <StartupVisibilityContext.Provider value={startupComplete}>
+        <StartupPreviewContext.Provider value={setPreviewReady}>
+        {fontsLoaded ? (
+          <View key={preparationAttempt} style={{ flex: 1 }} onLayout={event => {
+            const { width, height } = event.nativeEvent.layout;
+            setMainLaidOut(width > 0 && height > 0);
+          }}>
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="settings" options={{ headerShown: false }} />
@@ -207,15 +294,30 @@ export default function RootLayout() {
               options={{ headerShown: false }}
             />
           </Stack>
-        ) : splashFailed ? (
-          <StartupRecovery locale={deviceAppLocale} kind="splash" onRetry={() => {
-            setSplashFailed(false);
-            setSplashAttempt(attempt => attempt + 1);
-          }} />
-        ) : <SplashLoadingScreen />}
+          </View>
+        ) : null}
+        </StartupPreviewContext.Provider>
+        </StartupVisibilityContext.Provider>
         </KeyboardProvider>
-        <StatusBar hidden={Platform.OS === "android"} />
       </SettingsProvider>
+      </View>
+      {!startupComplete && (
+        <View style={StyleSheet.absoluteFill} onLayout={() => setLoaderLaidOut(true)}>
+          {splashFailed ? (
+            <StartupRecovery locale={deviceAppLocale} kind="splash" onRetry={retrySplash} />
+          ) : storageStartup?.failed ? (
+            <StartupRecovery locale={storageStartup.locale} kind="storage" onRetry={retryPreparation} />
+          ) : fontsFailed || preparationTimedOut || loaderImageFailed ? (
+            <StartupRecovery locale={storageStartup?.locale ?? deviceAppLocale}
+              kind="preparation" onRetry={retryPreparation} />
+          ) : (
+            <SplashLoadingScreen onImageLoad={() => setLoaderImageReady(true)}
+              onImageError={() => setLoaderImageFailed(true)} />
+          )}
+        </View>
+      )}
+      <StatusBar hidden={Platform.OS === "android"} />
+      </View>
       </PremiumLifecycle>
       </SafeAreaProvider>
     </ThemeProvider>

@@ -1,5 +1,4 @@
-import { StartupRecovery } from "@/components/StartupRecovery";
-import { SplashLoadingScreen } from "@/components/SplashLoadingScreen";
+import type { StorageStartupState } from "./startupContext";
 import { useSettingsLocalization } from "./settings/useSettingsLocalization";
 import {
   type BannerConfig, type PresetSnapshot, PRESET_SLOT_COUNT, DEFAULT_BANNER_CONFIG,
@@ -167,7 +166,10 @@ export const useSettings = (): SettingsContextValue => {
   );
 };
 
-export function SettingsProvider({ children }: { children: React.ReactNode }) {
+export function SettingsProvider({ children, onStartupStateChange }: {
+  children: React.ReactNode;
+  onStartupStateChange: (state: StorageStartupState) => void;
+}) {
   const { isPremium, entitlement } = usePremium();
   const [config, setConfig] = useState<BannerConfig>(DEFAULT_BANNER_CONFIG);
 
@@ -629,6 +631,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     ],
   );
 
+  const retryStorage = useCallback(() => {
+    setStorageLoadFailed(false);
+    setStorageLoadAttempt(attempt => attempt + 1);
+  }, []);
+
+  useEffect(() => {
+    onStartupStateChange({ ready: presetsStorageReady, failed: storageLoadFailed,
+      locale: resolvedAppLocale, retry: retryStorage });
+  }, [presetsStorageReady, storageLoadFailed, resolvedAppLocale, retryStorage, onStartupStateChange]);
+
   const contentValue = useMemo(
     () => ({ content: config.content }),
     [config.content],
@@ -637,12 +649,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   return (
     <RestContext.Provider value={restValue}>
       <ContentContext.Provider value={contentValue}>
-        {presetsStorageReady ? children : storageLoadFailed ? (
-          <StartupRecovery locale={resolvedAppLocale} kind="storage" onRetry={() => {
-            setStorageLoadFailed(false);
-            setStorageLoadAttempt(attempt => attempt + 1);
-          }} />
-        ) : <SplashLoadingScreen />}
+        {presetsStorageReady ? children : null}
       </ContentContext.Provider>
     </RestContext.Provider>
   );

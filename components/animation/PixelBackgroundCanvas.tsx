@@ -86,7 +86,8 @@ export function PixelBackgroundCanvas({
   translateX,
   isPortrait,
   mode,
-}: PixelBackgroundCanvasProps) {
+  isActive,
+}: PixelBackgroundCanvasProps & { isActive: boolean }) {
   const { width: winW, height: winH } = useWindowDimensions();
   const isTablet = Math.min(winW, winH) >= TABLET_MIN_SHORTEST_SIDE_DP;
   const isFullscreen = mode === "fullscreen";
@@ -135,6 +136,7 @@ export function PixelBackgroundCanvas({
             />
             {showGradientBackdrop ? (
               <GradientBackdrop
+                isActive={isActive}
                 key={`gradient-${gradientBackgroundPreset}`}
                 preset={gradientBackgroundPreset as GradientBackdropId}
                 width={width}
@@ -146,6 +148,7 @@ export function PixelBackgroundCanvas({
         ) : showGradientBackdrop ? (
           <Group layer={photoBackgroundShaderLayer}>
             <GradientBackdrop
+              isActive={isActive}
               key={`gradient-${gradientBackgroundPreset}`}
               preset={gradientBackgroundPreset as GradientBackdropId}
               width={width}

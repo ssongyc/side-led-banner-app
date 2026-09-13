@@ -232,12 +232,13 @@ export const LedBannerFullScreen = ({
               />
             ) : null}
             {effects.isPixelEffect ? (
-              <PixelBackgroundCanvas {...pixelBackgroundProps} />
+              <PixelBackgroundCanvas {...pixelBackgroundProps} isActive={isAnimationActive} />
             ) : null}
             {!effects.isPixelEffect && effects.showGradientBackdrop && stageWidth > 0 && stageHeight > 0 ? (
               <View style={StyleSheet.absoluteFill} pointerEvents="none">
                 <Canvas style={{ flex: 1 }} opaque={false}>
                   <GradientBackdrop
+                    isActive={isAnimationActive}
                     key={`gradient-${gradientBackgroundPreset}`}
                     preset={gradientBackgroundPreset as GradientBackdropId}
                     width={stageWidth}

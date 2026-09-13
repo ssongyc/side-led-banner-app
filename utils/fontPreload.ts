@@ -10,7 +10,7 @@ import {
 } from "@/constants/appFonts";
 import type { AppLocaleKey } from "@/constants/language";
 import { REMOTE_FONT_FACE_SETS } from "@/constants/remoteFonts";
-import { preloadSkiaTypefaces } from "@/hooks/useCachedSkiaFont";
+import { loadTypeface, preloadSkiaTypefaces } from "@/hooks/useCachedSkiaFont";
 import { readAppLanguage } from "@/utils/appLanguageStorage";
 import { readPresetSlotsJson } from "@/utils/presetStorage";
 import { ensureRemoteFontSetDownloaded } from "@/utils/remoteFontLoader";
@@ -103,4 +103,32 @@ export function ensureLocaleFontsLoaded(locale: AppLocaleKey): Promise<void> {
     loadedLocales.delete(locale);
     throw err;
   });
+}
+
+
+/** Optional cache warming: the root runs one bounded unit per idle opportunity. */
+export async function createDeferredFontPreloadTasks(device: AppLocaleKey): Promise<Array<() => Promise<unknown>>> {
+  const priorityIds = await collectPriorityFontIds(device);
+  const tasks: Array<() => Promise<unknown>> = [];
+  const addTextFonts = (assets: Record<string, number>) => {
+    const entries = Object.entries(assets);
+    for (let index = 0; index < entries.length; index += 2) {
+      const batch = entries.slice(index, index + 2);
+      tasks.push(async () => {
+        const missing = Object.fromEntries(batch.filter(([family]) => !Font.isLoaded(family)));
+        if (Object.keys(missing).length > 0) await loadAssetsWithRetry(missing);
+      });
+    }
+  };
+  addTextFonts(buildFontAssets(priorityIds));
+  for (const asset of new Set(getFontAssetIds([...getEagerFontIdsForLocale(device), ...priorityIds]))) {
+    tasks.push(async () => {
+      if (!await loadTypeface(asset)) throw new Error("Optional Skia font preload failed");
+    });
+  }
+  for (const remoteId of getRemoteFontIdsForIds(priorityIds)) {
+    tasks.push(() => ensureRemoteFontSetDownloaded(REMOTE_FONT_FACE_SETS[remoteId]));
+  }
+  addTextFonts(buildRemainingFontAssets(priorityIds));
+  return tasks;
 }

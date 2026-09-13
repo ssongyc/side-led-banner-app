@@ -1,3 +1,4 @@
+import { StartupPreviewContext } from "@/contexts/startupContext";
 import { useHeartBackgroundScroll } from "@/hooks/useHeartBackgroundScroll";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { isSignBoardPreset } from "@/constants/signBoardPresets";
@@ -33,7 +34,7 @@ import { getSizingPolicy } from "@/utils/textSizing";
 import { Canvas } from "@shopify/react-native-skia";
 import { Image } from "expo-image";
 import { LinearGradient as LinearGradientExpo } from "expo-linear-gradient";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   InputAccessoryView,
   Keyboard,
@@ -177,6 +178,15 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
       speechBubbleId: sizingPolicy.speechBubbleId,
     }),
   });
+
+  const reportStartupPreviewReady = useContext(StartupPreviewContext);
+  const startupPreviewReady = previewBox.width > 0 && previewBox.height > 0 &&
+    canvas.isPrepared;
+  useEffect(() => {
+    reportStartupPreviewReady(startupPreviewReady);
+    return () => reportStartupPreviewReady(false);
+  }, [startupPreviewReady, reportStartupPreviewReady, config.appearance.font,
+    effects.pixelSkiaFontOverride, previewFontSize, previewBox.width, previewBox.height]);
 
   const { opacity: blinkOpacity } = useBlinkOpacityStyle(isAnimationActive);
 
@@ -360,7 +370,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
         {effects.isPixelEffect &&
         previewBox.width > 0 &&
         previewBox.height > 0 ? (
-          <PixelBackgroundCanvas {...pixelBackgroundProps} />
+          <PixelBackgroundCanvas {...pixelBackgroundProps} isActive={isAnimationActive} />
         ) : null}
         {!effects.isPixelEffect &&
         effects.showGradientBackdrop &&
@@ -369,6 +379,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
           <View style={StyleSheet.absoluteFill} pointerEvents="none">
             <Canvas style={{ flex: 1 }} opaque={false}>
               <GradientBackdrop
+                isActive={isAnimationActive}
                 key={`gradient-${gradientBackgroundPreset}`}
                 preset={gradientBackgroundPreset as GradientBackdropId}
                 width={previewBox.width}

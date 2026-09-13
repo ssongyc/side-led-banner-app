@@ -1,13 +1,17 @@
 import LottieView from "lottie-react-native";
 import { Image, StyleSheet, View } from "react-native";
 
-export function SplashLoadingScreen() {
+export function SplashLoadingScreen({ onImageLoad, onImageError }: {
+  onImageLoad: () => void; onImageError: () => void;
+}) {
   return (
     <View style={styles.container}>
       <Image
         source={require("@/assets/images/splash-icon.png")}
         style={styles.icon}
         resizeMode="contain"
+        onLoad={onImageLoad}
+        onError={onImageError}
       />
       <View style={styles.dotsContainer}>
         <LottieView
@@ -33,7 +37,9 @@ const styles = StyleSheet.create({
     height: 200,
   },
   dotsContainer: {
-    marginTop: 40,
+    position: "absolute",
+    top: "50%",
+    marginTop: 140,
     width: 150,
     height: 50,
     justifyContent: "center",

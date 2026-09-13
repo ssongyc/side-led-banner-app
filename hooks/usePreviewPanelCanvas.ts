@@ -229,6 +229,19 @@ export function usePreviewPanelCanvas({
     scFallbackFont,
   ]);
 
+  // Only wait for fonts used by this text, using the same script rules as rendering.
+  // Unrelated remote fonts must not hold startup open.
+  const textFontsReady = useMemo(() => !!skiaFont && Array.from(displayText).every(ch => {
+    if (isPixelMode) return !isCJKChar(ch) || !!(pixelZhHansFont && pixelZhHantFont);
+    if (isHangulChar(ch)) return selectedFontIsKo || !!koFallbackFont;
+    if (isJapaneseKanaChar(ch)) return selectedFontIsJa || !!jaFallbackFont;
+    if (isCJKChar(ch)) return selectedFontIsZhTC || selectedFontIsZhSC || selectedFontIsJa ||
+      !!(resolvedAppLocale === "zhSC" ? scFallbackFont : tcFallbackFont);
+    return true;
+  }), [skiaFont, displayText, isPixelMode, pixelZhHansFont, pixelZhHantFont,
+    selectedFontIsKo, selectedFontIsJa, selectedFontIsZhTC, selectedFontIsZhSC,
+    koFallbackFont, jaFallbackFont, scFallbackFont, tcFallbackFont, resolvedAppLocale]);
+
   const [skiaCanvasLayout, setSkiaCanvasLayout] = useState({
     width: 0,
     height: 0,
@@ -383,6 +396,9 @@ export function usePreviewPanelCanvas({
   }, []);
 
   return {
+    // An empty or unsupported glyph sequence may legitimately have no text blob.
+    // Do not make the editor unreachable merely because the authored text has no drawable glyphs.
+    isPrepared: textFontsReady && drawW > 0 && drawH > 0 && skiaLineLayouts !== null,
     skiaFont,
     skiaTextWidth,
     skiaTextBlob: skiaTextBlobs?.[0] ?? null,

@@ -4,7 +4,7 @@ import { ScrollView, Text, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function StartupRecovery({ locale, kind, onRetry }: {
-  locale: AppLocaleKey; kind: "storage" | "splash"; onRetry: () => void;
+  locale: AppLocaleKey; kind: "storage" | "splash" | "preparation"; onRetry: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const labels = STARTUP_RECOVERY_LABELS[locale];
