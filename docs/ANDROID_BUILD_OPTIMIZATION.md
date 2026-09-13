@@ -16,8 +16,26 @@ For a store run, building an APK and AAB as separate top-level Gradle targets du
 
 ## Applied changes
 
+### CRLF/LF fingerprint correction — 2026-09-14
+
+The raw-byte fingerprint could treat a Git LF checkout and a Windows CRLF checkout as different dependency/native inputs, causing unnecessary installation and regeneration. The helper now normalizes CRLF to LF for fingerprints of `.npmrc` and supported UTF-8 text inputs (`json`, `js/cjs/mjs/jsx`, `ts/tsx`, `kt`, `java`, `gradle`, `xml`, `properties`, `swift`, `podspec`). Patches, binary assets, unsupported formats, environment files and toolchain metadata remain byte-sensitive. Source synchronization and provenance hashes retain exact bytes. Actual text, dependency, patch, native configuration, environment and toolchain changes still invalidate the relevant preparation state.
+
+Dependency schema 1 and native schema 3 preserve eligible existing success records through verified legacy-hash migration. The actual helper passed 23 tests in an in-memory filesystem with fake Git/toolchain inputs: both LF/CRLF migration directions, exact source provenance, genuine text/patch/binary/deletion changes, failed and unknown stamps, environment/toolchain drift, ad-profile changes and version-only reuse. No active build-root preparation, install, prebuild, build, lint or cache mutation was run. Actual build speed remains unmeasured.
+
+### Resource preflight and phase timing — 2026-09-14
+
+- The wrapper checks physical memory and active Gradle/Flutter/Expo/EAS CLI build clients before expensive preparation and again before Gradle. Below 4 GiB available memory, a detected client or an unreadable probe stops the run. No process termination, automatic waiting/retry or worker/heap increase is introduced. The 4 GiB floor is a conservative guard, not a measured peak-memory requirement.
+- Idle Gradle/Kotlin daemons and read-only Gradle queries are excluded. This is a local process snapshot: IDE-only/remote builds and clients starting afterward may not be detected. The same-project build lock remains; this does not claim a cross-project global lock.
+- `stage-timings.json` records total and individual phase durations, completion/failure/skipped states, safe resource summaries and available command exit codes. Phases include preflight, archive/source preparation, dependency installation, native generation/configuration, resource recheck, compilation, post-build checks, AAB export/mapping verification, APK conversion/export and artifact verification. Unreached/unrequested stages have no execution entry; total time also includes unassigned bookkeeping/cleanup.
+- Timing is retained on failures once the record directory exists. Current npm/prebuild logs are retained only for commands actually started. Existing Gradle logs, provenance, build options, signing and artifact checks remain.
+- Validation: 20 PowerShell fixture assertions passed for thresholds, client detection/exclusions, unreadable/failed probes, failed/skipped timing, JSON serialization and wrapper syntax. Neither a real host probe nor a release build was run as part of these tests.
+
+Run the isolated regression checks with `node --test scripts/prepare-local-apk.test.cjs` and `pwsh -NoProfile -File scripts/android-build-observability.test.ps1` only when testing is authorized. No packages are installed by these checks.
+
+### Existing release workflow
+
 - The Android native fingerprint now ignores only expo.version, expo.android.versionCode, expo.ios, and expo.web. Common Expo settings, Android settings, config plugins, local modules, dependency inputs, referenced Android/common assets, environment hash, toolchain hash, and the ad profile still invalidate native output.
-- The fingerprint schema and verified ad profile are recorded. An old successful stamp is migrated only when its matching prior plan proves the same ad profile and the preserved generated Android project exists. Otherwise preparation remains fail-closed.
+- The fingerprint schema and verified ad profile are recorded. Legacy dependency hashes and native schema-2 hashes migrate only after reproducing the successful old hash from the preserved inputs. Native migration also proves the environment/toolchain/ad-profile hash and requires the generated Android project. Failed, mismatched or unknown stamps require preparation.
 - The wrapper writes the requested versionName and versionCode into the generated Android build.gradle after source synchronization. It requires exactly one generated field of each type and stops on an unexpected template.
 - APK-only runs still use :app:assembleRelease.
 - -IncludeBundle runs now use only :app:bundleRelease, retain the AAB and exact R8 mapping, and derive one universal APK from that exact AAB with pinned bundletool 1.18.3.

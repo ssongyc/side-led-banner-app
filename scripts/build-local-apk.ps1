@@ -12,6 +12,12 @@ param(
  [ValidateSet(1, 2)][int]$GradleWorkers=1
 )
 $ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'android-build-observability.ps1')
+$timingState=New-AndroidBuildTiming
+$timingStatus='failed'
+$record=$null
+Start-AndroidBuildStage $timingState 'preflight'
+try {
 if($IncludeBundle -and $AdProfile -ne 'production'){throw 'Store AAB requires production ads'}
 $verificationScript=Join-Path $PSScriptRoot 'verify-store-release.py'
 if($IncludeBundle){
@@ -34,6 +40,12 @@ foreach($path in @((Split-Path $resolved -Parent),$resolved)){
 if(Test-Path -LiteralPath (Join-Path $resolved '.relocated-build')){throw 'Relocated native caches cannot be resumed'}
 $prepare=Join-Path $PSScriptRoot 'prepare-local-apk.cjs'
 $buildLock=$null
+$recordRoot=Join-Path (Split-Path $resolved -Parent) 'apk-runs'
+if((Test-Path -LiteralPath $recordRoot) -and ((Get-Item -LiteralPath $recordRoot).Attributes -band [IO.FileAttributes]::ReparsePoint)){throw 'Record directory must not be a link'}
+$runId=(Get-Date -Format 'yyyyMMdd-HHmmss')+'-'+[Guid]::NewGuid().ToString('N').Substring(0,8)
+$record=Join-Path $recordRoot $runId
+New-Item -ItemType Directory -Path $record -Force | Out-Null
+Assert-AndroidBuildResources -TimingState $timingState
 $signing='C:/AndroidSigning/com.minkyokim.sideledbannerapp'
 $cred=Get-Content (Join-Path $signing 'credentials.json') -Raw | ConvertFrom-Json
 $key=$cred.android.keystore
@@ -69,9 +81,7 @@ try {
  if($cert.GetCertHashString([Security.Cryptography.HashAlgorithmName]::SHA256) -ne $expected){throw 'Public certificate mismatch'}
  New-Item -ItemType Directory -Force -Path $resolved | Out-Null
  $buildLock=[IO.File]::Open((Join-Path $resolved '.build.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
- $runId=(Get-Date -Format 'yyyyMMdd-HHmmss')+'-'+[Guid]::NewGuid().ToString('N').Substring(0,8)
- $record=Join-Path (Split-Path $resolved -Parent) ('apk-runs/'+$runId)
- New-Item -ItemType Directory -Path $record | Out-Null
+ Start-AndroidBuildStage $timingState 'archive'
  # Preserve previous output before preparation, installation or generation can replace it.
  foreach($name in @('gradle-release.log','prebuild.log','npm-ci.log','source-inputs.json','source-revision.txt')){
   $old=Join-Path $resolved $name
@@ -87,7 +97,9 @@ try {
  }
  $previousApk=Join-Path $resolved 'android/app/build/outputs/apk/release/app-release.apk'
  if(Test-Path -LiteralPath $previousApk){Copy-Item -LiteralPath $previousApk -Destination (Join-Path $record 'previous.apk')}
+ Start-AndroidBuildStage $timingState 'sourcePreparation'
  & node $prepare prepare "$VersionCode"
+ $timingState.active.exitCode=$LASTEXITCODE
  if($LASTEXITCODE -ne 0){throw 'Source preparation failed'}
  $plan=Get-Content (Join-Path $resolved '.source-plan.json') -Raw | ConvertFrom-Json
  if($ResumeNative -and ($plan.nativeRequired -or $plan.installRequired)){throw 'ResumeNative requested but inputs changed; rerun without ResumeNative'}
@@ -98,14 +110,19 @@ try {
    if($LASTEXITCODE -ne 0){throw 'Native preparation state update failed'}
   }
   if($plan.installRequired){
+   Start-AndroidBuildStage $timingState 'dependencyInstallation'
    & node $prepare install-start
    if($LASTEXITCODE -ne 0){throw 'Installation state update failed'}
+   $timingState.active.log='npm-ci.log'
    & npm ci > npm-ci.log 2>&1
+   $timingState.active.exitCode=$LASTEXITCODE
+   Copy-Item -LiteralPath (Join-Path $resolved 'npm-ci.log') -Destination (Join-Path $record 'npm-ci.log')
    if($LASTEXITCODE -ne 0){throw 'Dependency installation failed; inspect npm-ci.log'}
    & node $prepare installed
    if($LASTEXITCODE -ne 0){throw 'Dependency state recording failed'}
-  }
+  }else{Skip-AndroidBuildStage $timingState 'dependencyInstallation'}
   if($plan.nativeRequired -or $plan.installRequired){
+   Start-AndroidBuildStage $timingState 'nativeGeneration'
    $archive=$null
    $native=Join-Path $resolved 'android'
    if(Test-Path -LiteralPath $native){
@@ -117,7 +134,10 @@ try {
     if([IO.Path]::GetFullPath($native) -ne (Join-Path $shortRoot 'android') -or (Split-Path ([IO.Path]::GetFullPath($archive)) -Parent) -ne $archiveRoot){throw 'Unexpected native archive path'}
     Move-Item -LiteralPath $native -Destination $archive
    }
+   $timingState.active.log='prebuild.log'
    & npx --no-install expo prebuild --platform android --no-clean --no-install > prebuild.log 2>&1
+   $timingState.active.exitCode=$LASTEXITCODE
+   Copy-Item -LiteralPath (Join-Path $resolved 'prebuild.log') -Destination (Join-Path $record 'prebuild.log')
    if($LASTEXITCODE -ne 0){throw 'Prebuild failed; previous native output is archived, not resumed'}
    # Reuse only generated app build caches at the same fixed absolute path.
    # Never restore app/src, manifests or Gradle configuration from the archive.
@@ -133,7 +153,8 @@ try {
      }
     }
    }
-  }
+  }else{Skip-AndroidBuildStage $timingState 'nativeGeneration'}
+  Start-AndroidBuildStage $timingState 'nativeConfiguration'
   $gradle=Get-Content android/app/build.gradle -Raw
   $pattern='(?s)(release\s*\{.*?signingConfig\s*(?:=\s*)?)signingConfigs\.(?:debug|localVerified)'
   if([regex]::Matches($gradle,$pattern).Count -ne 1){throw 'Unexpected release signing template'}
@@ -183,6 +204,8 @@ android {
   & node $prepare native-ready
   if($LASTEXITCODE -ne 0){throw 'Native state recording failed'}
   Copy-Item -LiteralPath (Join-Path $resolved 'source-inputs.json') -Destination $record
+  Start-AndroidBuildStage $timingState 'resourceRecheck'
+  Assert-AndroidBuildResources -TimingState $timingState
   $started=Get-Date
   $tasks=if($IncludeBundle){@(':app:bundleRelease')}else{@(':app:assembleRelease')}
   $daemonArgument=if($ReuseDaemon){'--daemon'}else{'--no-daemon'}
@@ -192,14 +215,18 @@ android {
   # Record the selected settings before execution, including failed compatibility trials.
   @{ configurationCache=[bool]$ConfigurationCache; reuseDaemon=[bool]$ReuseDaemon; gradleWorkers=$GradleWorkers; appCmakeCompilePool=1; appCmakeLinkPool=1; measureBuild=[bool]$MeasureBuild; arguments=$gradleArguments } | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath (Join-Path $record 'build-options.json')
   if($MeasureBuild){$gradleArguments+=@('--profile','--info')}
+  Start-AndroidBuildStage $timingState 'compilation'
   & ./android/gradlew.bat @gradleArguments > gradle-release.log 2>&1
   $buildExit=$LASTEXITCODE
+  $timingState.active.exitCode=$buildExit
+  Stop-AndroidBuildStage $timingState $(if($buildExit -eq 0){'completed'}else{'failed'})
   Copy-Item -LiteralPath (Join-Path $resolved 'gradle-release.log') -Destination $record
   if($MeasureBuild){
    $profileDirectory=Join-Path $resolved 'android/build/reports/profile'
    if(Test-Path -LiteralPath $profileDirectory){Copy-Item -LiteralPath $profileDirectory -Destination (Join-Path $record 'gradle-profile') -Recurse}
   }
   if($buildExit -ne 0){throw 'Gradle build failed; inspect gradle-release.log'}
+  Start-AndroidBuildStage $timingState 'postBuildChecks'
   if(Select-String -LiteralPath 'gradle-release.log' -SimpleMatch 'An error occurred when parsing kotlin metadata' -Quiet){throw 'R8 Kotlin metadata compatibility failure'}
   $expectedR8=(& node -p "require('./plugins/withAndroidRelease').R8_VERSION").Trim()
   if($LASTEXITCODE -ne 0 -or $expectedR8 -notmatch '^\d+\.\d+\.\d+$'){throw 'Expected R8 version is invalid'}
@@ -215,6 +242,7 @@ android {
   if($IncludeBundle){
    $aab=Join-Path $resolved 'android/app/build/outputs/bundle/release/app-release.aab'
    if(-not (Test-Path -LiteralPath $aab)){throw 'Gradle succeeded but AAB is missing'}
+   Start-AndroidBuildStage $timingState 'aabExport'
    $deliveryAab = & (Join-Path $PSScriptRoot 'new-aab-delivery-path.ps1') -Aab $aab -AppName 'LedPop' -OutputDirectory $record
    Copy-Item -LiteralPath $aab -Destination $deliveryAab -ErrorAction Stop
    # Stamp final export time without changing signed archive bytes.
@@ -226,6 +254,7 @@ android {
    $aabHash=(Get-FileHash -LiteralPath $aab -Algorithm SHA256).Hash
    if($aabHash -ne (Get-FileHash -LiteralPath $deliveryAab -Algorithm SHA256).Hash){throw 'AAB delivery hash mismatch'}
    Write-Output ('AAB: '+$deliveryAab)
+   Start-AndroidBuildStage $timingState 'aabMappingVerification'
    Add-Type -AssemblyName System.IO.Compression.FileSystem
    $zip=[IO.Compression.ZipFile]::OpenRead($aab)
    try {
@@ -236,11 +265,13 @@ android {
     if($embeddedHash -ne $mappingHash){throw 'AAB mapping differs from same-build mapping'}
    } finally {$zip.Dispose()}
    $apk=Join-Path $resolved 'android/app/build/outputs/bundle/release/app-release-universal.apk'
+   Start-AndroidBuildStage $timingState 'apkConversion'
    & (Join-Path $PSScriptRoot 'new-universal-apk-from-aab.ps1') -Aab $aab -OutputApk $apk -BundletoolJar $BundletoolJar -Keystore $key.keystorePath -KeyAlias $key.keyAlias -LogPath (Join-Path $record 'bundletool-build-apks.log') -MaxThreads 2
    $apkSource='bundletool-universal'
   }else{
    $apk=Join-Path $resolved 'android/app/build/outputs/apk/release/app-release.apk'
   }
+  Start-AndroidBuildStage $timingState 'apkExport'
   if(-not (Test-Path -LiteralPath $apk)){throw 'Release APK is missing'}
   $apkHash=(Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash
   $deliveryApk = & (Join-Path $PSScriptRoot 'new-apk-delivery-path.ps1') -Apk $apk -AppName 'LedPop' -OutputDirectory $record
@@ -255,11 +286,14 @@ android {
   Write-Output ('APK: '+$deliveryApk)
   @{ apk=$deliveryApk; apkSource=$apkSource; aab=$deliveryAab; adProfile=$AdProfile; aabSha256=$aabHash; bundletoolVersion=$bundletoolVersion; gradleTasks=$tasks; mappingSha256=$mappingHash; elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=$apkHash; revision=$plan.revision; dirty=$plan.dirty; versionName=$buildVersionName; versionCode=$plan.versionCode; apkExportedAtUtc=$apkExportedAtUtc; aabExportedAtUtc=$aabExportedAtUtc; measureBuild=[bool]$MeasureBuild; configurationCache=[bool]$ConfigurationCache; reuseDaemon=[bool]$ReuseDaemon; gradleWorkers=$GradleWorkers } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
   if($IncludeBundle){
+   Start-AndroidBuildStage $timingState 'artifactVerification'
    # One verification entrypoint; it never invokes Gradle or repeats APK packaging.
    & $PythonExecutable $verificationScript --record $record --build-root $resolved --bundletool $BundletoolJar --sdk $env:ANDROID_HOME --java-home $env:JAVA_HOME --r8 $expectedR8
+   $timingState.active.exitCode=$LASTEXITCODE
    if($LASTEXITCODE -ne 0){throw 'Store artifact verification failed; inspect release-verification record'}
    Write-Output ('Store static checks completed; review warnings and runtime/Play status separately. Record: '+$record)
   }else{
+   Skip-AndroidBuildStage $timingState 'artifactVerification'
    Write-Output ('Gradle '+($tasks -join ', ')+' completed; independent artifact verification still required. Record: '+$record)
   }
  } finally { Pop-Location }
@@ -267,4 +301,12 @@ android {
  $env:LEDPOP_AD_PROFILE=$previousAdProfile
  if($null -ne $buildLock){$buildLock.Dispose()}
  foreach($name in @('LEDPOP_STORE_PASSWORD','LEDPOP_KEY_PASSWORD','LEDPOP_KEY_ALIAS','LEDPOP_KEYSTORE')){Remove-Item "Env:$name" -ErrorAction SilentlyContinue}
+}
+
+ $timingStatus='completed'
+} finally {
+ $timingReport=Get-AndroidBuildTimingReport $timingState $timingStatus
+ if($record -and (Test-Path -LiteralPath $record)){
+  $timingReport | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $record 'stage-timings.json')
+ }
 }

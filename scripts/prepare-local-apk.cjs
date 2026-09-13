@@ -8,7 +8,8 @@ const target = path.join(root, 'artifacts', 'b');
 const statePath = path.join(target, '.source-state.json');
 const planPath = path.join(target, '.source-plan.json');
 const phase = process.argv[2];
-const nativeHashSchema = 2;
+const dependencyHashSchema = 1;
+const nativeHashSchema = 3;
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 const git = args => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -34,13 +35,19 @@ if (phase !== 'prepare') {
   if (!['install-start', 'native-start', 'installed', 'native-ready'].includes(phase)) throw Error('Unknown preparation phase');
   const state = readJson(statePath);
   const plan = readJson(planPath);
-  if (phase === 'install-start') state.dependencyHash = null;
+  if (phase === 'install-start') {
+    state.dependencyHash = null;
+    state.dependencyHashSchema = null;
+  }
   else if (phase === 'native-start') {
     state.nativeHash = null;
     state.nativeHashSchema = null;
     state.adProfile = null;
   }
-  else if (phase === 'installed') state.dependencyHash = plan.dependencyHash;
+  else if (phase === 'installed') {
+    state.dependencyHash = plan.dependencyHash;
+    state.dependencyHashSchema = plan.dependencyHashSchema;
+  }
   else {
     state.nativeHash = plan.nativeHash;
     state.nativeHashSchema = plan.nativeHashSchema;
@@ -109,7 +116,16 @@ dependencyNames.push(...previousFiles.filter(n => n.startsWith('patches/')));
 const nativeNames = [...new Set(['app.json', 'advertising.config.json', ...dependencyNames, ...files.filter(nativeFile), ...previousFiles.filter(nativeFile)])].sort();
 // Config/plugin changes conservatively invalidate native output. Dynamic config may read any asset.
 if (files.some(n => n.startsWith('app.config.'))) nativeNames.push(...files.filter(n => n.startsWith('assets/')));
-function digest(names, fromSource, normalizeNativeConfig = false) {
+// Normalize only CRLF in known UTF-8 build-input text. Keep patches, binary assets,
+// copied source bytes and source-inventory hashes exact.
+function fingerprintContent(name, content) {
+  if (name.startsWith('patches/') ||
+      !(name === '.npmrc' || /\.(?:json|[cm]?js|jsx|tsx?|kt|java|gradle|xml|properties|swift|podspec)$/.test(name))) return content;
+  const text = content.toString('utf8');
+  if (!Buffer.from(text, 'utf8').equals(content)) return content;
+  return Buffer.from(text.replace(/\r\n/g, '\n'), 'utf8');
+}
+function digest(names, fromSource, normalizeNativeConfig = false, normalizeLineEndings = true) {
   return hash(JSON.stringify([...new Set(names)].sort().map(name => {
     const file = safePath(target, name);
     let content = fromSource ? contents.get(name) : fs.existsSync(file) ? fs.readFileSync(file) : undefined;
@@ -117,6 +133,7 @@ function digest(names, fromSource, normalizeNativeConfig = false) {
       const parsed = JSON.parse(content.toString());
       content = Buffer.from(JSON.stringify(normalizeNativeConfig ? androidNativeAppConfig(parsed) : parsed));
     }
+    if (content && normalizeLineEndings) content = fingerprintContent(name, content);
     return [name, content ? hash(content) : null];
   })));
 }
@@ -139,15 +156,27 @@ const toolchainHash = hash(JSON.stringify([
 ]));
 const adProfile = process.env.LEDPOP_AD_PROFILE ?? 'production';
 const nativeHash = hash(digest(nativeNames, true, true) + environmentHash + toolchainHash + adProfile);
-const previousDependencyHash = state?.dependencyHash ?? (bootstrap ? digest(dependencyNames, false) : null);
+let previousDependencyHash = null;
+if (state?.dependencyHashSchema === dependencyHashSchema && state?.dependencyHash) {
+  previousDependencyHash = state.dependencyHash;
+} else if (state?.dependencyHash && state.dependencyHashSchema == null &&
+           digest(dependencyNames, false, false, false) === state.dependencyHash) {
+  // Prove the preserved bytes match the successful legacy stamp before migration.
+  previousDependencyHash = digest(dependencyNames, false);
+} else if (!state && bootstrap) {
+  previousDependencyHash = digest(dependencyNames, false);
+}
 const previousPlan = fs.existsSync(planPath) ? readJson(planPath) : null;
 const recordedProfile = state?.adProfile ??
   (state?.nativeHash && previousPlan?.nativeHash === state.nativeHash ? previousPlan.adProfile : null);
 let previousNativeHash = null;
 if (state?.nativeHashSchema === nativeHashSchema && state?.nativeHash) {
   previousNativeHash = state.nativeHash;
-} else if (state?.nativeHash && recordedProfile === adProfile && fs.existsSync(path.join(target, 'android', 'app', 'build.gradle'))) {
-  // Migrate an old successful stamp by hashing the actual preserved Android inputs.
+} else if (state?.nativeHashSchema === 2 && state.nativeHash && recordedProfile === adProfile &&
+           fs.existsSync(path.join(target, 'android', 'app', 'build.gradle')) &&
+           hash(digest(nativeNames, false, true, false) + environmentHash + toolchainHash + adProfile) === state.nativeHash) {
+  // Migrate only a proven legacy snapshot, including the current environment/toolchain.
+  // A failed phase, mismatched snapshot or unknown schema must require preparation.
   previousNativeHash = hash(digest(nativeNames, false, true) + environmentHash + toolchainHash + adProfile);
 }
 const plan = {
@@ -155,13 +184,13 @@ const plan = {
   revision: sourceRevision ?? git(['rev-parse', 'HEAD']).trim(),
   dirty: sourceRevision ? sourceOverrides.length > 0 : git(['status', '--porcelain', '-z']).length > 0,
   sourceOverrides,
-  versionCode, dependencyHash, nativeHash, nativeHashSchema,
+  versionCode, dependencyHash, dependencyHashSchema, nativeHash, nativeHashSchema,
   installRequired: dependencyHash !== previousDependencyHash || !fs.existsSync(path.join(target, 'node_modules', '.package-lock.json')),
   nativeRequired: nativeHash !== previousNativeHash || !fs.existsSync(path.join(target, 'android', 'app', 'build.gradle')),
   changed: [], removed: [],
 };
 // Persist an inventory BEFORE mutation, retaining successful dependency/native stamps on failure.
-fs.writeFileSync(statePath, JSON.stringify({ files: [...new Set([...previousFiles, ...files])], dependencyHash: previousDependencyHash, nativeHash: previousNativeHash, nativeHashSchema: previousNativeHash ? nativeHashSchema : null, adProfile: previousNativeHash ? adProfile : null }, null, 2));
+fs.writeFileSync(statePath, JSON.stringify({ files: [...new Set([...previousFiles, ...files])], dependencyHash: previousDependencyHash, dependencyHashSchema: previousDependencyHash ? dependencyHashSchema : null, nativeHash: previousNativeHash, nativeHashSchema: previousNativeHash ? nativeHashSchema : null, adProfile: previousNativeHash ? adProfile : null }, null, 2));
 for (const name of files) {
   const dest = safePath(target, name);
   const content = contents.get(name);
@@ -175,7 +204,7 @@ for (const name of previousFiles) {
   const dest = safePath(target, name);
   if (fs.existsSync(dest)) { fs.unlinkSync(dest); plan.removed.push(name); }
 }
-fs.writeFileSync(statePath, JSON.stringify({ files, dependencyHash: previousDependencyHash, nativeHash: previousNativeHash, nativeHashSchema: previousNativeHash ? nativeHashSchema : null, adProfile: previousNativeHash ? adProfile : null }, null, 2));
+fs.writeFileSync(statePath, JSON.stringify({ files, dependencyHash: previousDependencyHash, dependencyHashSchema: previousDependencyHash ? dependencyHashSchema : null, nativeHash: previousNativeHash, nativeHashSchema: previousNativeHash ? nativeHashSchema : null, adProfile: previousNativeHash ? adProfile : null }, null, 2));
 fs.writeFileSync(planPath, JSON.stringify(plan, null, 2));
 fs.writeFileSync(path.join(target, 'source-revision.txt'), plan.revision + '\n');
 fs.writeFileSync(path.join(target, 'source-inputs.json'), JSON.stringify({ sourceOverrides: plan.sourceOverrides, adProfile: plan.adProfile, revision: plan.revision, dirty: plan.dirty, versionCode, files: Object.fromEntries([...contents].map(([n, b]) => [n, hash(b)])) }, null, 2));
