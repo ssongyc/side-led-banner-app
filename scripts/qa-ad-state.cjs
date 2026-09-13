@@ -73,9 +73,9 @@ test('rewarded: startup deduplicates and terminal failure needs manual retry wit
  for(let i=0;i<3;i++){h.ads[i].emit('error');h.ads[i].emit('error');if(i<2){const delay=i===0?6000:12000;h.advance(delay-1);assert.equal(h.ads.length,i+1);h.advance(1);assert.equal(h.ads.length,i+2);}}
  assert.equal(a.getAdSnapshot().failed,true);assert.equal(a.getAdSnapshot().canRetry,true);a.loadRewardedAd();h.advance(999999);await flush();assert.equal(h.ads.length,3);a.retryRewarded();await flush();assert.equal(h.ads.length,4);h.ads[3].emit('loaded');assert.equal(a.isRewardedReady(),true);assert.equal(h.shows(),0);
 });
-test('rewarded: exactly one show, next preload, and one reward after opened/earned/closed',async()=>{
+test('rewarded: exactly one show, next preload, and immediate one-time earned reward',async()=>{
  const h=rewarded(),a=h.api;a.loadRewardedAd();await flush();h.ads[0].emit('loaded');a.showRewarded();a.showRewarded();await flush();assert.equal(h.shows(),1);
- h.ads[0].emit('opened');h.ads[0].emit('opened');assert.equal(h.ads.length,2);h.ads[1].emit('loaded');h.ads[0].emit('earned');assert.equal(h.rewards(),0);h.ads[0].emit('closed');h.ads[0].emit('closed');assert.equal(h.rewards(),1);assert.equal(a.isRewardedReady(),true);assert.equal(h.shows(),1);
+ h.ads[0].emit('opened');h.ads[0].emit('opened');assert.equal(h.ads.length,2);h.ads[1].emit('loaded');h.ads[0].emit('earned');h.ads[0].emit('earned');assert.equal(h.rewards(),1);h.ads[0].emit('closed');h.ads[0].emit('closed');assert.equal(h.rewards(),1);assert.equal(a.isRewardedReady(),true);assert.equal(h.shows(),1);
 });
 test('rewarded: early close grants no reward and loading alone never presents',async()=>{
  const h=rewarded(),a=h.api;a.loadRewardedAd();await flush();h.ads[0].emit('loaded');assert.equal(h.shows(),0);a.showRewarded();await flush();h.ads[0].emit('opened');h.ads[0].emit('closed');assert.equal(h.rewards(),0);

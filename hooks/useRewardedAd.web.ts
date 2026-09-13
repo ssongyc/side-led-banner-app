@@ -14,18 +14,13 @@ export function useRewardedAd(onRewardEarned: () => void) {
   const client = useRef<ReturnType<typeof createRewardedAd> | null>(null);
   useEffect(() => {
     if (!WEB_AD_DIAGNOSTICS) return;
-    let opened = false;
-    let earned = false;
     let granted = false;
     const ad = createRewardedAd(event => {
-      if (event === "LOADED") { opened = false; earned = false; granted = false; }
-      if (event === "OPENED") opened = true;
-      if (event === "EARNED" && opened) earned = true;
-      if (event === "CLOSED" && opened && earned && !granted && AppState.currentState === "active") {
+      if (event === "LOADED") granted = false;
+      if (event === "EARNED" && !granted) {
         granted = true;
         reward.current();
       }
-      if (event === "ERROR") { opened = false; earned = false; }
     });
     client.current = ad;
     const subscription = AppState.addEventListener("change", next => {

@@ -148,13 +148,13 @@ function createRewardedAd(slotName: SlotName): RewardedAdHandle {
     ad.addAdEventListener(rewardedAdEvents.earnedReward, () => {
       const activeSlotName = resolveSlotName(ad);
       if (activeSlotName !== "current" || slots.current.state !== "showing") return;
-      if (!openedCurrentAd) {
-        trace(activeSlotName, "reward_ignored_before_opened");
-        return;
-      }
       if (earnedRewardCurrentAd) return;
       earnedRewardCurrentAd = true;
       trace(activeSlotName, "earned_reward");
+      if (!rewardGrantedCurrentAd) {
+        rewardGrantedCurrentAd = true;
+        notifyRewardEarned();
+      }
     }),
     ad.addAdEventListener(rewardedAdEvents.closed, () => {
       const activeSlotName = resolveSlotName(ad);
@@ -162,14 +162,6 @@ function createRewardedAd(slotName: SlotName): RewardedAdHandle {
       clearOpenWatchdog();
       endImmersiveAd();
       trace(activeSlotName, "closed");
-      if (
-        openedCurrentAd &&
-        earnedRewardCurrentAd &&
-        !rewardGrantedCurrentAd
-      ) {
-        rewardGrantedCurrentAd = true;
-        notifyRewardEarned();
-      }
       promoteNextSlotToCurrent();
       notifySubscribers();
     }),

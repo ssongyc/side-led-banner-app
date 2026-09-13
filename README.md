@@ -111,7 +111,7 @@ Upgrade to Pro 설정 항목과 `/premium` 라우트는 제외했습니다. 구�
 - 재생 실패는 즉시 처리하고 실패한 광고와 대기 광고를 폐기합니다. 수동 재시도는 새 최대 3회 로드만 수행합니다. 새로 활성화된 Watch Ad를 눌러야 모달 제거 후 다음 프레임에 한 번 표시를 요청합니다.
 - 영어 준비 버튼은 `Preparing Ad...`입니다. 상태·버튼 문구는 지원 언어 7개로 제공하며, 가장 긴 문구의 공간을 최초 레이아웃부터 예약합니다. 작은 화면에서는 닫기·이미지·본문·안내·다시 시도·Watch Ad를 포함한 전체 콘텐츠를 하나의 세로 영역으로 스크롤하도록 구현했습니다. 모든 언어·화면 크기에서의 제스처와 레이아웃 검증은 미실행입니다.
 - 준비·실패 안내에 토스트·스낵바·추가 팝업을 사용하지 않습니다. 재생 실패 시 기존 리워드 모달에 안내합니다.
-- 동일한 광고의 OPENED·EARNED_REWARD·CLOSED 조건을 충족한 경우에만 2시간 Pro를 한 번 부여합니다. 실패 경로에서 보상을 지급하지 않습니다.
+- 현재 광고의 EARNED_REWARD를 받으면 2시간 Pro를 즉시 한 번만 부여합니다. CLOSED는 광고 정리와 다음 슬롯 승격에만 사용하며, 실패 경로에서 보상을 지급하지 않습니다.
 - 네이티브 배너는 최초 요청과 실패 후 6초·12초 재시도를 사용합니다. 3회 실패 안내를 10초 표시한 뒤 60초 더 기다려 동일한 주기를 한 번만 추가합니다. 추가 주기도 실패하면 안내를 10초 표시하고 중단합니다. 일반 웹의 광고 미지원 안내는 계속 표시합니다. 배너 횟수·추가 주기 사용 여부·대기 마감 시간은 ads/bannerState.ts에 유지해 재마운트로 초기화되지 않습니다. 화면 밖에서는 요청하지 않고 재진입 시 남은 대기를 이어갑니다. 마지막 실패 이후에는 프로세스 재시작 전까지 자동 주기를 재개하지 않습니다. 확인된 성공 후 새 배너 진입은 새 로드를 허용합니다. 진행 중 폐기된 요청도 횟수에 포함하며, 세 번째 요청이 응답 없이 폐기되면 실패를 꾸며내거나 추가 주기를 예약하지 않고 중단합니다. 이번 수정의 실행 검증은 미실행입니다. 리워드의 공유 실패 상태와는 별도입니다. 자세한 범위는 [광고 문서](docs/ADVERTISING.md)를 참조하세요.
 - 영구 구매자는 광고를 요청하지 않습니다. 구매 여부 확인 전 또는 확인 실패를 무료 사용자로 바꿔 광고를 요청하지 않습니다.
 - Android 광고에는 immersive 옵션을 적용합니다. 현재 버전의 진입·재생·종료·복귀 전 구간에서 내비게이션 바가 한 프레임도 노출되지 않는지는 실기기 미검증입니다. 과거 Google Play 외부 설치 화면의 노출 제한은 이전 기록에 남아 있습니다.
@@ -471,3 +471,12 @@ Expo 앱 버전을 1.1.0, Android versionCode를 28로 변경했습니다. Setti
 - Subway 비교에서 의존성 제거, 원격 번역의 고정 데이터 대체, 일반 UI 글자의 일괄 배율 변경은 기능·표시 영향 때문에 적용하지 않았습니다. 기존 Sunny 다국어 문구의 별도 미커밋 변경은 이번 전달에서 제외합니다.
 
 이번 변경은 소스와 문서에만 반영합니다. 빌드·린트·테스트는 실행하지 않았으며 iPhone/iPad/Android 제스처·오류 복구와 실제 광고·Amplitude 수신은 미검증입니다. 기존 출시 파일은 이번 소스를 포함하지 않습니다.
+
+## Android release maintenance (2026-09-14)
+
+- Updated source dependencies/toolchain: expo=~57.0.22; react-native=0.86.3; react-native-google-mobile-ads=^16.5.0; @amplitude/analytics-react-native=^1.8.0. These recorded versions are source settings, not a claim of current latest versions or verified release compatibility.
+- Rewarded-ad changes separate earned reward delivery from ad dismissal; current-instance earned callbacks grant once, while dismissal handles cleanup or native-picker presentation. Runtime behavior remains unverified.
+- For the next authorized APK/AAB build, use the existing signing/release entrypoint. Preserve build/dependency caches; avoid routine clean, reinstall or native regeneration. Resolve dependencies once when necessary and share APK/AAB build work only where the framework and current wrapper support it.
+- Enable Gradle build caching on the actual host; the Windows workstation default is configured in the user's Gradle properties. Remote EAS/CI does not inherit that setting. Configuration cache and worker/daemon overrides require project-specific compatibility evidence.
+- Preserve signing identity, exact same-build R8 mapping and applicable symbols, artifact SDK/version/ad-profile checks, hashes, delivery filename and export timestamp. Record build-phase durations in the next authorized build; no measured speedup is claimed.
+- Delivery workflow: update affected existing documents once, stage only task-owned changes, commit to main and verify origin/main. This update did not run builds, lint, tests or Play uploads. Existing published binaries are unchanged.
