@@ -9,9 +9,9 @@
 
 ## 현재 문서의 기준
 
-이 문서는 현재 작업 트리와 과거 산출물 기록을 구분합니다. 최신 APK는 2026-09-10 main 06f8847이며 아래 후속 변경을 포함합니다. 최신 AAB는 2026-09-09 빌드입니다. 같은 1.0.6 (24)라도 소스와 해시가 다릅니다. [최신 APK 빌드 증빙](artifacts/apk-runs/20260910-170358-6aecc7ad/BUILD.md), [실기기 QA 보고서](docs/QA_20260910.md)를 참조하세요. QA 중 추가한 광고 만료 재확인 수정은 소스에만 있으며 새 컴파일·커밋·푸시는 실행하지 않았습니다. 아래 전달 시점의 미검증 문구는 역사적 기록입니다.
+현재 소스 버전은 **1.1.1 (Android versionCode 29)**이며 Settings는 **V1.1.1**을 표시합니다. 이 소스는 아직 빌드하지 않았습니다. 최근 로컬 검증 APK/AAB는 main `a4657ac`의 **1.1.0 (28)**이며 실행 기록은 `artifacts/apk-runs/20260914-103443-c2041774`입니다. 프로덕션 AdMob, 기존 서명, SDK 36, Billing 9.1.0, 4개 ABI, 16 KiB 정렬과 R8 매핑의 정적 검증을 통과했습니다. 실기기 실행·실제 광고 노출·Play 업로드와 매핑 등록은 수행하지 않았습니다. 아래 이전 버전 문단은 각 시점의 역사적 기록입니다.
 
-## 후속 소스 변경 이력 — 9월 9일 산출물 미포함, 9월 10일 APK 포함
+## 과거 소스 변경 이력 — 2026-09-09~10
 
 - 배너: 최초 요청·실패 후 6초·다시 실패 후 12초의 3회가 모두 실패하면 안내를 10초 표시합니다. 안내 종료 후 60초 뒤에 동일한 3회 주기를 딱 한 번 추가합니다. 추가 주기도 실패하면 안내를 10초 표시하고 중단합니다. 화면 해제 시 타이머를 취소하며 추가 주기는 배너 로드 실패에만 적용합니다. 현재 로드 재시도 간격은 배너·리워드·SDK 초기화 모두 6초·12초이며, 기존 24번 산출물의 3초·6초 간격과 구분합니다.
 - 보상 모달과 개발용 CSV 시트: 닫기·이미지·본문·안내·버튼·여백을 하나의 세로 스크롤 영역에 포함했습니다. Safe Area 안에서 확대하며 드래그 시 버튼 실행을 억제합니다. 상태별 긴 문구 예약과 기존 광고 표시 순서를 유지합니다.
@@ -20,7 +20,7 @@
 - 원격 main의 Skia.PathBuilder 변경 및 __DEV__ 조건의 Pro 토글을 함께 보존했습니다. 기존 24번 산출물의 디버그 코드 제외 검증은 그 산출물에만 적용됩니다.
 - 이번 전달에서는 컴파일·린트·테스트·실기기 검증·새 APK/AAB 생성·스토어 업로드를 실행하지 않았습니다. 별도 RootLayout 스플래시 수정은 로컬에 보존하고 커밋에서 제외합니다.
 
-## 이전 APK·최신 AAB — 1.0.6 (24), 2026-09-09
+## 과거 APK·AAB — 1.0.6 (24), 2026-09-09
 
 **compile-ok**: bd567b0 + 광고 모듈 버전 설정 수정. 실제 AdMob production 프로필과 기존 서명으로 빌드했습니다. 최종 재개 Gradle 13m 46s이며 앞선 네이티브 컴파일 시간은 별도입니다.
 
@@ -38,7 +38,7 @@
 
 ## 85a61d6 → edaf82b 변경 비교 (과거 기록)
 
-현재 package.json의 Expo 선언 범위는 **~57.0.20**이며, React Native **0.86.3**, React **19.2.3**, 앱 버전 **1.1.0**입니다. Settings의 App Version은 Expo 앱 설정을 읽어 **V1.1.0**로 표시합니다. 소스 버전·APK의 versionCode·스토어 배포 버전은 별개입니다.
+현재 package.json의 Expo 선언 범위는 **~57.0.22**이며, React Native **0.86.3**, React **19.2.3**, 앱 버전은 **1.1.1**입니다. Settings의 App Version은 Expo 앱 설정을 읽어 **V1.1.1**로 표시합니다. 소스 버전·APK의 versionCode·스토어 배포 버전은 별개입니다.
 
 | 항목 | edaf82b 생성 전 소스 당시 상태 | 85a61d6 APK |
 | --- | --- | --- |
@@ -92,7 +92,7 @@ Upgrade to Pro 설정 항목과 `/premium` 라우트는 제외했습니다. 구�
 
 ## 광고 동작 — 현재 소스
 
-2026-09-09 후속 소스: 큰 적응형 배너·SDK 초기화 3회 재시도·자동 갱신 뷰 유지·test/production 분리·명시적 웹 진단 모드·Android Activity 몰입형 처리를 추가했습니다. [광고 구현 및 검증 제한](docs/ADVERTISING.md)을 참고하세요. Android 1.0.6 (24) APK/AAB 생성·로컬 산출물 검증을 완료했습니다. 실기기 광고 노출·배치는 미검증이며 위 릴리스 보고서를 참고하세요.
+현재 광고 구현은 큰 적응형 배너, SDK 초기화의 제한된 재시도, test/production 분리, 명시적 웹 진단 모드와 Android Activity 몰입형 처리를 포함합니다. [광고 구현 및 검증 제한](docs/ADVERTISING.md)을 참고하세요. 최근 1.1.0 (28) APK/AAB에서 프로덕션 광고 설정의 정적 포함을 확인했으며, 실기기 광고 노출·배치는 미검증입니다.
 
 
 리워드 상태는 슬롯별 `idle/loading/loaded/showing/failed`와 실패 원인 `load/show/initialization/configuration`에서 하나의 UI 스냅샷으로 계산합니다. 중복 전역 실패 플래그는 사용하지 않습니다.
@@ -107,7 +107,7 @@ Upgrade to Pro 설정 항목과 `/premium` 라우트는 제외했습니다. 구�
 | 재생 실패 | 비활성, 광고 준비 중… | 광고를 재생하지 못했어요. 다시 시도해 주세요. |
 
 - 로드: 최초 요청 → 실패 후 6초 뒤 두 번째 → 실패 후 12초 뒤 세 번째. 각 요청의 응답 시간은 별도입니다.
-- 최종 로드 실패와 재생 실패에는 수동 `다시 시도`를 제공합니다. 설정 재진입·모달 재오픈은 최종 실패 상태를 초기화하지 않습니다. 이 상태는 메모리에서 관리하므로 앱 프로세스 재시작 시 새 세션으로 시작합니다.
+- 최종 로드 실패와 재생 실패에는 수동 `다시 시도`를 제공합니다. Settings 화면을 실제로 나갔다가 다시 진입하면 최종 로드 실패 주기를 새로 시작할 수 있으며, 같은 화면에서 모달만 다시 여는 동작은 초기화하지 않습니다. 이 상태는 메모리에서 관리하므로 앱 프로세스 재시작 시 새 세션으로 시작합니다.
 - 재생 실패는 즉시 처리하고 실패한 광고와 대기 광고를 폐기합니다. 수동 재시도는 새 최대 3회 로드만 수행합니다. 새로 활성화된 Watch Ad를 눌러야 모달 제거 후 다음 프레임에 한 번 표시를 요청합니다.
 - 영어 준비 버튼은 `Preparing Ad...`입니다. 상태·버튼 문구는 지원 언어 7개로 제공하며, 가장 긴 문구의 공간을 최초 레이아웃부터 예약합니다. 작은 화면에서는 닫기·이미지·본문·안내·다시 시도·Watch Ad를 포함한 전체 콘텐츠를 하나의 세로 영역으로 스크롤하도록 구현했습니다. 모든 언어·화면 크기에서의 제스처와 레이아웃 검증은 미실행입니다.
 - 준비·실패 안내에 토스트·스낵바·추가 팝업을 사용하지 않습니다. 재생 실패 시 기존 리워드 모달에 안내합니다.
@@ -186,8 +186,6 @@ npm start
 AdMob 등 네이티브 모듈이 있어 Expo Go만으로 전체 기능을 검증할 수 없습니다. 해당 모듈이 포함된 개발 빌드를 사용합니다. 웹 미리보기 역시 실기기 광고·노치·시스템 UI 검증을 대신하지 않습니다.
 
 실제 앱 진입점은 `package.json`의 `expo-router/entry`와 `app/_layout.tsx`입니다. 루트 `index.js`는 사용하지 않습니다. `development` APK는 Metro에서 개발 코드를 받으며 `preview` APK와 `production` AAB는 코드를 내장합니다. EAS 환경 변수는 로컬 Metro에 자동 전달되지 않으므로 로컬 환경 설정도 필요합니다.
-
-`npm run reset-project`는 초기 템플릿 재설정용입니다. 앱 소스 디렉터리를 이동/삭제할 수 있으므로 실행 오류 해결이나 일반 개발 준비에 사용하지 않습니다.
 
 ## 프로젝트 구조
 
@@ -304,8 +302,7 @@ side-led-banner-app/
 │   ├── SIGNING_POLICY.md          # 서명·증분 APK 절차
 │   └── BUILD_HISTORY.md           # 이전 변경·빌드 기록
 ├── scripts/
-│   ├── build-local-apk.ps1        # 기존 서명 검증 후 Gradle 빌드
-│   └── reset-project.js           # 초기 템플릿 재설정용, 일반 작업에 사용 금지
+│   └── build-local-apk.ps1        # 기존 서명 검증 후 Gradle 빌드
 ├── app.json                       # Expo 앱 설정
 ├── eas.json                       # EAS 빌드/배포 설정
 ├── package-lock.json
@@ -320,18 +317,18 @@ side-led-banner-app/
 
 | 라이브러리                                                                                      | 버전     | 용도                            |
 | ----------------------------------------------------------------------------------------------- | -------- | ------------------------------- |
-| [Expo](https://expo.dev/)                                                                       | ~57.0.20 | React Native 개발 프레임워크    |
-| [expo-router](https://docs.expo.dev/router/introduction/)                                       | ~57.0.19 | 파일 기반 라우팅                |
+| [Expo](https://expo.dev/)                                                                       | ~57.0.22 | React Native 개발 프레임워크    |
+| [expo-router](https://docs.expo.dev/router/introduction/)                                       | ~57.0.21 | 파일 기반 라우팅                |
 | [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/)                  | 4.5.1    | 마키 스크롤 애니메이션          |
 | [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/)        | ~2.32.0  | 터치/제스처 처리                |
 | [expo-screen-orientation](https://docs.expo.dev/versions/latest/sdk/screen-orientation/)        | ~57.0.2 | 전체화면 시 가로/세로 전환 제어 |
-| [expo-linear-gradient](https://docs.expo.dev/versions/latest/sdk/linear-gradient/)              | ~57.0.1 | 프리셋 버튼 그라디언트          |
+| [expo-linear-gradient](https://docs.expo.dev/versions/latest/sdk/linear-gradient/)              | ~57.0.2 | 프리셋 버튼 그라디언트          |
 | [@miblanchard/react-native-slider](https://github.com/miblanchard/react-native-slider)          | ^2.6.0   | 속도/크기/블러 등 슬라이더 UI   |
 | [react-native-element-dropdown](https://github.com/hoaphantn7604/react-native-element-dropdown) | ^2.12.4  | 폰트 선택 드롭다운              |
 | [react-native-svg](https://github.com/software-mansion/react-native-svg)                        | 15.15.4  | SVG 아이콘 (재생/정지 버튼 등)  |
 | [react-native-safe-area-context](https://github.com/th3rdwave/react-native-safe-area-context)   | ~5.7.0   | 노치/Safe Area 대응             |
 | [@react-navigation/native](https://reactnavigation.org/)                                        | ^7.1.8   | 기존 의존성 (테마는 expo-router)          |
-| [react-native-google-mobile-ads](https://docs.page/invertase/react-native-google-mobile-ads)    | 16.5.0  | AdMob 배너/리워드 광고          |
+| [react-native-google-mobile-ads](https://docs.page/invertase/react-native-google-mobile-ads)    | ^16.5.0 | AdMob 배너/리워드 광고          |
 | [@amplitude/analytics-react-native](https://amplitude.com/docs/sdks/analytics/react-native/react-native-sdk) | ^1.8.0 | 사용 이벤트 분석 |
 
 ## Android 빌드 프로필
@@ -339,7 +336,7 @@ side-led-banner-app/
 - `eas.json`은 원격 버전 번호를 사용합니다 (`appVersionSource: remote`).
 - Android `preview`는 내부 배포 APK용이며 현재 자동 번호 증가가 없습니다. 같은 versionCode로도 소스가 다른 APK가 생성될 수 있으므로 커밋과 Build ID를 함께 기록합니다.
 - Android `production`은 스토어 AAB용이며 `autoIncrement: true`입니다. 실제 versionCode는 완료된 빌드에서 확인합니다.
-- V1.0.6 소스 변경 자체가 원격 versionCode 증가나 스토어 제출을 뜻하지 않습니다.
+- V1.1.1 소스 변경 자체가 원격 versionCode 증가나 스토어 제출을 뜻하지 않습니다.
 
 
 
@@ -351,7 +348,7 @@ side-led-banner-app/
 
 ## 스토어 버전과 제출 상태
 
-사용자가 알려준 스토어 표시 버전은 당시 1.0.5였으며, Play 최대 versionCode는 확인하지 못했습니다. 1.0.6 (23)과 (24)의 APK/AAB는 생성 완료됐고 각각의 릴리스 보고서에 검증 결과가 있습니다. 파일 생성은 업로드·심사 제출·승인을 의미하지 않습니다. 향후 제출 시 실제 스토어 버전 코드와 동일 빌드 매핑 등록 여부를 별도로 확인해야 합니다.
+Play Console의 현재 출시 버전과 최대 versionCode는 확인하지 못했습니다. 로컬에서는 1.1.0 (28) APK/AAB까지 생성하고 정적 검증했으며, 현재 1.1.1 (29) 소스는 아직 빌드하지 않았습니다. 파일 생성은 업로드·심사 제출·승인을 의미하지 않습니다. 향후 제출 시 Play Console의 실제 최대 versionCode와 동일 빌드 매핑 등록 여부를 별도로 확인해야 합니다.
 
 TypeScript 검증은 node_modules와 생성 산출물 artifacts를 제외합니다. 과거 빌드 복사본을 현재 소스로 중복 검사하지 않도록 범위를 고정했습니다.
 
@@ -375,7 +372,7 @@ Decibella 2의 store/audioMeterStore에서 기능별 모듈을 조합하는 방�
 ContentContext/RestContext, 저장 키·포맷, 초기값과 갱신 규칙은 유지합니다. Zustand 도입이나 선택적 구독 전환은 하지 않았으며, 이번 분리가 렌더 횟수나 프레임 시간을 줄였다는 의미는 아닙니다. 성능 이득은 미측정입니다. 이 분리 작업에서 컴파일·린트·테스트·새 빌드는 실행하지 않았습니다. 소스와 문서는 후속 main 전달에 포함합니다.
 ## 미사용 공개 API 정리
 
-소스 참조 조사에서 파일 내부에서만 호출되는 보조 함수 11개의 export를 제거했습니다. presetStorage의 JSON 쓰기, recordTile의 shader 생성, textSizing의 내부 계산 3개, skiaBubbleTextLayout의 줄 분리, pixelLed의 내부 계산 3개, appFonts의 내부 판별 2개입니다. 함수 구현과 호출은 유지합니다. 의도적으로 숨긴 Pro 구매·복원/문구와 광고 추적 조회 API는 보존합니다. 이번 조사에서 삭제를 확정할 독립 미사용 소스 파일은 없었습니다. 플랫폼별 파일·에셋·서명·빌드 기록은 삭제하지 않았으며 컴파일·린트·테스트는 실행하지 않았습니다.
+소스 참조 조사에서 기존 내부 보조 함수의 불필요한 export와, 새 지연 폰트 준비 흐름으로 대체되어 호출되지 않는 `loadRemainingFonts`, `prefetchRemoteFonts`, `getSkiaFontAssets`를 제거했습니다. Expo 템플릿 초기화 스크립트와 명령, 교체된 투명 스플래시와 참조되지 않는 직접 의존성 4개도 제거했습니다. 앱 라우트에서 도달하지 않는 독립 소스 파일은 없었습니다. 보관된 Pro 화면·구매/복원 API·광고 추적 API, 플랫폼별 구현, WebP 변환 원본, 폰트 라이선스, 서명·빌드 기록은 유지합니다. 리워드 안내 7개 언어는 실제 지급 시간인 2시간과 맞췄습니다. V1.1.1 릴리스 시도 `20260914-164757-b630a61e`는 `npm ci`가 잠긴 `zod` 파일의 `EBUSY` 오류로 중단되어 네이티브 생성·컴파일·산출물 생성은 시작되지 않았습니다. 현재 전달에서는 빌드·린트·테스트를 다시 실행하지 않았습니다.
 
 ## 유지보수 우선순위
 
@@ -455,9 +452,9 @@ IncludeBundle 출시 빌드는 새 단일 검증 스크립트로 기존 서명·
 
 출시 빌드 비교용 선택 옵션 `-ConfigurationCache`, `-ReuseDaemon`, `-GradleWorkers 1|2`를 추가했습니다. 기본값은 기존 단일 worker와 비재사용 Daemon이며 Configuration Cache는 꺼져 있습니다. 적용 검증 순서는 5 → 3 → 4이며, 호환성·메모리·속도 비교는 아직 실행하지 않았습니다. [비교 절차](docs/ANDROID_BUILD_OPTIMIZATION.md)를 참고하세요.
 
-## 버전 변경 — V1.1.0
+## 버전 변경 — V1.1.1
 
-Expo 앱 버전을 1.1.0, Android versionCode를 28로 변경했습니다. Settings는 Expo 설정을 읽어 V1.1.0으로 표시합니다. iOS buildNumber는 별도로 변경하지 않았습니다. 기존 APK/AAB는 1.0.9(27)이며 이번 버전의 빌드·스토어 업로드는 아직 실행하지 않았습니다.
+Expo 앱 버전을 1.1.1, Android versionCode를 29로 변경했습니다. Settings는 Expo 설정을 읽어 V1.1.1로 표시합니다. iOS buildNumber는 별도로 변경하지 않았습니다. 직전 1.1.0(28) APK/AAB는 main `a4657ac`에서 생성·정적 검증했으며, 현재 1.1.1 소스의 빌드·스토어 업로드는 아직 실행하지 않았습니다.
 
 2026-09-12 출시 후속 기록: main 2b6dc16의 1.0.9(27)은 `20260912-002428-05bfeae8` 실행에서 APK/AAB 생성과 통합 정적 검증을 완료했습니다. 위 구현 당시의 미빌드 문구와 구분합니다. 슬라이더 후속 변경은 해당 산출물에 포함되며 실기기 검증은 미실행입니다. Gradle 5분, 73 executed / 1122 up-to-date, R8 UP-TO-DATE였습니다. keytool의 정상 stderr 안내 처리만 빌드 래퍼에서 보완했고 종료 코드·인증서 검증은 유지했습니다. 새 V1.1.0 및 선택 빌드 옵션은 이 산출물에 포함되지 않습니다.
 

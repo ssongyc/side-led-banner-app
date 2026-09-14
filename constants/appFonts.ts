@@ -547,10 +547,6 @@ export function getRemoteFontIdsForIds(ids: FontId[]): RemoteFontId[] {
   return Array.from(out);
 }
 
-export function getSkiaFontAssets(locale: AppLocaleKey): number[] {
-  return getFontAssetIds(getEagerFontIdsForLocale(locale));
-}
-
 export const APP_THEME_FONT_FAMILY = "AppTheme";
 export const APP_THEME_FONT_FAMILY_BOLD = "AppTheme-Bold";
 

@@ -74,23 +74,6 @@ export function loadFontIds(ids: FontId[]): Promise<void> {
   return loadAssetsWithRetry(buildFontAssets(ids));
 }
 
-export function loadRemainingFonts(excludeIds: FontId[]): Promise<void> {
-  return loadAssetsWithRetry(buildRemainingFontAssets(excludeIds));
-}
-
-export function prefetchRemoteFonts(ids: FontId[]): void {
-  getRemoteFontIdsForIds(ids).forEach((remoteId) => {
-    if (__DEV__) console.log("[fonts] remote font prefetch start", remoteId);
-    ensureRemoteFontSetDownloaded(REMOTE_FONT_FACE_SETS[remoteId])
-      .then((uris) => {
-        if (__DEV__) console.log("[fonts] remote font prefetch done", remoteId, uris);
-      })
-      .catch((err) => {
-        if (__DEV__) console.warn("[fonts] remote font prefetch failed", remoteId, err);
-      });
-  });
-}
-
 const loadedLocales = new Set<AppLocaleKey>();
 
 /** 언어를 특정 로케일로 전환할 때, 아직 안 실린 그 로케일 폰트를 로드 */
