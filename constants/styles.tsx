@@ -429,6 +429,8 @@ export const rewardAdModalStyles = StyleSheet.create({
   },
   ctaButtonBg: {
     ...StyleSheet.absoluteFill,
+    width: "100%",
+    height: "100%",
     borderRadius: 28,
   },
   ctaButtonContent: {

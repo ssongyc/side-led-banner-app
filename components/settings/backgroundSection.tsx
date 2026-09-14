@@ -73,6 +73,7 @@ export const BackgroundSection = () => {
   return (
     <>
       <ScrollView
+        style={base.settingsPanelContainer}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         directionalLockEnabled

@@ -15,6 +15,7 @@ export const EffectSection = () => {
   return (
     <ScrollView
       id="effectSection"
+      style={styles.settingsPanelContainer}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollViewContainer}
       keyboardShouldPersistTaps="handled"

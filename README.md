@@ -477,3 +477,9 @@ Expo 앱 버전을 1.1.1, Android versionCode를 29로 변경했습니다. Setti
 - Enable Gradle build caching on the actual host; the Windows workstation default is configured in the user's Gradle properties. Remote EAS/CI does not inherit that setting. Configuration cache and worker/daemon overrides require project-specific compatibility evidence.
 - Preserve signing identity, exact same-build R8 mapping and applicable symbols, artifact SDK/version/ad-profile checks, hashes, delivery filename and export timestamp. Record build-phase durations in the next authorized build; no measured speedup is claimed.
 - Delivery workflow: update affected existing documents once, stage only task-owned changes, commit to main and verify origin/main. This update did not run builds, lint, tests or Play uploads. Existing published binaries are unchanged.
+
+## iOS 설정 스크롤·Watch Ad 표시 후속 수정 — 2026-09-14
+
+Text·Background·Effects의 각 ScrollView에 남은 화면 높이를 사용하는 `flex: 1` 패널 스타일을 적용했습니다. 이전 터치 인계 수정 뒤에도 높이 제약이 없어 콘텐츠가 부모에서 잘리고 내부 스크롤 거리가 생기지 않던 공통 원인을 보완한 것으로, 세 탭은 콘텐츠가 화면보다 길 때 각각 독립적으로 상하 스크롤합니다. 리워드 팝업의 Watch Ad 배경 이미지에는 버튼 전체 너비·높이를 명시해 iPad에서 배경 일부만 표시되는 경로를 수정했습니다. 기존 슬라이더 조작, 설정값, 광고 준비·표시·보상 순서는 유지합니다.
+
+[세부 UI 변경 기록](docs/UI_INTERACTION_1.0.9_27.md)에 원인, 적용 범위와 검증 한계를 기록했습니다. 이번 변경은 소스와 문서 diff만 확인했으며, 요청에 따라 빌드·린트·테스트와 iPhone/iPad 실기기 검증은 실행하지 않았습니다. 기존 APK/AAB에는 포함되지 않습니다.

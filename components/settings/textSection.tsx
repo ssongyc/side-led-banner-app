@@ -138,6 +138,7 @@ export const TextSection = () => {
 
   return (
     <ScrollView
+      style={styles.settingsPanelContainer}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollViewContainer}
       keyboardShouldPersistTaps="handled"
