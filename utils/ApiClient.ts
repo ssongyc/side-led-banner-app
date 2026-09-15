@@ -4,6 +4,9 @@ import { requireNativeModule } from "expo";
 import { Platform } from "react-native";
 import * as amplitude from "@amplitude/analytics-react-native";
 
+// One launch event per JS app lifetime, including repeated root effects.
+let appOpenedQueued = false;
+
 export async function initializeAnalytics(): Promise<void> {
   const key = process.env.EXPO_PUBLIC_AMPLITUDE_API_KEY ?? "";
   if (!key) return;
@@ -13,6 +16,10 @@ export async function initializeAnalytics(): Promise<void> {
     }).promise;
     const deviceId = amplitude.getDeviceId();
     if (deviceId) amplitude.setUserId(deviceId);
+    if (!appOpenedQueued) {
+      appOpenedQueued = true;
+      trackAnalyticsEvent("App Opened");
+    }
   } catch (e) {
     if (__DEV__) console.warn("[App] Amplitude init failed:", e);
   }

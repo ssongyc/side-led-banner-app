@@ -24,10 +24,13 @@ import { Image } from "expo-image";
 import { type Href, useRouter } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, Text, TouchableOpacity, View } from "react-native";
+import { Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAvoidingView, KeyboardToolbar } from "react-native-keyboard-controller";
-import { initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
+import { initialWindowMetrics, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
+
+// iOS applies changing system insets in native layout, without a JS padding pass.
+const MainScreen = Platform.OS === "ios" ? SafeAreaView : View;
 
 function DismissLabel() {
   return (
@@ -102,6 +105,8 @@ export default function Index() {
   };
 
   const handleStop = async () => {
+    // Restore system chrome while Play still covers the main screen.
+    if (Platform.OS === "ios") StatusBar.setHidden(false, "none");
     await ScreenOrientation.lockAsync(
       ScreenOrientation.OrientationLock.PORTRAIT_UP,
     );
@@ -161,7 +166,7 @@ export default function Index() {
   }, []);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: isPlaying ? 0 : (initialWindowMetrics?.insets.bottom ?? 0) }]}>
+    <MainScreen style={[styles.container, Platform.OS !== "ios" && { paddingTop: insets.top, paddingBottom: isPlaying ? 0 : (initialWindowMetrics?.insets.bottom ?? 0) }]}>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <PreviewPanel
           onCursorMovers={onCursorMovers}
@@ -310,6 +315,6 @@ export default function Index() {
           }
         />
       )}
-    </View>
+    </MainScreen>
   );
 }

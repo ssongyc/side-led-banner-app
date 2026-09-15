@@ -18,7 +18,7 @@ For a store run, building an APK and AAB as separate top-level Gradle targets du
 
 ### CRLF/LF fingerprint correction — 2026-09-14
 
-The raw-byte fingerprint could treat a Git LF checkout and a Windows CRLF checkout as different dependency/native inputs, causing unnecessary installation and regeneration. The helper now normalizes CRLF to LF for fingerprints of `.npmrc` and supported UTF-8 text inputs (`json`, `js/cjs/mjs/jsx`, `ts/tsx`, `kt`, `java`, `gradle`, `xml`, `properties`, `swift`, `podspec`). Patches, binary assets, unsupported formats, environment files and toolchain metadata remain byte-sensitive. Source synchronization and provenance hashes retain exact bytes. Actual text, dependency, patch, native configuration, environment and toolchain changes still invalidate the relevant preparation state.
+The raw-byte fingerprint could treat a Git LF checkout and a Windows CRLF checkout as different dependency/native inputs, causing unnecessary installation and regeneration. The helper now normalizes CRLF to LF for fingerprints of `.npmrc`, the tracked configuration template `.env.example`, and supported UTF-8 text inputs (`json`, `js/cjs/mjs/jsx`, `ts/tsx`, `kt`, `java`, `gradle`, `xml`, `properties`, `swift`, `podspec`). Actual local `.env*` files, patches, binary assets, unsupported formats and toolchain metadata remain byte-sensitive. Source synchronization and provenance hashes retain exact bytes. Actual text, dependency, patch, native configuration, environment and toolchain changes still invalidate the relevant preparation state.
 
 Dependency schema 1 and native schema 3 preserve eligible existing success records through verified legacy-hash migration. The actual helper passed 23 tests in an in-memory filesystem with fake Git/toolchain inputs: both LF/CRLF migration directions, exact source provenance, genuine text/patch/binary/deletion changes, failed and unknown stamps, environment/toolchain drift, ad-profile changes and version-only reuse. No active build-root preparation, install, prebuild, build, lint or cache mutation was run. Actual build speed remains unmeasured.
 
@@ -57,6 +57,15 @@ A bundletool universal APK is suitable for local installation and QA. Google Pla
 - Real-device smoke/QA, live ad impression/reward verification, Google Play upload, Play App Signing output, and Play mapping registration remain separate and were not performed.
 
 The exact artifacts, hashes and verification boundary are recorded in [ANDROID_RELEASE_1.0.9_27.md](ANDROID_RELEASE_1.0.9_27.md).
+
+## Measured production result — 1.1.1(29), 2026-09-14
+
+- Fixed source revision `14b698f709b38c4f0cc41eb3e105a14c02a7a8f7` built with no source overrides, production ads, `-IncludeBundle` and `-ResumeNative`; `-MeasureBuild`, Configuration Cache and daemon reuse were off, with one Gradle/CMake worker.
+- The first fast-path attempt stopped after 19.21 seconds because `.env.example` had identical text but LF bytes after fixed-revision synchronization, while the last successful native stamp had hashed CRLF bytes. Recomputing the legacy hash with CRLF reproduced the stored value exactly; actual local `.env`, native source inputs, SDK, JDK and Node metadata were unchanged. The generated cache stamp was corrected to the proven LF-equivalent hash. The helper now normalizes only `.env.example` line endings in the environment fingerprint so this false native invalidation does not recur.
+- The successful wrapper run completed in 1,131.90 seconds (18m 51.90s). Dependency installation and Expo native generation were skipped. Gradle `:app:bundleRelease` completed in 16m 56s with 1,159 actionable tasks: 79 executed, 3 from cache and 1,077 up-to-date.
+- The exact AAB was retained with its R8 mapping and bundletool 1.18.3 derived the universal APK. Static checks passed for the existing signer, version 1.1.1(29), production AdMob configuration, SDK 36, Billing 9.1.0, four ABIs, 16 KiB ZIP/ELF alignment, embedded same-build mapping, Hermes equality and release exclusions.
+- Retained warnings are the Expo config-plugin AdMob location notice, `NO_COLOR`/`FORCE_COLOR`, and Gradle 10 deprecation notice. The packaged production IDs were independently verified. Device runtime, live ad impression/reward, Google Play upload and Play mapping registration remain unverified.
+The 23-test record above belongs to the earlier fingerprint implementation. The subsequent .env.example correction received source/preparation inspection only; those tests were not rerun for this correction. No build, lint or tests were run during the 2026-09-15 documentation and main delivery.
 
 ## R8 investigation and unified verification — 2026-09-12
 

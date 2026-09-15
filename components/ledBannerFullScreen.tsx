@@ -25,6 +25,7 @@ import { Image } from "expo-image";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
     Modal,
+    Platform,
     Pressable,
     StatusBar,
     StyleSheet,
@@ -198,7 +199,7 @@ export const LedBannerFullScreen = ({
     <Modal
       visible={visible}
       onShow={hideAndroidNavigationBar}
-      animationType="fade"
+      animationType={Platform.OS === "ios" ? "none" : "fade"}
       presentationStyle="fullScreen"
       supportedOrientations={["portrait", "landscape"]}
       statusBarTranslucent

@@ -120,7 +120,7 @@ if (files.some(n => n.startsWith('app.config.'))) nativeNames.push(...files.filt
 // copied source bytes and source-inventory hashes exact.
 function fingerprintContent(name, content) {
   if (name.startsWith('patches/') ||
-      !(name === '.npmrc' || /\.(?:json|[cm]?js|jsx|tsx?|kt|java|gradle|xml|properties|swift|podspec)$/.test(name))) return content;
+      !(name === '.npmrc' || name === '.env.example' || /\.(?:json|[cm]?js|jsx|tsx?|kt|java|gradle|xml|properties|swift|podspec)$/.test(name))) return content;
   const text = content.toString('utf8');
   if (!Buffer.from(text, 'utf8').equals(content)) return content;
   return Buffer.from(text.replace(/\r\n/g, '\n'), 'utf8');
@@ -140,7 +140,8 @@ function digest(names, fromSource, normalizeNativeConfig = false, normalizeLineE
 const dependencyHash = digest(dependencyNames, true);
 // Hash the preserved local environment without copying or logging values.
 const envNames = fs.readdirSync(target).filter(n => /^\.env(?:\..*)?$/.test(n)).sort();
-const environmentHash = hash(JSON.stringify(envNames.map(n => [n, hash(fs.readFileSync(path.join(target, n)))])));
+const environmentHash = hash(JSON.stringify(envNames.map(n =>
+  [n, hash(fingerprintContent(n, fs.readFileSync(path.join(target, n))))])));
 const sdkRoot = 'C:/Users/ssong/AppData/Local/Android/Sdk';
 const sdkMetadata = ['build-tools', 'platforms', 'ndk', 'cmake'].flatMap(group =>
   fs.readdirSync(path.join(sdkRoot, group), { withFileTypes: true })

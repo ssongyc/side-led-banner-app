@@ -349,3 +349,12 @@ README에 누적돼 있던 이전 작업 기록입니다. 각 절의 “현재�
 - The existing upload signer, 1.0.9(27), production AdMob configuration, SDK 36, Billing 9.1.0, four ABIs, R8 8.13.23 mapping, AAB validation and 16 KiB alignment passed local artifact verification.
 - Compared with the 1.0.8(26) Gradle duration of 1h 7m 52s, the measured reduction was 56m 3s, or about 82.6 percent.
 - Device runtime QA, live ad impression/reward validation, Google Play upload and Play mapping registration were not performed. See [ANDROID_RELEASE_1.0.9_27.md](ANDROID_RELEASE_1.0.9_27.md).
+
+## 2026-09-14 production APK/AAB: V1.1.1 / 29 (fast path)
+
+- Source: clean fixed main `14b698f709b38c4f0cc41eb3e105a14c02a7a8f7`, no source overrides. The separate working-tree localization edit was excluded and preserved.
+- Build record: `artifacts/apk-runs/20260914-224723-f9b4673c`; result **compile-ok** and `static-checks-passed`.
+- Total wrapper time: 18m 51.90s. Dependency installation and native generation were skipped. Gradle `:app:bundleRelease` took 16m 56s with 79 executed / 3 from cache / 1,077 up-to-date tasks. No separate `assembleRelease`, clean, Configuration Cache or measurement profile was used.
+- AAB: `LedPopV111.aab`, 241,001,033 bytes, SHA-256 `59A4871140262CAFDD11FCF95FEF361A6CF821B64245B2B5F3AB40968BCDB08B`.
+- Universal APK from the exact AAB: `LedPopV111.apk`, 271,134,760 bytes, SHA-256 `64DC9658F9919270BB14A46DAC2C8C759ED0593015116E82F7AE5A6305576428`.
+- Existing upload signer, production AdMob, version 1.1.1(29), SDK 36, Billing 9.1.0, four ABIs, 16 KiB alignment, R8 8.13.23 mapping and AAB/APK Hermes/native equality passed static verification. Device runtime, live ads, Play upload and mapping registration were not performed.

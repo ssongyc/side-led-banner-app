@@ -104,3 +104,10 @@ App-root preload remains unchanged. Settings uses a memoized focus effect with `
 Amplitude initialization, getDeviceId/setUserId, eight event call sites and flush now pass through the existing utils/ApiClient.ts. Event names/properties, invocation timing, API-key handling, disableCookies setting and SDK identity persistence/restoration configuration are preserved. No identifier masking, raw-ID log removal, new retry, SDK replacement or analytics upload was performed as part of this change. Live Amplitude receipt remains unverified.
 
 These changes have static source/diff review only. No build, lint, tests, device QA or new APK/AAB was run for this delivery. Earlier build/test records above apply to their original versions only.
+
+
+## App launch analytics — 2026-09-15
+
+App Opened is queued once per JavaScript app lifetime from utils/ApiClient.ts after the existing app-root Amplitude initialization and getDeviceId/setUserId assignment. It represents a fresh app launch, not each foreground return, screen visit, Play action or SDK session start. A module-level guard prevents duplicate events from repeated initialization callbacks. Initialization remains scheduled after UI fonts load at the existing idle boundary; launches that end before initialization may not be recorded. Missing API configuration or initialization failure does not produce this event.
+
+Existing identity assignment, transmission, SDK persistence/restoration settings and interaction events are preserved. Only static source/diff review was performed; build, lint, tests, live Amplitude receipt and dashboard changes were not performed. The event becomes available for chart selection after an updated app sends it and Amplitude ingests it.

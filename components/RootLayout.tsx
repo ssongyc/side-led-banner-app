@@ -316,7 +316,7 @@ export default function RootLayout() {
           )}
         </View>
       )}
-      <StatusBar hidden={Platform.OS === "android"} />
+      <StatusBar style={Platform.OS === "ios" ? "dark" : "auto"} hidden={Platform.OS === "android"} />
       </View>
       </PremiumLifecycle>
       </SafeAreaProvider>
