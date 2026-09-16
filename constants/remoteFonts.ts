@@ -223,6 +223,36 @@ export const REMOTE_FONT_FACE_SETS = {
       fileName: "Poppins-Black.ttf",
     },
   },
+  poppins: {
+    regular: {
+      url: `${RELEASE_BASE}/Poppins-Regular.ttf`,
+      fileName: "Poppins-Regular.ttf",
+    },
+    bold: {
+      url: `${RELEASE_BASE}/Poppins-Black.ttf`,
+      fileName: "Poppins-Black.ttf",
+    },
+  },
+  inter: {
+    regular: {
+      url: `${RELEASE_BASE}/Inter_28pt-Regular.ttf`,
+      fileName: "Inter_28pt-Regular.ttf",
+    },
+    bold: {
+      url: `${RELEASE_BASE}/Inter_28pt-Bold.ttf`,
+      fileName: "Inter_28pt-Bold.ttf",
+    },
+  },
+  rubik_one: {
+    regular: {
+      url: `${RELEASE_BASE}/Rubik_400Regular.ttf`,
+      fileName: "Rubik_400Regular.ttf",
+    },
+    bold: {
+      url: `${RELEASE_BASE}/Rubik_700Bold.ttf`,
+      fileName: "Rubik_700Bold.ttf",
+    },
+  },
 } as const satisfies Record<string, RemoteFontFaceSet>;
 
 export type RemoteFontId = keyof typeof REMOTE_FONT_FACE_SETS;

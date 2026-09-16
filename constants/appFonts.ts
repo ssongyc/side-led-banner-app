@@ -80,18 +80,9 @@ const montserrat = fontFaceSet(
   require("@/assets/fonts/Montserrat/static/Montserrat-Regular.ttf"),
   require("@/assets/fonts/Montserrat/static/Montserrat-Black.ttf"),
 );
-const poppins = fontFaceSet(
-  require("@/assets/fonts/Poppins/Poppins-Regular.ttf"),
-  require("@/assets/fonts/Poppins/Poppins-Black.ttf"),
-);
-const inter = fontFaceSet(
-  require("@/assets/fonts/Inter/static/Inter_28pt-Regular.ttf"),
-  require("@/assets/fonts/Inter/static/Inter_28pt-Bold.ttf"),
-);
-const rubikOne = fontFaceSet(
-  require("@/assets/fonts/Rubik/Rubik_400Regular.ttf"),
-  require("@/assets/fonts/Rubik/Rubik_700Bold.ttf"),
-);
+const poppins = remoteFace("poppins");
+const inter = remoteFace("inter");
+const rubikOne = remoteFace("rubik_one");
 const montserratMedium = fontFaceSet(
   require("@/assets/fonts/Montserrat/static/Montserrat-Medium.ttf"),
   require("@/assets/fonts/Montserrat/static/Montserrat-Black.ttf"),
