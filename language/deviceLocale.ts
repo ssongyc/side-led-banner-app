@@ -33,8 +33,9 @@ export function deviceLocaleToAppLocale(locale: LocaleLike): AppLocaleKey {
   ).toUpperCase();
 
   if (code === "zh" && script === "hant") return "zhTC";
-  if (code === "zh" && ["TW", "HK", "MO"].includes(region)) return "zhTC";
   if (code === "zh" && script === "hans") return "zhSC";
+  if (code === "zh" && script) return "en";
+  if (code === "zh" && ["TW", "HK", "MO"].includes(region)) return "zhTC";
   if (code === "zh") return "zhSC";
   if (code === "ko") return "ko";
   if (code === "en") return "en";

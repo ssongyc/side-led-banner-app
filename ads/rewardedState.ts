@@ -14,7 +14,7 @@ type RewardedSlot = {
   ad: RewardedAdHandle | null;
   attempt: number;
   loadedAt: number | null;
-  failure: "load" | "show" | "configuration" | "initialization" | null;
+  failure: "load" | "show" | "open-timeout" | "expiry" | "configuration" | "initialization" | null;
   state: SlotState;
   retryTimer: ReturnType<typeof setTimeout> | null;
   unsubs: Array<() => void>;
@@ -36,8 +36,8 @@ let slots: Record<SlotName, RewardedSlot> = {
 };
 
 let openedCurrentAd = false;
-let earnedRewardCurrentAd = false;
-let rewardGrantedCurrentAd = false;
+type RewardAttempt = { started: boolean; granted: boolean; grant: Array<() => void> };
+const rewardAttempts = new WeakMap<RewardedAdHandle, RewardAttempt>();
 let nextLoadRequestedForCurrentShow = false;
 let immersiveFlow = 0;
 let openWatchdog: ReturnType<typeof setTimeout> | null = null;
@@ -68,10 +68,6 @@ function notifySubscribers() {
   subscribers.forEach((listener) => listener());
 }
 
-function notifyRewardEarned() {
-  rewardSubscribers.forEach((listener) => listener());
-}
-
 function getRewardedAdConfigurationError(): Error | null {
   try { getAdConfiguration(); return null; } catch (error) { return error as Error; }
 }
@@ -99,14 +95,11 @@ function endImmersiveAd(flow = immersiveFlow) {
 function markShowFailed() {
   clearOpenWatchdog();
   endImmersiveAd();
-  disposeSlot("current");
-  disposeSlot("next");
-  slots.current.state = "failed";
-  slots.current.failure = "show";
-  openedCurrentAd = false;
-  earnedRewardCurrentAd = false;
-  rewardGrantedCurrentAd = false;
-  nextLoadRequestedForCurrentShow = false;
+  promoteNextSlotToCurrent();
+  if (slots.current.state === "idle") {
+    slots.current.state = "failed";
+    slots.current.failure = "show";
+  }
   trace("current", "show_failed");
   notifySubscribers();
 }
@@ -119,8 +112,20 @@ function createRewardedAd(slotName: SlotName): RewardedAdHandle {
   slot.unsubs = [];
   const ad = createNativeRewardedAd(adUnitId);
   slot.ad = ad;
+  const rewardAttempt: RewardAttempt = { started: false, granted: false, grant: [] };
+  rewardAttempts.set(ad, rewardAttempt);
+  // Retain only this attempt's reward listener after dismissal/timeout.
+  const unsubscribeReward = ad.addAdEventListener(rewardedAdEvents.earnedReward, () => {
+    if (!rewardAttempt.started || rewardAttempt.granted) return;
+    rewardAttempt.granted = true;
+    unsubscribeReward();
+    recordAdEvent("rewarded", "earned_reward", { attempt: slot.attempt });
+    rewardAttempt.grant.forEach(listener => listener());
+    rewardAttempt.grant = [];
+  });
 
   slot.unsubs = [
+    () => { if (!rewardAttempt.started) unsubscribeReward(); },
     ad.addAdEventListener(rewardedAdEvents.loaded, () => {
       const activeSlotName = resolveSlotName(ad);
       if (!activeSlotName) return;
@@ -139,21 +144,12 @@ function createRewardedAd(slotName: SlotName): RewardedAdHandle {
       if (openedCurrentAd) return;
       clearOpenWatchdog();
       openedCurrentAd = true;
+      slots.current.failure = null;
+      notifySubscribers();
       trace(activeSlotName, "opened");
       if (!nextLoadRequestedForCurrentShow) {
         nextLoadRequestedForCurrentShow = true;
         loadNextSlotOnce();
-      }
-    }),
-    ad.addAdEventListener(rewardedAdEvents.earnedReward, () => {
-      const activeSlotName = resolveSlotName(ad);
-      if (activeSlotName !== "current" || slots.current.state !== "showing") return;
-      if (earnedRewardCurrentAd) return;
-      earnedRewardCurrentAd = true;
-      trace(activeSlotName, "earned_reward");
-      if (!rewardGrantedCurrentAd) {
-        rewardGrantedCurrentAd = true;
-        notifyRewardEarned();
       }
     }),
     ad.addAdEventListener(rewardedAdEvents.closed, () => {
@@ -233,8 +229,6 @@ function promoteNextSlotToCurrent() {
   slots.current = slots.next;
   slots.next = createEmptySlot();
   openedCurrentAd = false;
-  earnedRewardCurrentAd = false;
-  rewardGrantedCurrentAd = false;
   nextLoadRequestedForCurrentShow = false;
   trace("current", "next_promoted_to_current");
 }
@@ -255,8 +249,6 @@ export function suspendRewardedAds() {
   disposeSlot("current");
   disposeSlot("next");
   openedCurrentAd = false;
-  earnedRewardCurrentAd = false;
-  rewardGrantedCurrentAd = false;
   nextLoadRequestedForCurrentShow = false;
   notifySubscribers();
 }
@@ -318,15 +310,16 @@ function getLoadedState() {
 
 function getCanRetryState() {
   const current = slots.current;
-  return getPremiumSnapshot().entitlement === "free" && current.state === "failed" &&
-    (current.failure === "show" || current.failure === "initialization" || (current.failure === "load" && current.attempt >= 3));
+  return AppState.currentState === "active" && getPremiumSnapshot().entitlement === "free" &&
+    (isLoadedSlotExpired(current) || (current.state === "failed" &&
+    (current.failure === "expiry" || current.failure === "show" || current.failure === "initialization" || (current.failure === "load" && current.attempt >= 3))));
 }
 
 export function getAdSnapshot() {
   return {
     loaded: getLoadedState(),
-    failed: slots.current.state === "failed",
-    showFailed: slots.current.failure === "show",
+    failed: slots.current.state === "failed" || slots.current.failure === "open-timeout" || isLoadedSlotExpired(slots.current),
+    showFailed: slots.current.failure === "show" || slots.current.failure === "open-timeout" || slots.current.failure === "expiry" || isLoadedSlotExpired(slots.current),
     canRetry: getCanRetryState(),
   };
 }
@@ -349,15 +342,18 @@ export function showRewarded() {
     }
 
     const current = slots.current;
-    if (current.state === "showing" || current.state === "failed") return;
-    if (!current.ad || current.state !== "loaded" || !current.ad.loaded || isLoadedSlotExpired(current)) {
-      markShowFailed();
+    if (AppState.currentState !== "active" || current.state === "showing" || current.state === "failed") return;
+    if (isLoadedSlotExpired(current)) {
+      disposeSlot("current");
+      slots.current.state = "failed";
+      slots.current.failure = "expiry";
+      trace("current", "loaded_ad_expired");
+      notifySubscribers();
       return;
     }
+    if (!current.ad || current.state !== "loaded" || !current.ad.loaded) return;
 
     openedCurrentAd = false;
-    earnedRewardCurrentAd = false;
-    rewardGrantedCurrentAd = false;
     nextLoadRequestedForCurrentShow = false;
     current.failure = null;
     current.state = "showing";
@@ -383,8 +379,18 @@ export function showRewarded() {
         }
         openWatchdog = setTimeout(() => {
           openWatchdog = null;
-          if (!openedCurrentAd) onShowError(new Error("Rewarded ad did not open within 15 seconds"));
+          if (!openedCurrentAd && slots.current.ad === ad && slots.current.state === "showing") {
+            // A timeout is not evidence that the SDK window has closed.
+            current.failure = "open-timeout";
+            trace("current", "open_timeout");
+            notifySubscribers();
+          }
         }, 15_000);
+        const rewardAttempt = rewardAttempts.get(ad);
+        if (rewardAttempt) {
+          rewardAttempt.started = true;
+          rewardAttempt.grant = Array.from(rewardSubscribers);
+        }
         await showRewardedAd(ad);
       } catch (error) { onShowError(error); } finally { pendingSubscription.remove(); }
     })();

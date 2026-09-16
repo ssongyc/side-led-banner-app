@@ -42,8 +42,7 @@ export function releaseBanner(token: symbol) {
     update({ phase: "idle", attempt: 0, extraUsed: false, dueAt: null, messageUntil: 0 });
   } else if (state.phase === "loading") {
     // Destroyed requests consume their slot; do not replay it or invent a failure callback.
-    const delay = [6000, 12000][(state.attempt - 1) % 3];
-    update({ phase: delay === undefined ? "stopped" : "waiting",
-      dueAt: delay === undefined ? null : Date.now() + delay });
+    // Cancellation has no load-failure outcome, so it cannot schedule a retry.
+    update({ phase: "stopped", dueAt: null, messageUntil: 0 });
   }
 }

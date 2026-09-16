@@ -111,3 +111,11 @@ These changes have static source/diff review only. No build, lint, tests, device
 App Opened is queued once per JavaScript app lifetime from utils/ApiClient.ts after the existing app-root Amplitude initialization and getDeviceId/setUserId assignment. It represents a fresh app launch, not each foreground return, screen visit, Play action or SDK session start. A module-level guard prevents duplicate events from repeated initialization callbacks. Initialization remains scheduled after UI fonts load at the existing idle boundary; launches that end before initialization may not be recorded. Missing API configuration or initialization failure does not produce this event.
 
 Existing identity assignment, transmission, SDK persistence/restoration settings and interaction events are preserved. Only static source/diff review was performed; build, lint, tests, live Amplitude receipt and dashboard changes were not performed. The event becomes available for chart selection after an updated app sends it and Amplitude ingests it.
+
+## September 17 source correction
+
+`ads/rewardedState.ts` now correlates earned rewards with the shown ad instance and retains that reward handler after CLOSED/open timeout. A timeout keeps presentation ownership until SDK CLOSED/ERROR; it does not discard the ad, end immersive handling or enable retry. Confirmed show failure promotes existing next-slot work instead of deleting its retry budget. Expiry is distinguished from load failure, and the existing manual retry remains available in eligible foreground recovery states. No ad IDs, reward duration or analytics identity were changed.
+
+The Settings banner only requests while focused and foreground. Releasing an in-flight view without an SDK result stops that unknown attempt instead of inventing a failed-load retry. SDK automatic refresh remains separately unverified; no AdMob console settings changed. Chinese explicit script now precedes region in `language/deviceLocale.ts`.
+
+These source changes were read back but not compiled, linted, tested or exercised on a device. Earlier APK/QA records apply only to their named builds. Late-event behavior, immersive transitions and SDK refresh limits remain runtime verification items.

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { AppState, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
 import { AdaptiveBannerAd } from "@/ads/AdClient";
 import { getAdConfiguration } from "@/ads/adConfiguration";
 import { recordAdEvent } from "@/ads/adTrace";
@@ -10,6 +11,13 @@ const REQUEST_OPTIONS = { requestNonPersonalizedAdsOnly: true };
 type Props = { style?: StyleProp<ViewStyle>; unavailableLabel: string };
 export default function BannerAdComponent({ style, unavailableLabel }: Props) {
   const sdkState = useMobileAdsState();
+  const focused = useIsFocused();
+  const [foreground, setForeground] = useState(AppState.currentState === "active");
+  const eligible = focused && foreground;
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", value => setForeground(value === "active"));
+    return () => subscription.remove();
+  }, []);
   const state = useSyncExternalStore(subscribeBannerState, getBannerState, getBannerState);
   const token = useRef(Symbol("settings-banner"));
   const [owned, setOwned] = useState(false);
@@ -22,17 +30,18 @@ export default function BannerAdComponent({ style, unavailableLabel }: Props) {
   const sdkFailed = sdkState === "failed" || sdkState === "configuration" || !config;
   useEffect(() => {
     const owner = token.current;
+    if (!eligible) { setOwned(false); return; }
     setOwned(claimBanner(owner));
     void initializeMobileAds().catch(() => { /* Shared state carries failure. */ });
     return () => releaseBanner(owner);
-  }, []);
+  }, [eligible]);
   useEffect(() => {
-    if (!owned || sdkState !== "ready" || !config || width <= 0) return;
+    if (!eligible || !owned || sdkState !== "ready" || !config || width <= 0) return;
     if (state.phase === "idle") { requestBanner(token.current); return; }
     if (state.dueAt === null) return;
     const id = setTimeout(() => requestBanner(token.current), Math.max(0, state.dueAt - Date.now()));
     return () => clearTimeout(id);
-  }, [owned, sdkState, config, width, state.phase, state.dueAt]);
+  }, [eligible, owned, sdkState, config, width, state.phase, state.dueAt]);
   useEffect(() => {
     if (!sdkFailed) sdkFailedAt.current = null;
     else if (sdkFailedAt.current === null) sdkFailedAt.current = Date.now();
@@ -53,7 +62,7 @@ export default function BannerAdComponent({ style, unavailableLabel }: Props) {
   return <View style={[{ alignItems: "center", justifyContent: "center", minHeight: 50, flexShrink: 0 }, style]}
     onLayout={event => { const next = Math.floor(event.nativeEvent.layout.width); setWidth(current => current === next ? current : next); }}>
     {unavailable ? (messageVisible ? <Text allowFontScaling={false}>{unavailableLabel}</Text> : null) :
-      owned && sdkState === "ready" && config && width > 0 && (state.phase === "loading" || state.phase === "loaded") ?
+      eligible && owned && sdkState === "ready" && config && width > 0 && (state.phase === "loading" || state.phase === "loaded") ?
       <AdaptiveBannerAd key={requestId} unitId={config.banner} width={width} requestOptions={REQUEST_OPTIONS}
         onSizeChange={size => recordAdEvent("banner", "size_changed", { ...size, attempt: state.attempt })}
         onAdLoaded={size => {
