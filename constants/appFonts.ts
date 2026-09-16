@@ -96,80 +96,32 @@ const montserratMedium = fontFaceSet(
   require("@/assets/fonts/Montserrat/static/Montserrat-Medium.ttf"),
   require("@/assets/fonts/Montserrat/static/Montserrat-Black.ttf"),
 );
-const poppinsMedium = fontFaceSet(
-  require("@/assets/fonts/Poppins/Poppins-Medium.ttf"),
-  require("@/assets/fonts/Poppins/Poppins-Black.ttf"),
-);
-const syne = fontFaceSet(
-  require("@/assets/fonts/Syne/static/Syne-Medium.ttf"),
-  require("@/assets/fonts/Syne/static/Syne-ExtraBold.ttf"),
-);
-const orbitron = fontFaceSet(
-  require("@/assets/fonts/Orbitron/static/Orbitron-Regular.ttf"),
-  require("@/assets/fonts/Orbitron/static/Orbitron-Black.ttf"),
-);
-const robotoSlab = fontFaceSet(
-  require("@/assets/fonts/Roboto_Slab/static/RobotoSlab-Regular.ttf"),
-  require("@/assets/fonts/Roboto_Slab/static/RobotoSlab-Black.ttf"),
-);
-const arimo = fontFaceSet(
-  require("@/assets/fonts/Arimo/static/Arimo-Regular.ttf"),
-  require("@/assets/fonts/Arimo/static/Arimo-Bold.ttf"),
-);
-const notoSerifTc = fontFaceSet(
-  require("@/assets/fonts/Noto_Serif_TC/NotoSerifTC-Medium.ttf"),
-  require("@/assets/fonts/Noto_Serif_TC/NotoSerifTC-Bold.ttf"),
-);
+const poppinsMedium = remoteFace("poppins_medium");
+const syne = remoteFace("syne");
+const orbitron = remoteFace("orbitron");
+const robotoSlab = remoteFace("roboto_slab");
+const arimo = remoteFace("arimo");
+const notoSerifTc = remoteFace("noto_serif_tc");
 const chironGoRoundTc = remoteFace("chiron_goround_tc");
-const lxgwWenKaiTc = fontFaceSet(
-  require("@/assets/fonts/LXGW_WenKai_TC/LXGWWenKaiTC-Regular.ttf"),
-  require("@/assets/fonts/LXGW_WenKai_TC/LXGWWenKaiTC-Bold.ttf"),
-);
-const tsangerShuYuan = fontFaceSet(
-  require("@/assets/fonts/仓耳舒圆体W02/CangErShuYuanTiW02-2.ttf"),
-  require("@/assets/fonts/仓耳舒圆体W05.ttf"),
-);
+const lxgwWenKaiTc = remoteFace("lxgw_wenkai_tc");
+const tsangerShuYuan = remoteFace("tsanger_shuyuan");
 const tektur = fontFaceSet(
   require("@/assets/fonts/Tektur/static/Tektur-Regular.ttf"),
   require("@/assets/fonts/Tektur/static/Tektur-Bold.ttf"),
 );
-const gowunBatang = fontFaceSet(
-  require("@/assets/fonts/Gowun_Batang/GowunBatang-Regular.ttf"),
-  require("@/assets/fonts/Gowun_Batang/GowunBatang-Bold.ttf"),
-);
-const hahmlet = fontFaceSet(
-  require("@/assets/fonts/Hahmlet/static/Hahmlet-Medium.ttf"),
-  require("@/assets/fonts/Hahmlet/static/Hahmlet-Black.ttf"),
-);
-const gaegu = fontFaceSet(
-  require("@/assets/fonts/Gaegu/Gaegu-Regular.ttf"),
-  require("@/assets/fonts/Gaegu/Gaegu-Bold.ttf"),
-);
+const gowunBatang = remoteFace("gowun_batang");
+const hahmlet = remoteFace("hahmlet");
+const gaegu = remoteFace("gaegu");
 const chironHeiHk = remoteFace("chiron_hei_hk");
-const nanumSquareNeo = fontFaceSet(
-  require("@/assets/fonts/nanum-square-neo/NanumSquareNeo-bRg.ttf"),
-  require("@/assets/fonts/nanum-square-neo/TTF/NanumSquareNeo-eHv.ttf"),
-);
+const nanumSquareNeo = remoteFace("nanum_square_neo");
 const notoSansKr = fontFaceSet(
   require("@/assets/fonts/Noto_Sans_KR/static/NotoSansKR-Regular.ttf"),
   require("@/assets/fonts/Noto_Sans_KR/static/NotoSansKR-Bold.ttf"),
 );
-const kaisei = fontFaceSet(
-  require("@/assets/fonts/Kaisei_Tokumin/KaiseiTokumin-Regular.ttf"),
-  require("@/assets/fonts/Kaisei_Tokumin/KaiseiTokumin-ExtraBold.ttf"),
-);
-const ibmPlexSansJp = fontFaceSet(
-  require("@/assets/fonts/IBM_Plex_Sans_JP/IBMPlexSansJP_300Light.ttf"),
-  require("@/assets/fonts/IBM_Plex_Sans_JP/IBMPlexSansJP_700Bold.ttf"),
-);
-const delaGothicOne = fontFaceSet(
-  require("@/assets/fonts/Zen_Kaku_Gothic_New/static/ZenKakuGothicNew-Regular.ttf"),
-  require("@/assets/fonts/Zen_Kaku_Gothic_New/static/ZenKakuGothicNew-Bold.ttf"),
-);
-const mochiyPopOne = fontFaceSet(
-  require("@/assets/fonts/M_PLUS_Rounded_1c/static/MPLUSRounded1c-Regular.ttf"),
-  require("@/assets/fonts/M_PLUS_Rounded_1c/static/MPLUSRounded1c-Bold.ttf"),
-);
+const kaisei = remoteFace("kaisei");
+const ibmPlexSansJp = remoteFace("ibm_plex_sans_jp");
+const delaGothicOne = remoteFace("dela_gothic_one");
+const mochiyPopOne = remoteFace("mochiy_pop_one");
 const lineSeedJp = fontFaceSet(
   require("@/assets/fonts/LINE_Seed_JP/LINESeedJP_400Regular.ttf"),
   require("@/assets/fonts/LINE_Seed_JP/LINESeedJP_800ExtraBold.ttf"),
@@ -183,14 +135,8 @@ const notoSansSc = fontFaceSet(
   require("@/assets/fonts/Noto_Sans_SC/static/NotoSansSC-Bold.ttf"),
 );
 const zhengfengBrush = remoteFace("zhengfeng_brush");
-const yrdzst = fontFaceSet(
-  require("@/assets/fonts/YangRenDongZhuShiTi-Regular/YangRenDongZhuShiTi-Regular-2.ttf"),
-  require("@/assets/fonts/YangRenDongZhuShiTi-Bold/YangRenDongZhuShiTi-Bold-2.ttf"),
-);
-const notoSerifSc = fontFaceSet(
-  require("@/assets/fonts/Noto_Serif_SC/NotoSerifSC_400Regular.ttf"),
-  require("@/assets/fonts/Noto_Serif_SC/NotoSerifSC_700Bold.ttf"),
-);
+const yrdzst = remoteFace("yrdzst");
+const notoSerifSc = remoteFace("noto_serif_sc");
 const galmuri11 = singleFace(
   require("@/assets/fonts/galmuri11/Galmuri11.ttf"),
 );

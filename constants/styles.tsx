@@ -456,6 +456,46 @@ export const rewardAdModalStyles = StyleSheet.create({
   },
 });
 
+export const WATCH_AD_BUTTON_COLORS = ["#FFA733", "#FF6B00"] as const;
+
+export const fontDownloadModalStyles = StyleSheet.create({
+  root: rewardAdModalStyles.root,
+  dim: rewardAdModalStyles.dim,
+  card: rewardAdModalStyles.card,
+  closeButton: rewardAdModalStyles.closeButton,
+  body: {
+    padding: 24,
+    alignItems: "center",
+  },
+  title: {
+    ...uiThemeFontStyle,
+    fontSize: moderateScale(17),
+    fontWeight: "bold",
+    color: "#1A1A1A",
+    textAlign: "center",
+    lineHeight: moderateScale(23),
+    marginBottom: 24,
+  },
+  progressTrack: {
+    width: "100%",
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#EFEFEF",
+    overflow: "hidden",
+    marginBottom: 12,
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 4,
+  },
+  progressText: {
+    ...uiThemeFontStyle,
+    fontSize: 13,
+    fontWeight: "700",
+    color: WATCH_AD_BUTTON_COLORS[1],
+  },
+});
+
 export const heartBackgroundTickerStyles = StyleSheet.create({
   clip: {
     ...StyleSheet.absoluteFill,

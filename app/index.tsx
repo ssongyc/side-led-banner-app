@@ -1,4 +1,5 @@
 import AdDiagnostics from "@/components/dev/AdDiagnostics";
+import { FontDownloadModal } from "@/components/fontDownloadModal";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {
   MultipleLinePlayButton,
@@ -274,6 +275,7 @@ export default function Index() {
           isAdReady={isRewardedAdReady}
           onWatchAd={showRewardedAd}
         />}
+        <FontDownloadModal />
         {/* fullscreen LED banner modal */}
         <LedBannerFullScreen
           visible={isPlaying}
