@@ -9,3 +9,8 @@ export default function BannerAdComponent({ style }: { style?: StyleProp<ViewSty
     <Text allowFontScaling={false}>{WEB_AD_DIAGNOSTICS ? "WEB DIAGNOSTICS · Banner reserved area (150px), no real ad" : adUnavailableReason(resolvedAppLocale)}</Text>
   </View>;
 }
+
+// Web keeps its existing inline diagnostic placement; no native host is loaded.
+export function BannerPlacementProvider({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
+}

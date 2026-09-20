@@ -24,9 +24,9 @@ Cancellation/ads ineligibility invalidates callbacks and cancels the shared time
 
 ## Settings banner
 
-Uses react-native-google-mobile-ads 16.5.0 `LARGE_ANCHORED_ADAPTIVE_BANNER` and measured container width. The wrapper has no fixed 60dp height; the SDK's size drives content height. Left/right/bottom Safe Area are owned once by Settings. At usable viewport heights below 480 logical units, the footer is part of the Settings scroll body so it does not consume a fixed band beside the anchored ad. Other sizes retain the anchored footer. Actual phone/tablet/rotation measurements are pending.
+Uses react-native-google-mobile-ads 16.5.0 `LARGE_ANCHORED_ADAPTIVE_BANNER` and measured container width. The wrapper has no fixed 60dp height; the SDK's size drives content height. Settings reserves left/right/bottom Safe Area once; the persistent root host aligns the banner to that same inset rectangle. At usable viewport heights below 480 logical units, the footer is part of the Settings scroll body so it does not consume a fixed band beside the anchored ad. Other sizes retain the anchored footer. Actual phone/tablet/rotation measurements are pending.
 
-Before the first success: an initial three-request cycle uses 6-second/12-second failure retries; stale/duplicate callbacks are ignored. After all three fail, remove the failed view and show the localized unavailable message for 10 seconds. After it disappears, wait another 60 seconds, then start exactly one additional three-request cycle with the same 6-second/12-second retries (at most six app-controlled requests across remounts before success or process restart). If that cycle also fails, show the message for 10 seconds and stop without another automatic cycle. Success stops app retries; unmount cancels timers. Increasing request identities reject callbacks from the previous cycle. Settings remounts retain the same process-level budget and absolute deadlines in ads/bannerState.ts. Only a previously confirmed successful placement allows a fresh budget on later entry; terminal failure does not reset on remount. This exception applies only to banner load failures after SDK readiness, not initialization/configuration failures or rewarded ads.
+Before the first success: an initial three-request cycle uses 6-second/12-second failure retries; stale/duplicate callbacks are ignored. After all three fail, remove the failed view and show the localized unavailable message for 10 seconds. After it disappears, wait another 60 seconds, then start exactly one additional three-request cycle with the same 6-second/12-second retries (at most six app-controlled requests across remounts before success or process restart). If that cycle also fails, show the message for 10 seconds and stop without another automatic cycle. Success stops app retries; leaving Settings or backgrounding cancels app retry/message timers while retaining their absolute deadlines and the native request. Increasing request identities reject callbacks from the previous cycle. Settings remounts retain the same process-level budget and absolute deadlines in ads/bannerState.ts. Re-entry reuses the retained loading/loaded native view and never resets its budget; terminal failure does not reset on remount. This exception applies only to banner load failures after SDK readiness, not initialization/configuration failures or rewarded ads.
 
 This extra-cycle change is included in the September 10 06f8847 APK and was observed during offline device QA. September 9 artifacts do not include it despite sharing version 1.0.6 (24). Exact timer boundaries are covered by deterministic tests; device UI polling has limited time resolution.
 
@@ -93,7 +93,7 @@ Static import/call-site inspection only: no compile, lint, tests, device QA, com
 
 The placement state owns request IDs, attempts, extra-cycle consumption and absolute retry/message deadlines outside React. Component cleanup removes timers; remount resumes the remaining delay, or requests once when an existing deadline has passed. No requests run while the placement is absent. The existing 6/12-second retry intervals and 10-second message plus 60-second wait remain unchanged. Final failure and the extra-cycle limit survive remounts until process restart. Successful loading clears deadlines; SDK refresh failure still keeps the existing ad.
 
-An unmounted in-flight request consumes its attempt. A later entry may use only the next remaining attempt after its delay. If the third/sixth request is destroyed before receiving a result, stop without fabricating a failed callback, unavailable message or another cycle. Owner tokens and increasing request IDs reject old callbacks and concurrent ownership. There is no disk persistence or new manual retry UI.
+Historical behavior, superseded by the September 19 root-host correction: an unmounted in-flight request consumed its attempt with an unknown outcome. A later entry immediately uses only the next remaining attempt in the same bounded cycle; an already scheduled failure delay still retains its absolute deadline. If the third/sixth request is destroyed before receiving a result, stop without fabricating a failed callback, unavailable message or another cycle. Owner tokens and increasing request IDs reject old callbacks and concurrent ownership. There is no disk persistence or new manual retry UI.
 
 This correction was inspected statically only. No compile, lint, tests or new APK/AAB was performed. The source and documentation are included in the subsequent main delivery.
 
@@ -116,6 +116,57 @@ Existing identity assignment, transmission, SDK persistence/restoration settings
 
 `ads/rewardedState.ts` now correlates earned rewards with the shown ad instance and retains that reward handler after CLOSED/open timeout. A timeout keeps presentation ownership until SDK CLOSED/ERROR; it does not discard the ad, end immersive handling or enable retry. Confirmed show failure promotes existing next-slot work instead of deleting its retry budget. Expiry is distinguished from load failure, and the existing manual retry remains available in eligible foreground recovery states. No ad IDs, reward duration or analytics identity were changed.
 
-The Settings banner only requests while focused and foreground. Releasing an in-flight view without an SDK result stops that unknown attempt instead of inventing a failed-load retry. SDK automatic refresh remains separately unverified; no AdMob console settings changed. Chinese explicit script now precedes region in `language/deviceLocale.ts`.
+The September 17 Settings banner implementation destroyed the in-flight native view on exit and could leave the session stopped. The September 19 correction below supersedes that lifecycle behavior. SDK automatic refresh remains separately unverified; no AdMob console settings changed. Chinese explicit script now precedes region in `language/deviceLocale.ts`.
 
 These source changes were read back but not compiled, linted, tested or exercised on a device. Earlier APK/QA records apply only to their named builds. Late-event behavior, immersive transitions and SDK refresh limits remain runtime verification items.
+
+## September 19 Settings banner lifecycle correction (source only)
+
+- `BannerPlacementProvider` under the app root owns one native banner independently of Settings navigation. Settings reserves the existing banner height, bottom margin and safe-area space. Web keeps its inline diagnostic implementation.
+- Leaving Settings, backgrounding, or disabling ads hides the retained view outside the viewport and disables its touch/accessibility surface. It does not detach the native request or fabricate a load outcome. Existing callbacks can finish while absent; re-entry displays that same request/result, including the third or sixth attempt.
+- App-controlled requests/retry timers run only while Settings is eligible and foreground. Request identity, attempt count, absolute retry/message deadlines and the single extra-cycle budget survive re-entry. Native request width stays fixed for each request so a layout change cannot implicitly reload it. No ad IDs, SDK dependencies, reward logic or console settings changed.
+- Static source/call-site and diff inspection only; no build, lint, tests or device QA performed. Device checks remain necessary for exit/re-entry during each load attempt, hidden completion/failure, background return, ad removal, phone/tablet safe areas and SDK-controlled refresh/viewability. This is not proof of live impressions or release readiness.
+
+## September 20 Android/iOS rate review (source only)
+
+User-supplied aggregate screenshot, with reporting dates/country/format/build breakdown not supplied:
+
+| Platform | Requests | Matched | Match rate | Impressions | Show rate |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Android | 798 | 366 | 45.86% | 212 | 57.92% |
+| iOS | 256 | 232 | 90.63% | 183 | 78.88% |
+
+Match rate is matched requests / requests; show rate is impressions / matched requests. The unmatched 432 Android requests are not evidence of 432 SDK No-fill errors. The 154 matched-but-unshown Android requests are not all proven display failures: unused rewarded preloads and session exits also contribute. This aggregate cannot establish an Android SDK defect or the shipped version of the banner fix.
+
+Source inspection found the same non-personalized request setting on both platforms, separate production App IDs/unit IDs with runtime profile checks, and shared load/show logic. The Android-only immersive presentation boundary remains unchanged. The existing app-start current preload and next preload on OPENED remain; removing them merely to increase Show Rate would change approved readiness behavior.
+
+Corrections in this source change:
+
+- Rewarded requests and 6/12-second retry handles pause in inactive/background states. In-flight SDK work remains owned; failures retain monotonic deadlines and attempt counts. Foreground return resumes only pending first loads or due retries; slot promotion preserves them. No new retry cycle or automatic show is introduced.
+- Recheck ad eligibility immediately before SDK show, after Android immersive preparation, to reject a presentation whose entitlement changed while awaiting preparation.
+- Rewarded traces now correlate request IDs, attempt counts, elapsed time, SDK errors and discarded slot state. The banner records the SDK's actual onAdImpression separately from load completion, including placement eligibility and app state. These are bounded local diagnostics, not uploaded analytics or proof of AdMob report receipt. The installed rewarded adapter does not expose an impression event; OPENED is not labeled as an impression.
+
+Remaining evidence: same-period format/country/app-version reports, serving restrictions, eCPM floors, blocking controls, and country-specific consent configuration in AdMob. No app-owned UMP consent flow was found in the inspected source; this requires consent/configuration review for affected markets, but is not established as the cause of this Android/iOS difference. Non-personalized requests are not a replacement for consent handling. This change does not enable personalized ads or alter console settings.
+
+Static source/diff review only. Build, lint, automated tests, device/ad playback, store-version matching and live console validation were not performed. Rate or revenue improvement is not yet measured. Verify the corrected source in a separately authorized build/device run before judging rollout results.
+
+References: [AdMob metric definitions](https://support.google.com/admob/table/16327896?hl=en), [low match rate causes](https://support.google.com/admob/answer/9655701?hl=en), [Google UMP integration](https://developers.google.com/admob/android/privacy).
+
+AdMob read-only access was authorized during this review. Browser and computer-use runtimes failed with `trusted Node process exited unexpectedly` before a console page could be read. No authenticated report, floor, restriction or consent setting was verified or modified. The screenshot remains the only current account-metric evidence.
+
+## September 20 follow-up: delayed loads, expiry and session clocks (source only)
+
+- Initialization and banner/rewarded load responses pending for 45 seconds now use a neutral delayed-preparation message. This is an observation deadline, not a failed SDK callback: it never refunds an attempt, disposes the request, enables a duplicate retry or auto-shows an ad. A genuine late response remains accepted. Both new status messages are authored in all seven supported languages and included in the rewarded modal's existing intrinsic status-area measurement.
+- A one-shot foreground status timer updates rewarded readiness at the existing one-hour expiry boundary. Expiry disables Watch Ad and exposes the existing manual preparation control; it is separate from show failure and no longer triggers the show's automatic error-popup path just because time elapsed. Foreground return recomputes expiry. Started playback is not interrupted by this timer.
+- SDK initialization retains its shared pending promise, in-flight attempt and 6/12-second retry deadlines across inactive/background transitions. Backgrounding cancels timer handles, not in-flight SDK work; foreground return issues only the remaining due attempt. Explicit entitlement/root suspension retains its existing cancellation behavior.
+- Banner waits/messages, SDK initialization timing, rewarded validity and load deadlines use performance.now(). Human-readable trace timestamps remain UTC wall-clock values; monotonic deadline values are not formatted as calendar dates. Slot disposal/suspension and request outcomes clean up status timer handles. No periodic polling or new automatic retry cycle was added.
+
+Read back the affected source, call sites, web interface and translation variants. No compilation, lint, automated tests, device checks, commit or push was performed. Pending device checks include a genuinely delayed callback and its late result, foreground/background transitions during each initialization retry, one-hour expiry while the popup is open/closed, system-clock changes, and long translated statuses on small/large screens. Source inspection alone does not establish timer behavior during OS suspension or improved AdMob metrics.
+
+### Additional user-supplied seven-day screenshots
+
+A later Android overview showed 57 requests, 100% match rate and 32 impressions: calculated show rate 56.14%. The preceding seven-day counts inferred from the displayed differences are 186 requests and 129 impressions (69.35% show rate). For this interval, lower request volume and matched-but-unshown ads require investigation; low match rate was not observed. Another cropped overview showed 19 requests, 100% match rate and 10 impressions (52.63% calculated show rate), but its app/platform label was not visible. These screenshots have no exact calendar dates or format/country split and are not evidence that the unbuilt source changes improved results.
+
+### Scoped source delivery
+
+The September 19–20 banner lifecycle, delayed/expired state, initialization timing and documentation cleanup changes are grouped for main delivery. The unused external export of the web-internal DiagnosticAdEvent type was removed; no unused runtime ad files were established. The existing qa-ad-state.cjs harness needs synchronization with the new monotonic clock and initialization subscription interface before its next run. Historical passing QA results do not validate this source. Build, lint, tests and device QA were excluded from this delivery request.

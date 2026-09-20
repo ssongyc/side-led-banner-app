@@ -232,6 +232,8 @@ type Props = {
   adReady?: boolean;
   adFailed?: boolean;
   adShowFailed?: boolean;
+  adDelayed?: boolean;
+  adExpired?: boolean;
   onWatchAd?: () => void;
   canRetry?: boolean;
   onRetry?: () => void;
@@ -244,6 +246,8 @@ export function RewardAdModal({
   adReady = false,
   adFailed = false,
   adShowFailed = false,
+  adDelayed = false,
+  adExpired = false,
   onWatchAd,
   canRetry = false,
   onRetry,
@@ -399,7 +403,7 @@ export function RewardAdModal({
 
         <View style={styles.adStatusArea}>
           <ReservedAdText
-            text={adUnavailableReason(resolvedAppLocale) ?? (adReady ? "" : rewardAdLabel(adShowFailed ? "rewardAdShowFailed" : adFailed ? "rewardAdLoadFailed" : "rewardAdPreparing"))}
+            text={adUnavailableReason(resolvedAppLocale) ?? (adReady ? "" : rewardAdLabel(adExpired ? "rewardAdExpired" : adShowFailed ? "rewardAdShowFailed" : adFailed ? "rewardAdLoadFailed" : adDelayed ? "rewardAdDelayed" : "rewardAdPreparing"))}
             variants={REWARD_AD_STATUS_TEXTS}
             textStyle={styles.adStatusText}
           />

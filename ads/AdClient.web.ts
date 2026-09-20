@@ -1,7 +1,7 @@
 import { recordAdEvent } from "./adTrace";
 import { WEB_AD_DIAGNOSTICS, getWebAdState, getWebAdOutcome, selectWebAdState, subscribeWebAdState } from "./webAdDiagnostics.web";
 
-export type DiagnosticAdEvent = "LOADED" | "OPENED" | "EARNED" | "CLOSED" | "ERROR";
+type DiagnosticAdEvent = "LOADED" | "OPENED" | "EARNED" | "CLOSED" | "ERROR";
 // Explicit web diagnostics only. No native SDK or analytics payload changes.
 export function createRewardedAd(listener: (event: DiagnosticAdEvent) => void) {
   if (!WEB_AD_DIAGNOSTICS) throw new Error("Web ad diagnostics are disabled");

@@ -1,3 +1,4 @@
+import { BannerPlacementProvider } from "@/components/admob/bannerAd";
 import { StartupRecovery } from "@/components/StartupRecovery";
 import { STARTUP_RECOVERY_LABELS } from "@/language/startupRecoveryLabels";
 import { SplashLoadingScreen } from "@/components/SplashLoadingScreen";
@@ -270,6 +271,7 @@ export default function RootLayout() {
         accessibilityElementsHidden={!startupComplete}
         importantForAccessibility={startupComplete ? "auto" : "no-hide-descendants"}>
       <SettingsProvider onStartupStateChange={setStorageStartup}>
+        <BannerPlacementProvider>
         <KeyboardProvider>
         <StartupVisibilityContext.Provider value={startupComplete}>
         <StartupPreviewContext.Provider value={setPreviewReady}>
@@ -299,6 +301,7 @@ export default function RootLayout() {
         </StartupPreviewContext.Provider>
         </StartupVisibilityContext.Provider>
         </KeyboardProvider>
+        </BannerPlacementProvider>
       </SettingsProvider>
       </View>
       {!startupComplete && (

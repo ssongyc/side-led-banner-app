@@ -9,9 +9,9 @@
 
 ## 현재 문서의 기준
 
-현재 소스 버전은 **1.1.2 (Android versionCode 29)**이며 Settings는 Expo 버전을 읽어 **V1.1.2**를 표시합니다. 이번 변경은 표시 버전만 갱신했으며 Android versionCode와 iOS buildNumber는 변경하지 않았습니다. 1.1.2 빌드는 아직 생성하지 않았습니다. 최근 로컬 검증 APK/AAB는 main `14b698f`의 **1.1.1 (29)**이며 실행 기록은 `artifacts/apk-runs/20260914-224723-f9b4673c`입니다. 프로덕션 AdMob, 기존 서명, SDK 36, Billing 9.1.0, 4개 ABI, 16 KiB 정렬과 동일 빌드 R8 매핑의 정적 검증을 통과했습니다. 실기기 실행·실제 광고 노출·Play 업로드와 매핑 등록은 수행하지 않았습니다. 아래 이전 버전 문단은 각 시점의 역사적 기록입니다.
+현재 소스 버전은 **1.1.2 (Android versionCode 29)**이며 Settings는 Expo 버전을 읽어 **V1.1.2**를 표시합니다. 버전 갱신 당시 Android versionCode와 iOS buildNumber는 변경하지 않았습니다. 9월 19~20일 광고 변경은 소스 반영 단계이며 새 빌드·실기기 QA를 수행하지 않았습니다. 이 문서에 기록된 최근 로컬 검증 APK/AAB는 main `14b698f`의 **1.1.1 (29)**이며 실행 기록은 `artifacts/apk-runs/20260914-224723-f9b4673c`입니다. 프로덕션 AdMob, 기존 서명, SDK 36, Billing 9.1.0, 4개 ABI, 16 KiB 정렬과 동일 빌드 R8 매핑의 정적 검증을 통과했습니다. 실기기 실행·실제 광고 노출·Play 업로드와 매핑 등록은 수행하지 않았습니다. 아래 이전 버전 문단은 각 시점의 역사적 기록입니다.
 
-V1.1.2 소스에는 iOS Play 종료의 상태 표시줄 선복원·네이티브 안전 영역·페이드 제거와 어두운 상태 표시줄을 반영했습니다. Amplitude 초기화·사용자 식별 후 새 앱 실행당 한 번 `App Opened`를 기록합니다. 상세 동작과 미검증 범위는 [UI 변경 기록](docs/UI_INTERACTION_1.0.9_27.md)과 [광고·분석 문서](docs/ADVERTISING.md)를 참고하세요. 이번 문서·커밋 전달에서는 빌드·린트·테스트를 실행하지 않았습니다.
+V1.1.2 소스에는 iOS Play 종료의 상태 표시줄 선복원·네이티브 안전 영역·페이드 제거와 어두운 상태 표시줄을 반영했습니다. Amplitude 초기화·사용자 식별 후 새 앱 실행당 한 번 `App Opened`를 기록합니다. 상세 동작과 미검증 범위는 [UI 변경 기록](docs/UI_INTERACTION_1.0.9_27.md)과 [광고·분석 문서](docs/ADVERTISING.md)를 참고하세요. 최근 광고 변경의 빌드·린트·테스트·실기기 검증은 수행하지 않았습니다. 아래의 커밋·푸시 미실행 표기는 각 작업 당시 기록입니다.
 
 ## 과거 소스 변경 이력 — 2026-09-09~10
 
@@ -40,7 +40,7 @@ V1.1.2 소스에는 iOS Play 종료의 상태 표시줄 선복원·네이티브 
 
 ## 85a61d6 → edaf82b 변경 비교 (과거 기록)
 
-현재 package.json의 Expo 선언 범위는 **~57.0.22**이며, React Native **0.86.3**, React **19.2.3**, 앱 버전은 **1.1.1**입니다. Settings의 App Version은 Expo 앱 설정을 읽어 **V1.1.1**로 표시합니다. 소스 버전·APK의 versionCode·스토어 배포 버전은 별개입니다.
+아래 표는 두 과거 빌드 시점의 비교입니다. 현재 소스 버전은 상단 「현재 문서의 기준」을, 의존성 선언은 「주요 라이브러리」를 참고하세요. 소스 버전·APK의 versionCode·스토어 배포 버전은 별개입니다.
 
 | 항목 | edaf82b 생성 전 소스 당시 상태 | 85a61d6 APK |
 | --- | --- | --- |
@@ -97,24 +97,27 @@ Upgrade to Pro 설정 항목과 `/premium` 라우트는 제외했습니다. 구�
 현재 광고 구현은 큰 적응형 배너, SDK 초기화의 제한된 재시도, test/production 분리, 명시적 웹 진단 모드와 Android Activity 몰입형 처리를 포함합니다. [광고 구현 및 검증 제한](docs/ADVERTISING.md)을 참고하세요. 최근 1.1.0 (28) APK/AAB에서 프로덕션 광고 설정의 정적 포함을 확인했으며, 실기기 광고 노출·배치는 미검증입니다.
 
 
-리워드 상태는 슬롯별 `idle/loading/loaded/showing/failed`와 실패 원인 `load/show/initialization/configuration`에서 하나의 UI 스냅샷으로 계산합니다. 중복 전역 실패 플래그는 사용하지 않습니다.
+리워드 상태는 슬롯별 `idle/loading/loaded/showing/failed`와 실패 원인 `load/show/open-timeout/expiry/initialization/configuration`에서 하나의 UI 스냅샷으로 계산합니다. 중복 전역 실패 플래그는 사용하지 않습니다.
 
 리워드 광고는 무료 사용자 상태가 확인되고 광고 SDK 초기화가 완료되면 선로딩합니다. 준비·로딩·재생 중인 광고가 있으면 같은 로드 주기를 중복 시작하지 않습니다. 광고가 열리면 다음 광고도 선로딩하며, 로드 완료만으로 재생하지 않습니다.
 
 | 상태 | 리워드 버튼 | 고정 안내 영역 |
 | --- | --- | --- |
 | 준비·로딩·재시도 중 | 비활성, 광고 준비 중… | 광고를 준비하고 있어요. 잠시만 기다려 주세요. |
+| 응답이 45초 이상 지연 | 비활성, 광고 준비 중… | 광고 준비가 지연되고 있어요. 응답을 기다리고 있습니다. |
+| 준비된 광고 만료 | 비활성, 기존 다시 시도 제공 | 준비된 광고가 만료됐어요. 다시 준비해 주세요. |
 | 준비 완료 | 활성, 언어별 Watch Ad 문구 | 문구를 지우고 공간 유지 |
 | 로드 3회 실패 | 비활성, 광고 준비 중… | 광고를 불러오지 못했어요. 잠시 후 다시 시도해 주세요. |
 | 재생 실패 | 비활성, 광고 준비 중… | 광고를 재생하지 못했어요. 다시 시도해 주세요. |
 
 - 로드: 최초 요청 → 실패 후 6초 뒤 두 번째 → 실패 후 12초 뒤 세 번째. 각 요청의 응답 시간은 별도입니다.
 - 최종 로드 실패와 재생 실패에는 수동 `다시 시도`를 제공합니다. Settings 화면을 실제로 나갔다가 다시 진입하면 최종 로드 실패 주기를 새로 시작할 수 있으며, 같은 화면에서 모달만 다시 여는 동작은 초기화하지 않습니다. 이 상태는 메모리에서 관리하므로 앱 프로세스 재시작 시 새 세션으로 시작합니다.
-- 재생 실패는 즉시 처리하고 실패한 광고와 대기 광고를 폐기합니다. 수동 재시도는 새 최대 3회 로드만 수행합니다. 새로 활성화된 Watch Ad를 눌러야 모달 제거 후 다음 프레임에 한 번 표시를 요청합니다.
+- SDK가 재생 실패를 확정하면 기존 다음 슬롯을 현재 슬롯으로 승격하며 진행 중 요청·횟수·예정 시각을 보존합니다. 표시 요청 후 15초 동안 OPENED가 없으면 별도 지연 오류를 알리되, SDK 종료가 확인될 때까지 표시 소유권을 유지합니다. 수동 재시도가 가능한 상태에서 다시 시도하면 새 최대 3회 로드만 수행합니다. 새로 활성화된 Watch Ad를 눌러야 모달 제거 후 다음 프레임에 한 번 표시를 요청합니다.
 - 영어 준비 버튼은 `Preparing Ad...`입니다. 상태·버튼 문구는 지원 언어 7개로 제공하며, 가장 긴 문구의 공간을 최초 레이아웃부터 예약합니다. 작은 화면에서는 닫기·이미지·본문·안내·다시 시도·Watch Ad를 포함한 전체 콘텐츠를 하나의 세로 영역으로 스크롤하도록 구현했습니다. 모든 언어·화면 크기에서의 제스처와 레이아웃 검증은 미실행입니다.
 - 준비·실패 안내에 토스트·스낵바·추가 팝업을 사용하지 않습니다. 재생 실패 시 기존 리워드 모달에 안내합니다.
-- 현재 광고의 EARNED_REWARD를 받으면 2시간 Pro를 즉시 한 번만 부여합니다. CLOSED는 광고 정리와 다음 슬롯 승격에만 사용하며, 실패 경로에서 보상을 지급하지 않습니다.
-- 네이티브 배너는 최초 요청과 실패 후 6초·12초 재시도를 사용합니다. 3회 실패 안내를 10초 표시한 뒤 60초 더 기다려 동일한 주기를 한 번만 추가합니다. 추가 주기도 실패하면 안내를 10초 표시하고 중단합니다. 일반 웹의 광고 미지원 안내는 계속 표시합니다. 배너 횟수·추가 주기 사용 여부·대기 마감 시간은 ads/bannerState.ts에 유지해 재마운트로 초기화되지 않습니다. 화면 밖에서는 요청하지 않고 재진입 시 남은 대기를 이어갑니다. 마지막 실패 이후에는 프로세스 재시작 전까지 자동 주기를 재개하지 않습니다. 확인된 성공 후 새 배너 진입은 새 로드를 허용합니다. 진행 중 폐기된 요청도 횟수에 포함하며, 세 번째 요청이 응답 없이 폐기되면 실패를 꾸며내거나 추가 주기를 예약하지 않고 중단합니다. 이번 수정의 실행 검증은 미실행입니다. 리워드의 공유 실패 상태와는 별도입니다. 자세한 범위는 [광고 문서](docs/ADVERTISING.md)를 참조하세요.
+- 현재 광고의 EARNED_REWARD를 받으면 2시간 Pro를 즉시 한 번만 부여합니다. CLOSED는 광고 정리와 다음 슬롯 승격에 사용합니다. 실패·시간 초과만으로 보상을 만들지 않으며, 종료 뒤 늦게 도착한 실제 보상 이벤트도 표시했던 광고에 연결해 중복 없이 처리합니다.
+- 네이티브 배너는 최초 요청과 실패 후 6초·12초 재시도를 사용합니다. 3회 실패 안내를 10초 표시한 뒤 60초 더 기다려 동일한 주기를 한 번만 추가합니다. 추가 주기도 실패하면 안내를 10초 표시하고 중단합니다. 앱 루트의 배너 호스트가 네이티브 요청을 유지하고 Settings는 자리와 표시 여부를 연결합니다. 화면 이탈·백그라운드에서는 새 앱 요청과 재시도 타이머를 멈추되 기존 요청·결과·시도 횟수·마감 시각을 보존합니다. 재진입은 같은 광고 또는 남은 대기를 이어가며 성공·실패 예산을 초기화하지 않습니다. SDK 자동 새로고침과 실제 숨김·재표시는 실기기 미검증입니다. 일반 웹의 미지원 안내와 명시적 웹 진단은 별도 경로입니다. 자세한 범위는 [광고 문서](docs/ADVERTISING.md)를 참조하세요.
+- 초기화·배너·리워드의 45초 지연 안내는 실패 판정이나 재요청이 아닙니다. 늦게 도착한 SDK 결과를 처리하며 지연만으로 수동 재시도를 활성화하지 않습니다. 리워드 만료는 버튼·기존 상태 영역을 갱신하고 자동 팝업이나 자동 재생을 시작하지 않습니다. 대기·광고 유효시간은 경과시간 기준이며 로그의 UTC 시각과 구분합니다.
 - 영구 구매자는 광고를 요청하지 않습니다. 구매 여부 확인 전 또는 확인 실패를 무료 사용자로 바꿔 광고를 요청하지 않습니다.
 - Android 광고에는 immersive 옵션을 적용합니다. 현재 버전의 진입·재생·종료·복귀 전 구간에서 내비게이션 바가 한 프레임도 노출되지 않는지는 실기기 미검증입니다. 과거 Google Play 외부 설치 화면의 노출 제한은 이전 기록에 남아 있습니다.
 
@@ -222,7 +225,8 @@ side-led-banner-app/
 │   │   ├── rewardAdDebugFab.tsx      # 리워드 광고 디버그 버튼
 │   │   └── sheetFetchDebugPanel.tsx  # 시트 fetch 디버그 패널
 │   ├── admob/
-│   │   └── bannerAd.tsx              # 설정 화면 배너 광고
+│   │   ├── bannerAd.tsx              # Settings 자리 예약·루트 네이티브 배너 호스트
+│   │   └── bannerAd.web.tsx          # 웹 안내·명시적 진단 배너
 │   ├── skia/
 │   │   └── GradientBackdrop.tsx      # 그라데이션 배경
 │   ├── previewPanel.tsx              # 미리보기 패널
@@ -237,9 +241,10 @@ side-led-banner-app/
 │   ├── AdClient.tsx               # 네이티브 광고 SDK 경계
 │   ├── AdClient.web.ts            # 명시적 웹 진단 이벤트
 │   ├── rewardedState.ts           # 리워드 슬롯·타이머·보상 조건
+│   ├── bannerState.ts             # 세션 배너 요청 예산·재시도 마감 시각
 │   ├── adConfiguration.ts         # 플랫폼·프로필 검증
 │   ├── adTrace.ts                 # 120개 추적 기록, 개발 모드 콘솔
-│   ├── initializeMobileAds.ts     # 공유 SDK 초기화
+│   ├── initializeMobileAds.ts     # 공유 SDK 초기화·백그라운드 대기·지연 안내
 │   ├── initializeMobileAds.web.ts # 웹 초기화 미지원
 │   └── webAdDiagnostics.web.ts    # 진단 상태 선택
 ├── hooks/
@@ -338,7 +343,7 @@ side-led-banner-app/
 - `eas.json`은 원격 버전 번호를 사용합니다 (`appVersionSource: remote`).
 - Android `preview`는 내부 배포 APK용이며 현재 자동 번호 증가가 없습니다. 같은 versionCode로도 소스가 다른 APK가 생성될 수 있으므로 커밋과 Build ID를 함께 기록합니다.
 - Android `production`은 스토어 AAB용이며 `autoIncrement: true`입니다. 실제 versionCode는 완료된 빌드에서 확인합니다.
-- V1.1.1 소스 변경 자체가 원격 versionCode 증가나 스토어 제출을 뜻하지 않습니다.
+- 앱 표시 버전 변경 자체가 원격 versionCode 증가나 스토어 제출을 뜻하지 않습니다.
 
 
 
@@ -485,3 +490,22 @@ Expo 앱 버전을 1.1.1, Android versionCode를 29로 변경했습니다. Setti
 Text·Background·Effects의 각 ScrollView에 남은 화면 높이를 사용하는 `flex: 1` 패널 스타일을 적용했습니다. 이전 터치 인계 수정 뒤에도 높이 제약이 없어 콘텐츠가 부모에서 잘리고 내부 스크롤 거리가 생기지 않던 공통 원인을 보완한 것으로, 세 탭은 콘텐츠가 화면보다 길 때 각각 독립적으로 상하 스크롤합니다. 리워드 팝업의 Watch Ad 배경 이미지에는 버튼 전체 너비·높이를 명시해 iPad에서 배경 일부만 표시되는 경로를 수정했습니다. 기존 슬라이더 조작, 설정값, 광고 준비·표시·보상 순서는 유지합니다.
 
 [세부 UI 변경 기록](docs/UI_INTERACTION_1.0.9_27.md)에 원인, 적용 범위와 검증 한계를 기록했습니다. 이번 변경은 소스와 문서 diff만 확인했으며, 요청에 따라 빌드·린트·테스트와 iPhone/iPad 실기기 검증은 실행하지 않았습니다. 기존 APK/AAB에는 포함되지 않습니다.
+
+
+### Settings banner lifecycle — 2026-09-19 (source only)
+
+The app-root banner host retains the native request and attempt budget when Settings is left. Returning reuses the pending/completed request; new app-controlled retries pause while absent and resume against the existing deadline. Settings keeps its reserved layout area. See [advertising lifecycle details and outstanding device checks](docs/ADVERTISING.md#september-19-settings-banner-lifecycle-correction-source-only). No build, lint, tests or device verification was performed for this change.
+
+### Android/iOS ad-rate review — 2026-09-20 (source only)
+
+Rewarded loading now preserves pending work and retry deadlines across background/foreground transitions without issuing new background requests. The show boundary rechecks entitlement, and local diagnostics distinguish banner impressions from loads and correlate rewarded request/error/disposal events. See [the screenshot comparison, findings and remaining evidence](docs/ADVERTISING.md#september-20-androidios-rate-review-source-only). No build, lint, tests, device QA or measured rate improvement is claimed.
+
+### Ad preparation follow-up — 2026-09-20 (source only)
+
+Added a delayed-response notice without cancelling or duplicating SDK requests, live rewarded-expiry button updates with existing manual recovery, foreground-only SDK initialization retries preserving deadlines, and monotonic timing for ad validity/waits. Seven-language status text remains in the existing inline area. See [implementation and unperformed device checks](docs/ADVERTISING.md#september-20-follow-up-delayed-loads-expiry-and-session-clocks-source-only). Build, lint, tests, commit and push were not run.
+
+### 광고 정리 및 문서 일치 확인 — 2026-09-20
+
+광고 파일·API의 앱/플랫폼별 참조와 QA 참조를 확인했습니다. 삭제할 미사용 광고 파일은 발견하지 못했으며, 외부 소비자가 없는 웹 내부 타입 `DiagnosticAdEvent`의 export만 제거했습니다. 웹의 명시적 미지원 경계, 진단 코드와 `getAdTrace` QA 용도는 유지합니다.
+
+기존 `scripts/qa-ad-state.cjs`는 보존 대상입니다. 다만 새 `performance.now()` 기준과 초기화 구독 API에 대한 하네스가 아직 동기화되지 않았으므로 다음 자동 QA 전에 갱신해야 합니다. 과거 통과 기록은 해당 당시 소스의 결과이며 현재 광고 변경의 통과 증거가 아닙니다. 이번 정리에서는 빌드·린트·테스트·커밋·푸시를 실행하지 않았습니다.

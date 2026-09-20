@@ -48,6 +48,8 @@ export default function Index() {
   const { playOption } = config.content;
   const { isPlaying, activeTab, rewardAdVisible } = ui;
   const {
+    delayed: rewardAdDelayed,
+    expired: rewardAdExpired,
     loaded: rewardAdLoaded,
     failed: rewardAdFailed,
     showFailed: rewardAdShowFailed,
@@ -266,6 +268,8 @@ export default function Index() {
         {!isPremium && <RewardAdModal
           visible={rewardAdVisible}
           onClose={() => updateUI({ rewardAdVisible: false })}
+          adDelayed={rewardAdDelayed}
+          adExpired={rewardAdExpired}
           adReady={rewardAdLoaded}
           adFailed={rewardAdFailed}
           adShowFailed={rewardAdShowFailed}

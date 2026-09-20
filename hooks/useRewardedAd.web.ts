@@ -35,6 +35,6 @@ export function useRewardedAd(onRewardEarned: () => void) {
   }, []);
   const canRetry = WEB_AD_DIAGNOSTICS && (state === "load-failed" || state === "show-failed");
   const retry = useCallback(() => { if (canRetry) selectWebAdState("loading"); }, [canRetry]);
-  return { loaded: isWebAdReady(), failed: !WEB_AD_DIAGNOSTICS || state === "load-failed" || state === "show-failed",
+  return { delayed: false, expired: false, loaded: isWebAdReady(), failed: !WEB_AD_DIAGNOSTICS || state === "load-failed" || state === "show-failed",
     showFailed: WEB_AD_DIAGNOSTICS && state === "show-failed", show, canRetry, retry, isReady: isWebAdReady };
 }

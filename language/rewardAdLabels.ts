@@ -17,6 +17,8 @@ export type RewardAdLabelKey =
   | "rewardBenefitOutlineShadow"
   | "rewardDescription"
   | "rewardWatchAd"
+  | "rewardAdDelayed"
+  | "rewardAdExpired"
   | "rewardAdPreparing"
   | "rewardAdPreparingButton"
   | "rewardAdLoadFailed"
@@ -25,6 +27,24 @@ export type RewardAdLabelKey =
   | "rewardAdUnavailable";
 
 const LABELS: Record<RewardAdLabelKey, Record<AppLocaleKey, string>> = {
+  rewardAdDelayed: {
+    ko: "광고 준비가 지연되고 있어요. 응답을 기다리고 있습니다.",
+    en: "Ad preparation is taking longer. Waiting for a response.",
+    ja: "広告の準備に時間がかかっています。応答を待っています。",
+    zhTC: "廣告準備時間較長，正在等待回應。",
+    zhSC: "广告准备时间较长，正在等待响应。",
+    fr: "La préparation prend plus de temps. En attente d’une réponse.",
+    es: "El anuncio tarda más en prepararse. Esperando una respuesta."
+  },
+  rewardAdExpired: {
+    ko: "준비된 광고가 만료됐어요. 다시 준비해 주세요.",
+    en: "The prepared ad has expired. Please prepare it again.",
+    ja: "準備した広告の有効期限が切れました。再度準備してください。",
+    zhTC: "準備好的廣告已過期，請重新準備。",
+    zhSC: "准备好的广告已过期，请重新准备。",
+    fr: "La publicité préparée a expiré. Veuillez la préparer à nouveau.",
+    es: "El anuncio preparado ha caducado. Vuelve a prepararlo."
+  },
   rewardAdPreparing: {
   "ko": "광고를 준비하고 있어요. 잠시만 기다려 주세요.",
   "en": "Preparing your ad. Please wait a moment.",
@@ -156,6 +176,8 @@ const LABELS: Record<RewardAdLabelKey, Record<AppLocaleKey, string>> = {
 // All variants participate in intrinsic layout, including before an ad state changes.
 export const REWARD_AD_STATUS_TEXTS = [
   ...Object.values(LABELS.rewardAdPreparing),
+  ...Object.values(LABELS.rewardAdDelayed),
+  ...Object.values(LABELS.rewardAdExpired),
   ...Object.values(LABELS.rewardAdLoadFailed),
   ...Object.values(LABELS.rewardAdShowFailed),
 ];
@@ -198,7 +220,7 @@ export function tRewardAdLabel(
 ): string {
   const fb = LABELS[key];
   // Authored modal status copy must not be replaced by a remotely matched Sheet row.
-  if (key === "rewardAdPreparing" || key === "rewardAdPreparingButton" ||
+  if (key === "rewardAdDelayed" || key === "rewardAdExpired" || key === "rewardAdPreparing" || key === "rewardAdPreparingButton" ||
       key === "rewardAdLoadFailed" || key === "rewardAdShowFailed" || key === "rewardAdRetry") return fb[locale];
   const opts = REWARD_SHEET_PICK[key];
 

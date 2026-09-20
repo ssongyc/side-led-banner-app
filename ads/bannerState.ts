@@ -14,7 +14,7 @@ export function claimBanner(token: symbol) {
 }
 export function requestBanner(token: symbol) {
   if (owner !== token || state.phase === "loading" || state.phase === "loaded" || state.phase === "stopped") return;
-  if (state.phase !== "idle" && (state.dueAt === null || Date.now() < state.dueAt)) return;
+  if (state.phase !== "idle" && (state.dueAt === null || performance.now() < state.dueAt)) return;
   const extra = state.phase === "failed";
   if (extra && state.extraUsed) return;
   update({ phase: "loading", attempt: state.attempt + 1, requestId: state.requestId + 1,
@@ -28,7 +28,7 @@ export function bannerLoaded(token: symbol, requestId: number) {
 export function bannerFailed(token: symbol, requestId: number) {
   if (owner !== token || state.requestId !== requestId || state.phase !== "loading") return false;
   const delay = [6000, 12000][(state.attempt - 1) % 3];
-  const now = Date.now();
+  const now = performance.now();
   if (delay !== undefined) update({ phase: "waiting", dueAt: now + delay });
   else update({ phase: "failed", messageUntil: now + 10_000,
     dueAt: state.extraUsed ? null : now + 70_000 });
@@ -37,12 +37,9 @@ export function bannerFailed(token: symbol, requestId: number) {
 export function releaseBanner(token: symbol) {
   if (owner !== token) return;
   owner = null;
-  if (state.phase === "loaded") {
-    // A later visible placement may load anew after a confirmed success.
-    update({ phase: "idle", attempt: 0, extraUsed: false, dueAt: null, messageUntil: 0 });
-  } else if (state.phase === "loading") {
-    // Destroyed requests consume their slot; do not replay it or invent a failure callback.
-    // Cancellation has no load-failure outcome, so it cannot schedule a retry.
+  // Only the root host's actual teardown releases ownership. Screen exits never
+  // call this: their in-flight native view and callbacks remain alive.
+  if (state.phase === "loading" || state.phase === "loaded") {
     update({ phase: "stopped", dueAt: null, messageUntil: 0 });
   }
 }
