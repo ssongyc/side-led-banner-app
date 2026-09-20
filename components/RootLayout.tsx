@@ -31,7 +31,7 @@ import { useLocales } from "expo-localization";
 import { Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, AppState, Platform, StyleSheet, View } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
@@ -117,7 +117,9 @@ export default function RootLayout() {
   const [splashDismissed, setSplashDismissed] = useState(false);
   const [splashFailed, setSplashFailed] = useState(false);
   const [splashAttempt, setSplashAttempt] = useState(0);
+  const splashHidePromise = useRef<Promise<void> | null>(null);
   const retrySplash = useCallback(() => {
+    splashHidePromise.current = null;
     setSplashFailed(false);
     setSplashAttempt(attempt => attempt + 1);
   }, []);
@@ -130,19 +132,24 @@ export default function RootLayout() {
     if (splashDismissed || splashFailed) return;
     if (!startupComplete && (!loaderLaidOut || (!loaderImageReady && !recoveryVisible))) return;
     let cancelled = false;
-    void SplashScreen.hideAsync().then(() => {
-      if (!cancelled) setSplashDismissed(true);
-    }).catch(error => {
-      if (cancelled) return;
-      setSplashFailed(true);
-      if (__DEV__) console.error("[Splash] Native splash dismissal failed", error);
-      if (Platform.OS !== "web") {
-        const labels = STARTUP_RECOVERY_LABELS[deviceAppLocale];
-        Alert.alert(labels.title, labels.splash, [{ text: labels.retry, onPress: retrySplash }],
-          { cancelable: false });
-      }
+    const frame = requestAnimationFrame(() => {
+      // Request a frame explicitly; readiness changes reuse the same native call.
+      // Only the existing explicit failure-retry action clears this promise.
+      splashHidePromise.current ??= Promise.resolve().then(() => SplashScreen.hideAsync());
+      void splashHidePromise.current.then(() => {
+        if (!cancelled) setSplashDismissed(true);
+      }).catch(error => {
+        if (cancelled) return;
+        setSplashFailed(true);
+        if (__DEV__) console.error("[Splash] Native splash dismissal failed", error);
+        if (Platform.OS !== "web") {
+          const labels = STARTUP_RECOVERY_LABELS[deviceAppLocale];
+          Alert.alert(labels.title, labels.splash, [{ text: labels.retry, onPress: retrySplash }],
+            { cancelable: false });
+        }
+      });
     });
-    return () => { cancelled = true; };
+    return () => { cancelled = true; cancelAnimationFrame(frame); };
   }, [startupComplete, loaderLaidOut, loaderImageReady, recoveryVisible, splashDismissed, splashFailed, splashAttempt, deviceAppLocale, retrySplash]);
 
   const [preparedLocale, setPreparedLocale] = useState<string | null>(null);

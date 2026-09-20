@@ -23,10 +23,40 @@ export type RewardAdLabelKey =
   | "rewardAdPreparingButton"
   | "rewardAdLoadFailed"
   | "rewardAdShowFailed"
+  | "rewardAdInitializationFailed"
+  | "rewardAdConfigurationFailed"
+  | "rewardAdOpenUnconfirmed"
   | "rewardAdRetry"
   | "rewardAdUnavailable";
 
 const LABELS: Record<RewardAdLabelKey, Record<AppLocaleKey, string>> = {
+  rewardAdInitializationFailed: {
+    ko: "광고 서비스를 초기화하지 못했어요. 다시 시도해 주세요.",
+    en: "The ad service could not initialize. Please try again.",
+    ja: "広告サービスを初期化できませんでした。もう一度お試しください。",
+    zhTC: "無法初始化廣告服務，請重試。",
+    zhSC: "无法初始化广告服务，请重试。",
+    fr: "Impossible d’initialiser le service publicitaire. Veuillez réessayer.",
+    es: "No se pudo inicializar el servicio de anuncios. Inténtalo de nuevo."
+  },
+  rewardAdConfigurationFailed: {
+    ko: "광고 설정에 문제가 있어 광고를 이용할 수 없어요.",
+    en: "Ads are unavailable because of an ad configuration problem.",
+    ja: "広告の設定に問題があるため、広告を利用できません。",
+    zhTC: "廣告設定有問題，無法使用廣告。",
+    zhSC: "广告配置有问题，无法使用广告。",
+    fr: "Les publicités sont indisponibles en raison d’un problème de configuration.",
+    es: "Los anuncios no están disponibles por un problema de configuración."
+  },
+  rewardAdOpenUnconfirmed: {
+    ko: "광고가 열렸는지 확인되지 않았어요. 응답을 기다리고 있습니다.",
+    en: "Ad opening has not been confirmed. Waiting for a response.",
+    ja: "広告が開いたことを確認できません。応答を待っています。",
+    zhTC: "尚未確認廣告是否開啟，正在等待回應。",
+    zhSC: "尚未确认广告是否打开，正在等待响应。",
+    fr: "L’ouverture de la publicité n’est pas confirmée. En attente d’une réponse.",
+    es: "No se ha confirmado la apertura del anuncio. Esperando una respuesta."
+  },
   rewardAdDelayed: {
     ko: "광고 준비가 지연되고 있어요. 응답을 기다리고 있습니다.",
     en: "Ad preparation is taking longer. Waiting for a response.",
@@ -180,6 +210,9 @@ export const REWARD_AD_STATUS_TEXTS = [
   ...Object.values(LABELS.rewardAdExpired),
   ...Object.values(LABELS.rewardAdLoadFailed),
   ...Object.values(LABELS.rewardAdShowFailed),
+  ...Object.values(LABELS.rewardAdInitializationFailed),
+  ...Object.values(LABELS.rewardAdConfigurationFailed),
+  ...Object.values(LABELS.rewardAdOpenUnconfirmed),
 ];
 export const REWARD_AD_BUTTON_TEXTS = [
   ...Object.values(LABELS.rewardWatchAd),
@@ -220,7 +253,7 @@ export function tRewardAdLabel(
 ): string {
   const fb = LABELS[key];
   // Authored modal status copy must not be replaced by a remotely matched Sheet row.
-  if (key === "rewardAdDelayed" || key === "rewardAdExpired" || key === "rewardAdPreparing" || key === "rewardAdPreparingButton" ||
+  if (key === "rewardAdInitializationFailed" || key === "rewardAdConfigurationFailed" || key === "rewardAdOpenUnconfirmed" || key === "rewardAdDelayed" || key === "rewardAdExpired" || key === "rewardAdPreparing" || key === "rewardAdPreparingButton" ||
       key === "rewardAdLoadFailed" || key === "rewardAdShowFailed" || key === "rewardAdRetry") return fb[locale];
   const opts = REWARD_SHEET_PICK[key];
 

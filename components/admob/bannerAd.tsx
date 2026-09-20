@@ -8,7 +8,7 @@ import { usePremium } from "@/contexts/premiumContext";
 import { AdaptiveBannerAd } from "@/ads/AdClient";
 import { getAdConfiguration } from "@/ads/adConfiguration";
 import { recordAdEvent } from "@/ads/adTrace";
-import { initializeMobileAds, useMobileAdsState, useMobileAdsLoadDelayed } from "@/ads/initializeMobileAds";
+import { initializeMobileAds, retryMobileAdsInitialization, useMobileAdsState, useMobileAdsLoadDelayed } from "@/ads/initializeMobileAds";
 import { getBannerPlacement } from "@/ads/bannerState";
 
 const REQUEST_OPTIONS = { requestNonPersonalizedAdsOnly: true };
@@ -79,7 +79,7 @@ function PersistentBanner({ placementId, adaptiveWidth, visible, delayedLabel, u
   visible: boolean; delayedLabel: string; unavailableLabel: string; onHeight: (height: number) => void;
   bottom: number; left: number; right: number;
 }) {
-  const { getBannerState, subscribeBannerState, claimBanner, releaseBanner, requestBanner, bannerLoaded, bannerFailed } = getBannerPlacement(placementId);
+  const { initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, releaseBanner, requestBanner, bannerLoaded, bannerFailed } = getBannerPlacement(placementId);
   const sdkState = useMobileAdsState();
   const sdkDelayed = useMobileAdsLoadDelayed();
   const [foreground, setForeground] = useState(AppState.currentState === "active");
@@ -112,6 +112,19 @@ function PersistentBanner({ placementId, adaptiveWidth, visible, delayedLabel, u
   useEffect(() => {
     if (eligible) void initializeMobileAds().catch(() => { /* Shared state carries failure. */ });
   }, [eligible]);
+  useEffect(() => {
+    if (owned && sdkState === "failed") initializationFailed(token.current);
+  }, [owned, sdkState, state.phase]);
+  useEffect(() => {
+    if (!eligible || !owned || !config || sdkState !== "failed" || state.dueAt === null || state.extraUsed) return;
+    const timer = setTimeout(() => {
+      if (!canRequest.current || AppState.currentState !== "active" || !beginInitializationRecovery(token.current)) return;
+      retryMobileAdsInitialization();
+      recordAdEvent("banner", "initialization_extra_cycle_started", { placementId });
+      void initializeMobileAds().catch(() => { /* Shared state reports the genuine result. */ });
+    }, Math.max(0, state.dueAt - performance.now()));
+    return () => clearTimeout(timer);
+  }, [eligible, owned, config, sdkState, state.dueAt, state.extraUsed]);
   useEffect(() => {
     if (!eligible || !owned || sdkState !== "ready" || !config || width <= 0) return;
     if (state.phase === "idle") {

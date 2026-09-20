@@ -35,6 +35,18 @@ function createBannerPlacement() {
       dueAt: state.extraUsed ? null : now + 70_000 });
     return true;
   }
+  function initializationFailed(token: symbol) {
+    if (owner !== token || state.phase === "failed" || state.phase === "stopped" || state.phase === "loaded") return;
+    const now = performance.now();
+    update({ phase: "failed", messageUntil: now + 10_000,
+      dueAt: state.extraUsed ? null : now + 70_000 });
+  }
+  function beginInitializationRecovery(token: symbol) {
+    if (owner !== token || state.phase !== "failed" || state.extraUsed ||
+        state.dueAt === null || performance.now() < state.dueAt) return false;
+    update({ phase: "idle", attempt: 0, extraUsed: true, dueAt: null, messageUntil: 0 });
+    return true;
+  }
   function releaseBanner(token: symbol) {
     if (owner !== token) return;
     owner = null;
@@ -45,7 +57,7 @@ function createBannerPlacement() {
     }
   }
 
-  return { getBannerState, subscribeBannerState, claimBanner, requestBanner, bannerLoaded, bannerFailed, releaseBanner };
+  return { initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, requestBanner, bannerLoaded, bannerFailed, releaseBanner };
 }
 
 const placements = new Map<string, ReturnType<typeof createBannerPlacement>>();

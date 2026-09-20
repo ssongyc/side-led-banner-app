@@ -177,3 +177,70 @@ The production Android build exposed an unsupported direct @react-navigation/nat
 
 
 The import correction subsequently passed Android compilation and bundled-source checks in run 20260920-214301-06a96479 for V1.1.2(30). Production AdMob configuration and native modules were verified in both APK and AAB. Actual impressions/rewards and device lifecycle QA remain unperformed. The source correction and the historical export records are included in this final source delivery; no build, lint, tests or device QA ran for this delivery. See the successful export record in ANDROID_BUILD_OPTIMIZATION.md.
+
+## Rewarded failure messages — 2026-09-21 source update
+
+The rewarded snapshot now carries its existing failure cause through the hook and main screen to the popup. SDK initialization failure, configuration failure and unconfirmed ad opening each have separate authored messages in all seven supported languages. These messages participate in the popup's initial reserved-text sizing and are not overwritten by Sheet matching. The web hook exposes a null native failure cause and retains its existing explicit diagnostic behavior.
+
+Third-load exhaustion still uses the load-failure message; confirmed show failure keeps the existing presentation-failure message. A show-to-open timeout no longer claims definite playback failure or asks the user to retry. Its existing recovery block, genuine late callbacks, current/next slots and fresh-tap-only presentation remain unchanged.
+
+Source and call-site diff review only; no build, lint, tests, device QA, commit or push. Effective AdMob automatic refresh, native transition frames and retained late-reward listener/resource cleanup remain unverified and are not claimed fixed.
+## Banner refresh delivery and pending SDK cleanup — 2026-09-21
+
+The user requested both improvements. Automatic refresh was changed from Google optimized to Disabled for Android banner 9971880471 and iOS banner 4875843768 (publisher 3506417530430977). Each AdMob setting was reopened after Save and showed Disabled selected. No app periodic refresh was added. This confirms saved console configuration, not measured device request totals.
+
+Installed react-native-google-mobile-ads 16.5.0 retains its JS SharedEventEmitter subscription after removeAllListeners; Android adArray and iOS adMap/delegateMap also retain per-request objects without an individual rewarded disposal API. Removing only app listeners therefore cannot complete native cleanup.
+
+The proposed dependency repair was NOT applied: automatic approval review rejected direct JS/Android/iOS library patching and a new native API because an unbuilt cross-platform change could break builds, ad callbacks or reward delivery. The rejected command did not create the patch script or change node_modules. Earlier app-level message corrections remain intact.
+
+### Concrete pending repair scope (requires approval after review rejection)
+
+1. Add rewardedDispose(requestId) to the rewarded module's codegen interface and Android/iOS implementations, releasing only that request's native references on the UI queue.
+2. Have the loaded event identify a Google-served response from the actual adapter. Release a closed Google-served instance, or a rewarded-and-closed instance, only after delivering its genuine callbacks. Preserve unknown mediation's late earned callback and report any unproved terminal boundary; no time/count eviction.
+3. Release the corresponding JS native-event subscription as well as app listeners. For a discarded in-flight load, retain a cleanup listener until a real load/error result, then release that result instead of recreating an orphan native object. Preserve current/next slot budgets and show cancellation.
+4. Keep the repair as a version-checked reproducible dependency patch, include it in installation/native preparation fingerprints and apply it to reused build snapshots. Require a native rebuild before claiming delivery to an installed app. No dependency upgrade, build/test, commit or push is authorized by this pending proposal alone.
+
+This is a reviewable implementation scope, not implemented or verified code. Android/iOS compilation and callback/resource/device checks remain unperformed.
+## Approved rewarded resource repair — 2026-09-21 source implementation
+
+The user explicitly approved the concrete dependency repair above after the automatic review rejection. The prior blocked status is historical. The source implementation is now present in plugins/patchRewardedCleanup.cjs and applied to the installed 16.5.0 dependency. This is not a compiled/runtime validation.
+
+- The version-checked patch adds rewardedDispose(requestId) to the codegen spec, Android rewarded module and iOS rewarded module. Native per-request ad/delegate references are removed on the UI queue. The JS handle removes its native event subscription and all remaining application listeners after a proved terminal boundary. Android now forwards rewarded failed-to-show callbacks into the existing error path; other fullscreen formats are unchanged.
+- The loaded event carries the actual Google adapter ordering guarantee. Google-served CLOSED, an earned-and-closed ad (in either order), and a confirmed SDK error release resources only after the event reaches app listeners. The app explicitly disposes never-shown discarded slots and rejected/cancelled show attempts. A discarded pending load retains only the callback path necessary to release its genuine later result; it is not turned into a failure/retry.
+- Unknown mediation that closes without an earned callback still lacks a proved terminal reward boundary. Its genuine late callback remains, as does any SDK request that never settles. These unresolved cases are not solved by an arbitrary time limit; no universal bounded-memory claim is made. Current/next retry budgets, exactly-once reward grants, manual retry and the open watchdog are preserved.
+- The dependency is pinned to 16.5.0 in package.json and package-lock.json. postinstall, Expo config and the local Android wrapper reapply the same patch. The existing source preparer hashes plugins/ and dependency inputs, so this change invalidates stale native preparation and cannot use ResumeNative against old inputs. No package installation or build was run now.
+- The native ad boundary checks for the new disposal method. An older binary reports configuration failure and stops ad requests; shipping this JS requires an Android/iOS native rebuild. It is not an OTA-only update.
+
+Reviewed the patch anchors, native main-thread release paths, type declarations, event ordering, app callers and build-preparation inclusion by source inspection. No compilation, lint, automated tests, device/memory profiling, commit or push. Before release, the exact rebuilt artifact still needs load failure, early close, earned-before/after-close, expired/discarded ad, show failure, timeout, backgrounding and repeated-use memory checks.
+## Google-only rewarded admission — 2026-09-21 current status
+
+The user explicitly selected "Google ads only" for Watermelon Checker and LED POP to eliminate the closed-without-reward retention path for unknown mediation. Before marking a rewarded ad ready, the app now requires the actual loaded response to identify the Google adapter: Android com.google.ads.mediation.admob.AdMobAdapter or iOS GADMAdapterGoogleAdMobAds. Null, unknown and third-party responses are released before show, reported as configuration failure and do not trigger load retries. This restriction applies to rewarded ads; it does not change banner source selection or AdMob mediation configuration.
+
+For admitted ads, Google's documented earned-before-dismissal contract makes CLOSED a terminal reward boundary, including early closure without a reward. Genuine earned callbacks are delivered once before resources are released. No arbitrary late-reward timer or reward fabrication is used. Earlier notes about unknown mediation retention describe the pre-restriction implementation, not a supported presentation path after this change. A show/open timeout still does not prove termination; an SDK operation that never returns remains pending. This change does not claim to solve an unresponsive SDK.
+
+All four Android/iOS banner Automatic refresh settings were reopened on 2026-09-21 and still showed Disabled. The saved settings are verified; device request counts are not. No additional periodic refresh was added.
+
+Source inspection only. Build, lint, tests, runtime/memory QA, commit and push were not performed. Installed apps need a new build before the source changes take effect.
+
+LED POP exposes the native response-order flag through its pinned dependency patch and checks it at load and again before show. The patch also upgrades its exact earlier task-owned form in reused build snapshots. A native Android/iOS rebuild is required; an OTA-only update cannot supply the disposal API.
+
+
+### September 21 follow-up policy corrections
+
+Settings/manual recovery first promotes a usable or loading next slot, retaining its identity, attempt budget and pending deadline. No fresh current cycle is created in that case.
+
+Source/diff review only. No build, lint, tests, device verification, commit, push or console changes. Consent integration remains excluded by user instruction.
+
+
+### September 21 presentation classification and reward integrity
+
+Pre-handoff cancellation and confirmed SDK pre-show rejection retain the existing recovery path. Errors after dispatch without terminal evidence keep the current presentation and genuine reward callback; no replacement load/show is started.
+
+Reviewed installed RN Google Mobile Ads 16.5.0 / Flutter Google Mobile Ads source as applicable. No build, lint, automated tests, device checks, commit, push or console changes were performed. Source changes do not verify installed binaries. Consent integration remains excluded.
+
+
+### Banner initialization recovery follow-up (source review)
+
+Final shared SDK initialization failure now records the banner placement's ten-second notice and seventy-second recovery deadline. A visible foreground placement may consume its single extra cycle at that deadline, reset a retryable initialization failure and reuse the shared initialization promise. Configuration failure is excluded. The extra-cycle guard and deadline survive hiding and re-entry; initialization recovery and later banner load failures share the same extra-cycle allowance. No periodic refresh or rewarded presentation is added.
+
+Source/diff review only; no build, lint, automated tests, device QA, commit, push or console changes. Actual SDK request timing and retained hidden-view behavior remain unverified.

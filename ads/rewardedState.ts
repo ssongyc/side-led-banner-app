@@ -1,8 +1,9 @@
-import { createNativeRewardedAd, rewardedAdEvents, beginRewardedPresentation, endRewardedPresentation, showRewardedAd, type RewardedAdHandle } from "./AdClient";
+import { disposeRewardedAd, createNativeRewardedAd, rewardedAdEvents, beginRewardedPresentation, endRewardedPresentation, showRewardedAd, type RewardedAdHandle } from "./AdClient";
 import { getAdConfiguration } from "@/ads/adConfiguration";
 import { initializeMobileAds, getMobileAdsState, retryMobileAdsInitialization, isMobileAdsLoadDelayed, subscribeMobileAdsState } from "@/ads/initializeMobileAds";
 import { recordAdEvent } from "@/ads/adTrace";
 import { getPremiumSnapshot } from "@/utils/ApiClient";
+import { isConfirmedPreShowFailure } from './showFailure';
 import { AppState, Platform } from "react-native";
 
 const LOAD_RETRY_DELAYS_MS = [6000, 12000] as const;
@@ -116,6 +117,10 @@ function disposeSlot(slotName: SlotName) {
   if (slot.ad) trace(slotName, `discard_${slot.state}`);
   clearSlotRetryTimer(slot);
   slot.unsubs.forEach((unsubscribe) => unsubscribe());
+  if (slot.ad && !rewardAttempts.get(slot.ad)?.started) {
+    // The patched handle waits for a pending load result before native cleanup.
+    disposeRewardedAd(slot.ad);
+  }
   slots[slotName] = createEmptySlot();
 }
 
@@ -129,6 +134,9 @@ function endImmersiveAd(flow = immersiveFlow) {
 function markShowFailed() {
   clearOpenWatchdog();
   endImmersiveAd();
+  // Reached only for confirmed SDK error/rejected show or pre-show cancellation.
+  // The open watchdog never takes this path.
+  if (slots.current.ad) disposeRewardedAd(slots.current.ad);
   promoteNextSlotToCurrent();
   if (slots.current.state === "idle") {
     slots.current.state = "failed";
@@ -165,6 +173,15 @@ function createRewardedAd(slotName: SlotName): RewardedAdHandle {
       if (!activeSlotName) return;
       const activeSlot = slots[activeSlotName];
       if (activeSlot.state !== "loading" || activeSlot.retryAt !== null) return;
+      if (!ad.googleRewardOrderGuaranteed) {
+        trace(activeSlotName, "unsupported_ad_source");
+        // Reject before readiness/show; no late reward can belong to this ad.
+        disposeSlot(activeSlotName);
+        slots[activeSlotName].state = "failed";
+        slots[activeSlotName].failure = "configuration";
+        notifySubscribers();
+        return;
+      }
       clearSlotRetryTimer(activeSlot);
       activeSlot.state = "loaded";
       activeSlot.loadedAt = performance.now();
@@ -333,9 +350,9 @@ export function loadRewardedAd(options?: { restartFailed?: boolean }) {
   // Only an explicit Settings entry may restart a retryable terminal failure.
   if (slots.current.state === "failed") {
     if (!options?.restartFailed || !getCanRetryState()) return;
+    if (reuseNextForRecovery()) return;
     retryMobileAdsInitialization();
     disposeSlot("current");
-    disposeSlot("next");
   }
   const configError = getRewardedAdConfigurationError();
   if (configError) {
@@ -380,7 +397,8 @@ export function loadRewardedAd(options?: { restartFailed?: boolean }) {
 
 function getLoadedState() {
   return getPremiumSnapshot().entitlement === "free" && slots.current.state === "loaded" &&
-    slots.current.ad?.loaded === true && !isLoadedSlotExpired(slots.current);
+    slots.current.ad?.loaded === true && slots.current.ad.googleRewardOrderGuaranteed &&
+    !isLoadedSlotExpired(slots.current);
 }
 
 function getCanRetryState() {
@@ -392,6 +410,7 @@ function getCanRetryState() {
 
 export function getAdSnapshot() {
   return {
+    failure: slots.current.failure,
     delayed: isMobileAdsLoadDelayed() || (slots.current.state === "loading" && slots.current.ad !== null &&
       slots.current.retryAt === null && slots.current.requestedAt !== null && performance.now() - slots.current.requestedAt >= 45000),
     expired: slots.current.failure === "expiry" || isLoadedSlotExpired(slots.current),
@@ -430,6 +449,14 @@ export function showRewarded() {
       return;
     }
     if (!current.ad || current.state !== "loaded" || !current.ad.loaded) return;
+    if (!current.ad.googleRewardOrderGuaranteed) {
+      trace("current", "unsupported_ad_source");
+      disposeSlot("current");
+      slots.current.state = "failed";
+      slots.current.failure = "configuration";
+      notifySubscribers();
+      return;
+    }
 
     openedCurrentAd = false;
     nextLoadRequestedForCurrentShow = false;
@@ -471,15 +498,31 @@ export function showRewarded() {
           rewardAttempt.grant = Array.from(rewardSubscribers);
         }
         await showRewardedAd(ad);
-      } catch (error) { onShowError(error); } finally { pendingSubscription.remove(); }
+      } catch (error) {
+        if (!rewardAttempts.get(ad)?.started || isConfirmedPreShowFailure(error)) onShowError(error);
+        else if (slots.current.ad === ad && slots.current.state === "showing") {
+          current.failure = "open-timeout";
+          recordAdEvent("rewarded", "show_result_unknown", {}, error);
+          notifySubscribers();
+        }
+      } finally { pendingSubscription.remove(); }
     })();
+}
+
+function reuseNextForRecovery() {
+    const next = slots.next;
+    if (next.state !== "loading" && !(next.state === "loaded" && !isLoadedSlotExpired(next) && next.ad?.loaded)) return false;
+    promoteNextSlotToCurrent();
+    resumeSlotLoad(slots.current);
+    notifySubscribers();
+    return true;
 }
 
 export function retryRewarded() {
     if (!getCanRetryState()) return;
+    if (reuseNextForRecovery()) return;
     retryMobileAdsInitialization();
     disposeSlot("current");
-    disposeSlot("next");
     loadRewardedAd(); // Only load; a new enabled Watch Ad action is required to show.
 }
 

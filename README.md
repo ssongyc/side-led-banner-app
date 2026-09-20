@@ -556,3 +556,9 @@ Reviewed the shared-policy changes since `development-policies` commit `2d86ce0`
 - Shown reward attempts retain their reward-only listener until an earned callback; an early-close terminal cleanup boundary is not established. Source retention is not proof of bounded native resources or live reward delivery.
 
 Reviewed the shared-policy changes from 714a660 to 012793e (artifact applicability, version-source exceptions, pending transactions and retained reward callbacks). Findings above are scoped source inspection, not full app compliance. Existing approved ad/recovery exceptions remain. No build, lint, tests, dependency installation, device QA, credential/store changes or upload ran. Documentation and source changes are delivered separately per repository.
+
+## Splash frame scheduling — 2026-09-21
+
+RootLayout now requests the native splash handoff on requestAnimationFrame and retains one hideAsync promise across readiness-effect reruns. Cleanup cancels an unissued frame and ignores stale results; it does not duplicate an in-flight native dismissal. Only the existing explicit failure-retry action clears the promise. Main-first bypass, complete artwork/text readiness and manual startup recovery remain unchanged; no fixed wait was added. This is the React Native equivalent of explicitly scheduling a frame, not use of Flutter APIs.
+
+Source review only; build, lint, tests and device startup verification were not performed.

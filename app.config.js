@@ -1,5 +1,6 @@
 const profiles = require('./advertising.config.json');
 module.exports = ({ config }) => {
+  require('./plugins/patchRewardedCleanup.cjs')();
   const profile = process.env.LEDPOP_AD_PROFILE ?? 'production';
   if (!Object.hasOwn(profiles, profile)) throw new Error('Invalid LEDPOP_AD_PROFILE');
   const buildProfile = process.env.EAS_BUILD_PROFILE;

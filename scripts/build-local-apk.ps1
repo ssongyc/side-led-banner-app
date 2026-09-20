@@ -124,6 +124,8 @@ try {
    & node $prepare installed
    if($LASTEXITCODE -ne 0){throw 'Dependency state recording failed'}
   }else{Skip-AndroidBuildStage $timingState 'dependencyInstallation'}
+  & node plugins/patchRewardedCleanup.cjs
+  if($LASTEXITCODE -ne 0){throw 'Rewarded cleanup dependency patch failed'}
   if($plan.nativeRequired -or $plan.installRequired){
    Start-AndroidBuildStage $timingState 'nativeGeneration'
    $archive=$null
