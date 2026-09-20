@@ -139,9 +139,15 @@ function digest(names, fromSource, normalizeNativeConfig = false, normalizeLineE
 }
 const dependencyHash = digest(dependencyNames, true);
 // Hash the preserved local environment without copying or logging values.
-const envNames = fs.readdirSync(target).filter(n => /^\.env(?:\..*)?$/.test(n)).sort();
-const environmentHash = hash(JSON.stringify(envNames.map(n =>
-  [n, hash(fingerprintContent(n, fs.readFileSync(path.join(target, n))))])));
+// .env.example is synchronized below; hash its incoming bytes, including addition/deletion.
+// Actual local environment files are preserved and remain byte-sensitive.
+const envNames = [...new Set([
+  ...fs.readdirSync(target).filter(n => /^\.env(?:\..*)?$/.test(n) && n !== '.env.example'),
+  ...(contents.has('.env.example') ? ['.env.example'] : []),
+])].sort();
+const environmentHash = hash(JSON.stringify(envNames.map(n => [n, hash(
+  n === '.env.example' ? fingerprintContent(n, contents.get(n)) : fs.readFileSync(path.join(target, n)),
+)])));
 const sdkRoot = 'C:/Users/ssong/AppData/Local/Android/Sdk';
 const sdkMetadata = ['build-tools', 'platforms', 'ndk', 'cmake'].flatMap(group =>
   fs.readdirSync(path.join(sdkRoot, group), { withFileTypes: true })

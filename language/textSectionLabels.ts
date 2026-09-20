@@ -276,13 +276,13 @@ const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
     es: "Restaurar la compra anterior",
   },
   sunnyGames: {
-    ko: "Sunny의 게임 및 앱",
-    en: "Sunny's Games and Apps",
-    ja: "Sunny のゲームとアプリ",
-    zhTC: "Sunny 的遊戲與應用",
-    zhSC: "Sunny 的游戏与应用",
-    fr: "Jeux et applications de Sunny",
-    es: "Juegos y aplicaciones de Sunny",
+    ko: "Sunny 게임 & 앱",
+    en: "Sunny Games & Apps",
+    ja: "Sunny ゲーム＆アプリ",
+    zhTC: "Sunny 遊戲與應用程式",
+    zhSC: "Sunny 游戏和应用",
+    fr: "Sunny Jeux & Applications",
+    es: "Sunny Juegos y Aplicaciones",
   },
   instagram: {
     ko: "Instagram",
@@ -391,6 +391,8 @@ export function tTextSectionLabel(
   settingsSheetRows?: GoogleSheetLocaleRow[] | null,
 ): string {
   const fb = LABELS[key];
+  // User-approved brand label is fixed in all supported languages.
+  if (key === "sunnyGames") return fb[locale];
 
   const settingsOpts = SETTINGS_SHEET_PICK[key];
   if (settingsOpts) {

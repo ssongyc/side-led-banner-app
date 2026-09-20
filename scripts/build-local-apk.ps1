@@ -25,9 +25,10 @@ if($IncludeBundle){
  $PythonExecutable=(Get-Command $PythonExecutable -CommandType Application -ErrorAction Stop).Source
  & $PythonExecutable -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)"
  if($LASTEXITCODE -ne 0){throw 'Store verification requires Python 3.11 or newer'}
- foreach($tool in @('apksigner.bat','aapt.exe','zipalign.exe')){
-  if(-not (Test-Path -LiteralPath (Join-Path 'C:/Users/ssong/AppData/Local/Android/Sdk/build-tools/36.1.0' $tool))){throw ('Store verification tool missing: '+$tool)}
- }
+}
+$buildTools='C:/Users/ssong/AppData/Local/Android/Sdk/build-tools/36.1.0'
+foreach($tool in @('apksigner.bat','aapt.exe','zipalign.exe')){
+ if(-not (Test-Path -LiteralPath (Join-Path $buildTools $tool))){throw ('Artifact verification tool missing: '+$tool)}
 }
 if($env:EXPO_PUBLIC_WEB_AD_DIAGNOSTICS -eq '1'){throw 'Web diagnostics cannot be included in native builds'}
 
@@ -65,6 +66,7 @@ try {
  if($IncludeBundle){
   $BundletoolJar=[IO.Path]::GetFullPath($BundletoolJar)
   if(-not (Test-Path -LiteralPath $BundletoolJar -PathType Leaf)){throw 'Pinned bundletool jar is missing'}
+  if((Get-FileHash -LiteralPath $BundletoolJar -Algorithm SHA256).Hash -ne 'a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29'){throw 'Pinned bundletool integrity verification failed'}
   $bundletoolVersion=((& "$env:JAVA_HOME/bin/java.exe" -jar $BundletoolJar version 2>&1)-join [Environment]::NewLine).Trim()
   if($LASTEXITCODE -ne 0 -or $bundletoolVersion -ne '1.18.3'){throw 'Pinned bundletool version verification failed'}
  }
@@ -79,6 +81,7 @@ try {
  if($LASTEXITCODE -ne 0 -or (($check -join '') -replace ':','') -notmatch $expected){throw 'Keystore fingerprint verification failed'}
  $cert=[Security.Cryptography.X509Certificates.X509Certificate2]::CreateFromPem([IO.File]::ReadAllText((Join-Path $signing 'upload_certificate.pem')))
  if($cert.GetCertHashString([Security.Cryptography.HashAlgorithmName]::SHA256) -ne $expected){throw 'Public certificate mismatch'}
+ if([DateTime]::UtcNow -lt $cert.NotBefore.ToUniversalTime() -or [DateTime]::UtcNow -ge $cert.NotAfter.ToUniversalTime()){throw 'Signing certificate is outside its validity period'}
  New-Item -ItemType Directory -Force -Path $resolved | Out-Null
  $buildLock=[IO.File]::Open((Join-Path $resolved '.build.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
  Start-AndroidBuildStage $timingState 'archive'
@@ -271,8 +274,25 @@ android {
   }else{
    $apk=Join-Path $resolved 'android/app/build/outputs/apk/release/app-release.apk'
   }
-  Start-AndroidBuildStage $timingState 'apkExport'
   if(-not (Test-Path -LiteralPath $apk)){throw 'Release APK is missing'}
+  if(-not $IncludeBundle){
+   Start-AndroidBuildStage $timingState 'apkBasicVerification'
+   & (Join-Path $buildTools 'apksigner.bat') verify --verbose --print-certs $apk > (Join-Path $record 'apk-signature.txt') 2>&1
+   if($LASTEXITCODE -ne 0){throw 'APK signature verification failed'}
+   $signature=[IO.File]::ReadAllText((Join-Path $record 'apk-signature.txt'))
+   $signers=[regex]::Matches($signature,'(?im)^Signer #\d+ certificate SHA-256 digest: ([0-9a-f]+)\s*$')
+   if($signers.Count -ne 1 -or $signers[0].Groups[1].Value -ne $expected){throw 'APK signer identity mismatch'}
+   & (Join-Path $buildTools 'aapt.exe') dump badging $apk > (Join-Path $record 'apk-badging.txt') 2>&1
+   if($LASTEXITCODE -ne 0){throw 'APK metadata inspection failed'}
+   $badging=[IO.File]::ReadAllText((Join-Path $record 'apk-badging.txt'))
+   $identity=[regex]::Match($badging,"(?m)^package: name='([^']+)' versionCode='(\d+)' versionName='([^']+)'")
+   if(-not $identity.Success -or $identity.Groups[1].Value -ne 'com.minkyokim.sideledbannerapp' -or $identity.Groups[2].Value -ne [string]$buildVersionCode -or $identity.Groups[3].Value -ne $buildVersionName){throw 'APK application/version mismatch'}
+   $targetSdk=[regex]::Match($badging,"(?m)^targetSdkVersion:'(\d+)'")
+   if(-not $targetSdk.Success -or [int]$targetSdk.Groups[1].Value -lt 36 -or $badging.Contains('application-debuggable')){throw 'APK target SDK or debuggable configuration is invalid'}
+   & (Join-Path $buildTools 'zipalign.exe') -c -P 16 4 $apk > (Join-Path $record 'apk-alignment.txt') 2>&1
+   if($LASTEXITCODE -ne 0){throw 'APK ZIP alignment verification failed'}
+  }
+  Start-AndroidBuildStage $timingState 'apkExport'
   $apkHash=(Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash
   $deliveryApk = & (Join-Path $PSScriptRoot 'new-apk-delivery-path.ps1') -Apk $apk -AppName 'LedPop' -OutputDirectory $record
   Copy-Item -LiteralPath $apk -Destination $deliveryApk -ErrorAction Stop
@@ -294,7 +314,7 @@ android {
    Write-Output ('Store static checks completed; review warnings and runtime/Play status separately. Record: '+$record)
   }else{
    Skip-AndroidBuildStage $timingState 'artifactVerification'
-   Write-Output ('Gradle '+($tasks -join ', ')+' completed; independent artifact verification still required. Record: '+$record)
+   Write-Output ('Gradle '+($tasks -join ', ')+' completed; APK signature, identity, target SDK and ZIP alignment checked. Full store/native/ads verification still required. Record: '+$record)
   }
  } finally { Pop-Location }
 } finally {

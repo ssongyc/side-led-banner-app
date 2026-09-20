@@ -5,6 +5,14 @@ module.exports = ({ config }) => {
   const buildProfile = process.env.EAS_BUILD_PROFILE;
   if (buildProfile === 'production' && profile !== 'production') throw new Error('Store builds require production ads');
   if (process.env.EAS_BUILD_PLATFORM && process.env.EXPO_PUBLIC_WEB_AD_DIAGNOSTICS === '1') throw new Error('Web diagnostics cannot be used in native builds');
+  // EAS supplies EXPO_PUBLIC variables to both config resolution and Metro.
+  // Do not ship a production iOS build with silently disabled launch analytics.
+  if (process.env.EAS_BUILD_PLATFORM === 'ios' && buildProfile === 'production') {
+    const analyticsKey = process.env.EXPO_PUBLIC_AMPLITUDE_API_KEY?.trim();
+    if (!analyticsKey || analyticsKey === 'your_amplitude_api_key_here') {
+      throw new Error('iOS production requires EXPO_PUBLIC_AMPLITUDE_API_KEY in the EAS production environment');
+    }
+  }
   const ids = profiles[profile];
   for (const platform of ['android', 'ios']) {
     const entry = ids[platform];

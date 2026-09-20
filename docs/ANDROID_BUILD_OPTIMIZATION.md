@@ -110,3 +110,20 @@ Baseline from run `20260912-002428-05bfeae8`: Gradle 5m0.25s, startup 19.318s, c
 References: [Configuration Cache](https://docs.gradle.org/current/userguide/configuration_cache.html), [Gradle Daemon](https://docs.gradle.org/current/userguide/gradle_daemon.html).
 
 The release wrapper also preserves successful keytool JKS notices on stderr without treating them as a failure; a nonzero exit code or mismatched certificate still stops the build. This correction was exercised by run 20260912-002428-05bfeae8. Version 1.1.0(28) and the optional comparison flags have not been built.
+
+
+## Android preflight audit — 2026-09-16
+
+- The source preparer now fingerprints incoming .env.example bytes, including additions/deletions, rather than the previous active snapshot's copy. Previously a template change could record a pre-sync hash, causing another native regeneration on the following build. Real local environment files remain untouched and byte-sensitive. This correction does not run preparation or migrate cache state during the audit.
+- Bundletool 1.18.3's SHA-256 is checked before executing the JAR or starting compilation, using the same expected hash as the existing final store verifier. Missing artifact-inspection tools now block APK-only builds as well as combined builds.
+- The recorded public signing certificate must be within its validity dates after the existing identity checks. Credentials and signing identity are unchanged; no credential operations were executed.
+- APK-only builds now inspect signature/single expected signer, application ID, expected versionName/versionCode, targetSdk >= 36, non-debuggable status and 16 KiB ZIP alignment before final export, retaining logs and a separate verification duration. These basic checks do not establish native ELF alignment, Billing/ad module correctness, four-ABI coverage or full store readiness. Combined APK/AAB builds retain their full existing verifier; there is no repeated compilation.
+- Read-only audit found build caching enabled in the effective default Gradle User Home and the wrapper's --build-cache argument. Preserved generated output has target/compile SDK 36, four ABIs, R8/resource shrinking and merged Billing 9.1.0 metadata. This is evidence for the previous build, not a verified V1.1.2 artifact. Google's Billing deprecation table and release notes were rechecked; Billing 8+ is required without an extension, and the recorded 9.1.0 remains supported.
+- Marketing version is 1.1.2 but local versionCode remains 29. Before Play submission, verify that the selected code has not been used on any track; use the existing explicit -VersionCode option if needed. No Play Console lookup, automatic increment or source version change was performed.
+- Static source/diff review only: no build, lint, tests, source preparation, dependency installation, artifact-verifier execution or upload. New checks are implemented but not execution-verified. Existing iOS audit and unrelated localization changes remain separate.
+
+References: [Billing deprecation](https://developer.android.com/google/play/billing/deprecation-faq), [Billing release notes](https://developer.android.com/google/play/billing/release-notes).
+
+## Release attempt — 2026-09-20
+
+Run 20260920-164209-293bcd5d requested production ads and V1.1.2(30), using app source revision 2bec314df65d47086e0c633e5371b7018d4cac9d and the local release-preparation tooling changes documented above. Source preparation reported 21 changed files, no removals, installRequired=false and nativeRequired=false. The subsequent resource gate stopped the run with 3.96 GiB available memory against its 4 GiB minimum. Compilation and final artifact verification were not reached; no new release APK/AAB was produced. Cached dependencies/native output were retained. The previously pending preparation and localized Sunny-label changes are now included in the source delivery; this failed attempt does not validate those changes or a release binary.

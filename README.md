@@ -492,6 +492,15 @@ Text·Background·Effects의 각 ScrollView에 남은 화면 높이를 사용하
 [세부 UI 변경 기록](docs/UI_INTERACTION_1.0.9_27.md)에 원인, 적용 범위와 검증 한계를 기록했습니다. 이번 변경은 소스와 문서 diff만 확인했으며, 요청에 따라 빌드·린트·테스트와 iPhone/iPad 실기기 검증은 실행하지 않았습니다. 기존 APK/AAB에는 포함되지 않습니다.
 
 
+## TestFlight build preparation — 2026-09-16
+
+The existing EAS production iOS profile now pins Expo SDK 57's Xcode 26.6 build image. Production iOS configuration stops when the public Amplitude SDK key is missing, blank or the supplied example value, preventing a build with silently disabled App Opened analytics. Remote build-number auto-increment and existing signing identity selection are unchanged. No iOS build, upload, credential or remote environment change was performed. See [the source audit and outstanding signing/archive checks](docs/SIGNING_POLICY.md#ios-testflight-source-audit--2026-09-16). V1.1.2 and recent UI changes remain unverified on iPhone/iPad.
+
+
+## Android APK/AAB preparation audit — 2026-09-16
+
+The release wrapper now checks bundletool integrity and signing certificate validity before compilation, and performs basic signature/version/SDK/ZIP-alignment checks for APK-only exports. The source preparer hashes the incoming environment template to avoid a stale pre-sync fingerprint. Full combined APK/AAB verification remains unchanged. These source changes have not been build/test verified; see [the audit record](docs/ANDROID_BUILD_OPTIMIZATION.md#android-preflight-audit--2026-09-16). V1.1.2 still uses local versionCode 29; confirm an unused Play code before submission.
+
 ### Settings banner lifecycle — 2026-09-19 (source only)
 
 The app-root banner host retains the native request and attempt budget when Settings is left. Returning reuses the pending/completed request; new app-controlled retries pause while absent and resume against the existing deadline. Settings keeps its reserved layout area. See [advertising lifecycle details and outstanding device checks](docs/ADVERTISING.md#september-19-settings-banner-lifecycle-correction-source-only). No build, lint, tests or device verification was performed for this change.
@@ -509,3 +518,9 @@ Added a delayed-response notice without cancelling or duplicating SDK requests, 
 광고 파일·API의 앱/플랫폼별 참조와 QA 참조를 확인했습니다. 삭제할 미사용 광고 파일은 발견하지 못했으며, 외부 소비자가 없는 웹 내부 타입 `DiagnosticAdEvent`의 export만 제거했습니다. 웹의 명시적 미지원 경계, 진단 코드와 `getAdTrace` QA 용도는 유지합니다.
 
 기존 `scripts/qa-ad-state.cjs`는 보존 대상입니다. 다만 새 `performance.now()` 기준과 초기화 구독 API에 대한 하네스가 아직 동기화되지 않았으므로 다음 자동 QA 전에 갱신해야 합니다. 과거 통과 기록은 해당 당시 소스의 결과이며 현재 광고 변경의 통과 증거가 아닙니다. 이번 정리에서는 빌드·린트·테스트·커밋·푸시를 실행하지 않았습니다.
+
+## Pending changes consolidated — 2026-09-20
+
+The previously uncommitted TestFlight and Android preparation changes documented above are included in this delivery. The previously excluded Sunny label change is also included: the Settings entry uses the approved localized Sunny Games & Apps labels in all seven supported languages, without a remote Sheet override for this entry. Other labels retain their existing resolution.
+
+The latest Android release attempt stopped before compilation at the memory gate; no new APK/AAB was produced. See the [build attempt record](docs/ANDROID_BUILD_OPTIMIZATION.md#release-attempt--2026-09-20). This documentation/commit delivery does not run builds, lint, tests or device QA.
