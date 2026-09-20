@@ -1,4 +1,13 @@
-﻿# LED POP Android local signing
+# LED POP Android local signing
+
+## 2026-09-21 — DEX / Play quality source review
+
+- Existing `withAndroidRelease.js` already selects the optimizing default and enables minify/resource shrinking. Added the missing independent effective-configuration/AAB-metrics gate to `build-local-apk.ps1` before artifact export; results and configuration are retained as `r8-optimization.json` and `r8-configuration.txt` in the build record directory.
+- Main/Settings explicitly select orientation, while playback supports orientation selection. Preserve that product behavior; adaptive large-screen/rotation validation is still required. Tracked native/plugin source search found no direct `getStatusBarColor`, `setStatusBarColor`, `setNavigationBarColor` or `BitmapFactory.decodeStream` call; this does not cover SDK bytecode or prove Play warnings absent.
+- `scripts/verify-r8-optimization.ps1` rejects empty effective R8 configuration and active `-dontoptimize`, `-dontshrink` or `-dontobfuscate`. For an AAB it independently checks enabled options and numeric `100 - no*Percentage` values in embedded `r8.json`; missing/unknown metadata blocks export. The local preventive floor is 25% in each category, including small apps; this is not a claim that Play enforces a deadline on every app. Evidence includes configuration/metadata SHA-256 and total uncompressed DEX bytes. APK-only checks do not build an extra AAB or claim AAB metrics.
+- Static source/diff review only: no prebuild, build, lint, tests, device checks or Play upload. New artifacts and runtime compatibility remain unverified. Retain required JNI/reflection/SDK keep rules. Store warning resolution requires a later authorized build, relevant device checks and the user's manual Play upload/reanalysis. No version, signing identity or SDK upgrade in this change.
+- Shared reference: [DEX optimization policy](C:/Users/ssong/.codex/skills/mobile-app-production/references/android-release-mapping.md#dex-optimization-is-separate-from-mapping). App-specific Play eligibility/deadline remains unverified.
+
 
 - Application ID: com.minkyokim.sideledbannerapp.
 - Existing EAS credential: Build Credentials FIxh6TZalE, downloaded with user authorization on 2026-09-08.

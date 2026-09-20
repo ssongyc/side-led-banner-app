@@ -238,6 +238,14 @@ android {
   $mapping=Join-Path $resolved 'android/app/build/outputs/mapping/release/mapping.txt'
   if(-not (Test-Path -LiteralPath $mapping) -or (Get-Item -LiteralPath $mapping).Length -eq 0){throw 'Optimized release mapping is missing'}
   if(-not (Select-String -LiteralPath $mapping -Pattern ('^# compiler_version: '+[regex]::Escape($expectedR8)+'$') -Quiet)){throw 'Mapping compiler version does not match the pinned R8 version'}
+  $optimizationArguments = @{ ConfigurationPath = (Join-Path (Split-Path $mapping -Parent) 'configuration.txt') }
+  if ($IncludeBundle) { $optimizationArguments.AabPath = Join-Path $resolved 'android/app/build/outputs/bundle/release/app-release.aab' }
+  $optimizationArgs = @('-NoProfile', '-File', (Join-Path $PSScriptRoot 'verify-r8-optimization.ps1'), '-ConfigurationPath', $optimizationArguments.ConfigurationPath)
+  if ($IncludeBundle) { $optimizationArgs += @('-AabPath', $optimizationArguments.AabPath) }
+  $optimizationResult = & (Get-Process -Id $PID).Path @optimizationArgs
+  if ($LASTEXITCODE -ne 0) { throw 'R8 optimization gate failed; export blocked' }
+  $optimizationResult | Set-Content -LiteralPath (Join-Path $record 'r8-optimization.json') -Encoding utf8
+  Copy-Item -LiteralPath $optimizationArguments.ConfigurationPath -Destination (Join-Path $record 'r8-configuration.txt')
   $mappingHash=(Get-FileHash -LiteralPath $mapping -Algorithm SHA256).Hash
   Copy-Item -LiteralPath $mapping -Destination (Join-Path $record 'mapping.txt')
   $aabHash=$null
