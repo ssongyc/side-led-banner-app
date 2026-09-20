@@ -170,3 +170,10 @@ A later Android overview showed 57 requests, 100% match rate and 32 impressions:
 ### Scoped source delivery
 
 The September 19–20 banner lifecycle, delayed/expired state, initialization timing and documentation cleanup changes are grouped for main delivery. The unused external export of the web-internal DiagnosticAdEvent type was removed; no unused runtime ad files were established. The existing qa-ad-state.cjs harness needs synchronization with the new monotonic clock and initialization subscription interface before its next run. Historical passing QA results do not validate this source. Build, lint, tests and device QA were excluded from this delivery request.
+
+### Expo Router import correction — 2026-09-20
+
+The production Android build exposed an unsupported direct @react-navigation/native import in the Settings banner slot. useIsFocused now comes from expo-router/react-navigation, as required by the installed Expo Router. No attach/detach, visibility, request budget or reward logic changed. The first rebuild was blocked at the memory preflight after the correction; that attempt did not verify compilation or device behavior. See the failure record in ANDROID_BUILD_OPTIMIZATION.md.
+
+
+The import correction subsequently passed Android compilation and bundled-source checks in run 20260920-214301-06a96479 for V1.1.2(30). Production AdMob configuration and native modules were verified in both APK and AAB. Actual impressions/rewards and device lifecycle QA remain unperformed. The source correction and the historical export records are included in this final source delivery; no build, lint, tests or device QA ran for this delivery. See the successful export record in ANDROID_BUILD_OPTIMIZATION.md.

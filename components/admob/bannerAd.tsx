@@ -1,7 +1,7 @@
 import { useSettingsRest } from "@/contexts/settingsContext";
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AppState, Text, View, type StyleProp, type ViewStyle } from "react-native";
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused } from "expo-router/react-navigation";
 import { usePathname } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePremium } from "@/contexts/premiumContext";
