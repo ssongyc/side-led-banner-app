@@ -1,6 +1,6 @@
 import { useSettingsRest } from "@/contexts/settingsContext";
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
-import { AppState, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { AppState, Platform, Text, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
 import { useIsFocused } from "expo-router/react-navigation";
 import { usePathname } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -9,7 +9,7 @@ import { AdaptiveBannerAd } from "@/ads/AdClient";
 import { getAdConfiguration } from "@/ads/adConfiguration";
 import { recordAdEvent } from "@/ads/adTrace";
 import { initializeMobileAds, useMobileAdsState, useMobileAdsLoadDelayed } from "@/ads/initializeMobileAds";
-import { getBannerState, subscribeBannerState, claimBanner, releaseBanner, requestBanner, bannerLoaded, bannerFailed } from "@/ads/bannerState";
+import { getBannerPlacement } from "@/ads/bannerState";
 
 const REQUEST_OPTIONS = { requestNonPersonalizedAdsOnly: true };
 type Props = { style?: StyleProp<ViewStyle>; unavailableLabel: string };
@@ -45,21 +45,41 @@ export function BannerPlacementProvider({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const { adsAllowed } = usePremium();
   const insets = useSafeAreaInsets();
+  const viewport = useWindowDimensions();
+  const width = Math.floor(viewport.width - insets.left - insets.right);
+  const visible = !!placement && pathname === "/settings" && adsAllowed;
+  const activeId = Platform.OS === "ios"
+    ? `${viewport.width > viewport.height ? "landscape" : "portrait"}-${width}` : "settings";
+  const [slots, setSlots] = useState<{ id: string; width: number; height: number }[]>([]);
+  useEffect(() => {
+    if (!visible || width <= 0) return;
+    setSlots(current => current.some(slot => slot.id === activeId)
+      ? current : [...current, { id: activeId, width, height: 50 }]);
+  }, [visible, width, activeId]);
+  useEffect(() => {
+    setHeight(slots.find(slot => slot.id === activeId)?.height ?? 50);
+  }, [activeId, slots]);
   return <PlacementContext.Provider value={{ height, attach, detach }}>
     <View style={{ flex: 1 }}>
       {children}
-      <PersistentBanner visible={!!placement && pathname === "/settings" && adsAllowed}
+      {slots.map(slot => <PersistentBanner key={slot.id} placementId={slot.id}
+        adaptiveWidth={Platform.OS === "ios" ? slot.width : undefined}
+        visible={visible && slot.id === activeId}
         delayedLabel={rewardAdLabel("rewardAdDelayed")}
-        unavailableLabel={placement?.label ?? ""} onHeight={setHeight}
-        bottom={insets.bottom + 12} left={insets.left} right={insets.right} />
+        unavailableLabel={placement?.label ?? ""} onHeight={height => setSlots(current =>
+          current.find(value => value.id === slot.id)?.height === height ? current :
+            current.map(value => value.id === slot.id ? { ...value, height } : value))}
+        bottom={insets.bottom + 12} left={insets.left} right={insets.right} />)}
     </View>
   </PlacementContext.Provider>;
 }
 
-function PersistentBanner({ visible, delayedLabel, unavailableLabel, onHeight, bottom, left, right }: {
+function PersistentBanner({ placementId, adaptiveWidth, visible, delayedLabel, unavailableLabel, onHeight, bottom, left, right }: {
+  placementId: string; adaptiveWidth?: number;
   visible: boolean; delayedLabel: string; unavailableLabel: string; onHeight: (height: number) => void;
   bottom: number; left: number; right: number;
 }) {
+  const { getBannerState, subscribeBannerState, claimBanner, releaseBanner, requestBanner, bannerLoaded, bannerFailed } = getBannerPlacement(placementId);
   const sdkState = useMobileAdsState();
   const sdkDelayed = useMobileAdsLoadDelayed();
   const [foreground, setForeground] = useState(AppState.currentState === "active");
@@ -76,7 +96,7 @@ function PersistentBanner({ visible, delayedLabel, unavailableLabel, onHeight, b
   const state = useSyncExternalStore(subscribeBannerState, getBannerState, getBannerState);
   const token = useRef(Symbol("settings-banner"));
   const [owned, setOwned] = useState(false);
-  const [width, setWidth] = useState(0);
+  const [width, setWidth] = useState(adaptiveWidth ?? 0);
   const [, redraw] = useState(0);
   const [config] = useState(() => { try { return getAdConfiguration(); } catch { return null; } });
   const startedAt = useRef(0);
@@ -138,13 +158,13 @@ function PersistentBanner({ visible, delayedLabel, unavailableLabel, onHeight, b
   }
   // Do not use display:none or conditionally remove the ad on blur: Fabric can
   // tear down that native view. Park this one view outside the viewport instead.
-  return <View collapsable={false} pointerEvents={eligible ? "auto" : "none"}
+  return <View collapsable={false} removeClippedSubviews={false} pointerEvents={eligible ? "auto" : "none"}
     accessibilityElementsHidden={!eligible} importantForAccessibility={eligible ? "auto" : "no-hide-descendants"}
-    style={{ position: "absolute", left, right, bottom: eligible ? bottom : -10000,
+    style={{ position: "absolute", left, right: adaptiveWidth === undefined ? right : undefined, width: adaptiveWidth, bottom: eligible ? bottom : -10000,
       opacity: eligible ? 1 : 0, alignItems: "center", justifyContent: "center", minHeight: 50 }}
     onLayout={event => {
       const next = Math.floor(event.nativeEvent.layout.width);
-      setWidth(current => current === next ? current : next);
+      if (adaptiveWidth === undefined) setWidth(current => current === next ? current : next);
       onHeight(Math.max(50, event.nativeEvent.layout.height));
     }}>
     {!unavailable && delayed ? <Text allowFontScaling={false}>{delayedLabel}</Text> : null}

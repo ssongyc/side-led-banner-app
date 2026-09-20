@@ -106,7 +106,7 @@ export default function SettingsScreen() {
   );
 
   const appVersion = useMemo(
-    () => Constants.expoConfig?.version ?? "1.0.0",
+    () => Constants.expoConfig?.version,
     [],
   );
 
@@ -259,7 +259,7 @@ export default function SettingsScreen() {
             style={settingsStyles.versionValueText}
             allowFontScaling={false}
           >
-            V{appVersion}
+            {appVersion ? `V${appVersion}` : "—"}
           </Text>
         </View>
         {compactHeight && footer}
