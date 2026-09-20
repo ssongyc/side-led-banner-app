@@ -532,3 +532,9 @@ The resumed release build completed with production AdMob configuration. [APK](a
 ## Next Android build preparation
 
 The existing release wrapper now batches pinned Git-source reads, fixes the development-server IP/port only for release builds to avoid host-network-dependent resource changes, and isolates iOS-only analytics validation from Android native inputs. Cache reuse, one AAB build followed by APK extraction, four ABIs and all signing/artifact checks remain. The first adoption may regenerate native configuration once. These changes are source-reviewed, not build/timing verified; see [incremental preparation details](docs/ANDROID_BUILD_OPTIMIZATION.md#incremental-preparation-improvements--2026-09-20-source-only).
+
+## Splash transition policy follow-up — 2026-09-20
+
+The existing path already disables the native exit fade, keeps an opaque #1a1a1a loader over the prepared screen, and removes it only after storage, selected-language fonts, main layout and Skia preview readiness. There is no fixed minimum branding delay or splash-to-main opacity animation. Existing explicit startup recovery remains unchanged; no splash code change was needed in this review.
+
+Source and call-site inspection only: no build, lint, tests or device QA ran for this review. Existing artifact/QA records remain historical and do not establish absence of overlap, blank frames or flicker in this revision. Fast/slow cold starts, startup errors and affected return paths remain to be observed on actual Android/iOS devices. The authoritative shared rule is C:/Users/ssong/.codex/skills/mobile-app-production/references/layout-platform.md, Splash-to-main transition.
