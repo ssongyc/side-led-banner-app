@@ -124,10 +124,11 @@ export default function RootLayout() {
 
   const recoveryVisible = !!storageStartup?.failed || fontsFailed || preparationTimedOut || loaderImageFailed;
 
-  // Hand off to the already mounted React loader, independently of storage/fonts.
-  // The same loader remains in place while the real screen mounts underneath it.
+  // Hand off to the complete loader or directly to the prepared main screen.
+  // Main readiness must never depend on the branding image or native dismissal.
   useEffect(() => {
-    if (splashDismissed || splashFailed || !loaderLaidOut || (!loaderImageReady && !recoveryVisible)) return;
+    if (splashDismissed || splashFailed) return;
+    if (!startupComplete && (!loaderLaidOut || (!loaderImageReady && !recoveryVisible))) return;
     let cancelled = false;
     void SplashScreen.hideAsync().then(() => {
       if (!cancelled) setSplashDismissed(true);
@@ -142,7 +143,7 @@ export default function RootLayout() {
       }
     });
     return () => { cancelled = true; };
-  }, [loaderLaidOut, loaderImageReady, recoveryVisible, splashDismissed, splashFailed, splashAttempt, deviceAppLocale, retrySplash]);
+  }, [startupComplete, loaderLaidOut, loaderImageReady, recoveryVisible, splashDismissed, splashFailed, splashAttempt, deviceAppLocale, retrySplash]);
 
   const [preparedLocale, setPreparedLocale] = useState<string | null>(null);
   const startupLocale = storageStartup?.ready ? storageStartup.locale : null;
@@ -162,7 +163,7 @@ export default function RootLayout() {
   const isReady = fontsLoaded && !!storageStartup?.ready && preparedLocale === startupLocale && mainLaidOut &&
     (pathname !== "/" || previewReady);
   useEffect(() => {
-    if (startupComplete || !isReady || !splashDismissed || recoveryVisible) return;
+    if (startupComplete || !isReady || recoveryVisible) return;
     // Allow committed layout/font updates to reach a frame before uncovering the screen.
     let secondFrame: number | undefined;
     const frame = requestAnimationFrame(() => {
@@ -172,7 +173,7 @@ export default function RootLayout() {
       cancelAnimationFrame(frame);
       if (secondFrame !== undefined) cancelAnimationFrame(secondFrame);
     };
-  }, [startupComplete, isReady, splashDismissed, recoveryVisible]);
+  }, [startupComplete, isReady, recoveryVisible]);
 
   useEffect(() => {
     if (startupComplete || storageStartup?.failed || fontsFailed) return;
@@ -267,13 +268,13 @@ export default function RootLayout() {
       <PremiumLifecycle>
       <PremiumAwareAds />
       <View style={{ flex: 1, backgroundColor: "#1a1a1a" }}>
-      <View style={{ flex: 1 }} pointerEvents={startupComplete ? "auto" : "none"}
-        accessibilityElementsHidden={!startupComplete}
-        importantForAccessibility={startupComplete ? "auto" : "no-hide-descendants"}>
+      <View style={{ flex: 1 }} pointerEvents={startupComplete && splashDismissed && !splashFailed ? "auto" : "none"}
+        accessibilityElementsHidden={!startupComplete || !splashDismissed || splashFailed}
+        importantForAccessibility={startupComplete && splashDismissed && !splashFailed ? "auto" : "no-hide-descendants"}>
       <SettingsProvider onStartupStateChange={setStorageStartup}>
         <BannerPlacementProvider>
         <KeyboardProvider>
-        <StartupVisibilityContext.Provider value={startupComplete}>
+        <StartupVisibilityContext.Provider value={startupComplete && splashDismissed && !splashFailed}>
         <StartupPreviewContext.Provider value={setPreviewReady}>
         {fontsLoaded ? (
           <View key={preparationAttempt} style={{ flex: 1 }} onLayout={event => {
@@ -304,7 +305,7 @@ export default function RootLayout() {
         </BannerPlacementProvider>
       </SettingsProvider>
       </View>
-      {!startupComplete && (
+      {(!startupComplete || splashFailed) && (
         <View style={StyleSheet.absoluteFill} onLayout={() => setLoaderLaidOut(true)}>
           {splashFailed ? (
             <StartupRecovery locale={deviceAppLocale} kind="splash" onRetry={retrySplash} />
@@ -314,7 +315,7 @@ export default function RootLayout() {
             <StartupRecovery locale={storageStartup?.locale ?? deviceAppLocale}
               kind="preparation" onRetry={retryPreparation} />
           ) : (
-            <SplashLoadingScreen onImageLoad={() => setLoaderImageReady(true)}
+            <SplashLoadingScreen key={preparationAttempt} onImageLoad={() => setLoaderImageReady(true)}
               onImageError={() => setLoaderImageFailed(true)} />
           )}
         </View>

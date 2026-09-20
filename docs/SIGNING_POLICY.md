@@ -1,5 +1,12 @@
 # LED POP Android local signing
 
+## 2026-09-21 — Splash composition and main-first review
+
+- Baseline `7513cad`. `RootLayout.tsx` no longer makes main-screen readiness depend on native splash dismissal or the loader image. Once the existing font/storage/preview/layout readiness reaches its frame boundary, the overlay is removed and native dismissal can proceed directly to main. Image preparation finishing later cannot restore the loader. `SplashLoadingScreen.tsx` reveals its image composition only after image loading, with no Android image fade. Existing startup errors and manual retry remain available, including native-dismissal failure after main preparation. The image contains the splash branding; no additional text/font load is introduced.
+
+Source review only: no prebuild, build, lint, tests or device run in this task. No minimum branding duration was added. Frame callbacks coordinate rendering; they do not prove GPU completion. Native OS launch surfaces may not be skippable. Runtime visual continuity remains unverified. See the [shared splash policy](C:/Users/ssong/.codex/skills/mobile-app-production/references/layout-platform.md#splash-to-main-transition).
+
+
 ## 2026-09-21 — DEX / Play quality source review
 
 - Existing `withAndroidRelease.js` already selects the optimizing default and enables minify/resource shrinking. Added the missing independent effective-configuration/AAB-metrics gate to `build-local-apk.ps1` before artifact export; results and configuration are retained as `r8-optimization.json` and `r8-configuration.txt` in the build record directory.
