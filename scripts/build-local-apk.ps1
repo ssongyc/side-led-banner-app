@@ -214,6 +214,8 @@ android {
   $daemonArgument=if($ReuseDaemon){'--daemon'}else{'--no-daemon'}
   $cacheArgument=if($ConfigurationCache){'--configuration-cache'}else{'--no-configuration-cache'}
   $gradleArguments=@('-p','android')+$tasks+@('--build-cache',$daemonArgument,$cacheArgument,('--max-workers='+$GradleWorkers),'-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=1024m','--stacktrace')
+  # Release bundles never use Metro. Keep host-IP changes out of resValues/R8 inputs.
+  $gradleArguments+=@('-PreactNativeDevServerIp=127.0.0.1','-PreactNativeDevServerPort=8081')
   if($ConfigurationCache){$gradleArguments+='--configuration-cache-problems=fail'}
   # Record the selected settings before execution, including failed compatibility trials.
   @{ configurationCache=[bool]$ConfigurationCache; reuseDaemon=[bool]$ReuseDaemon; gradleWorkers=$GradleWorkers; appCmakeCompilePool=1; appCmakeLinkPool=1; measureBuild=[bool]$MeasureBuild; arguments=$gradleArguments } | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath (Join-Path $record 'build-options.json')

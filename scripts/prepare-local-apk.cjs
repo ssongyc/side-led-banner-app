@@ -62,12 +62,44 @@ const sourceRevision = requestedRevision ? git(['rev-parse', '--verify', request
 const sourceOverrides = JSON.parse(process.env.LEDPOP_BUILD_OVERRIDES || '[]');
 if (!Array.isArray(sourceOverrides) || sourceOverrides.some(n => typeof n !== 'string')) throw Error('Invalid source overrides');
 sourceOverrides.forEach(n => safePath(root, n));
+// Read committed blobs in bounded batches; preserve binary bytes and pinned revisions.
+const tree = sourceRevision ? git(['ls-tree', '-r', '-l', '-z', sourceRevision]).split('\0').filter(Boolean).map(entry => {
+  const match = /^(\d+) (\w+) ([a-f0-9]+) +([\d-]+)\t([\s\S]+)$/.exec(entry);
+  if (!match) throw Error('Invalid Git source inventory');
+  return { mode: match[1], type: match[2], oid: match[3], size: Number(match[4]), name: match[5] };
+}).filter(entry => !excluded(entry.name)) : [];
+const committed = new Map();
+let batch = [], batchBytes = 0;
+function readBatch() {
+  if (!batch.length) return;
+  const output = execFileSync('git', ['-C', root, 'cat-file', '--batch'], {
+    input: batch.map(entry => entry.oid + '\n').join(''), maxBuffer: batchBytes + batch.length * 128,
+  });
+  let offset = 0;
+  for (const entry of batch) {
+    const end = output.indexOf(10, offset);
+    if (end < 0 || output.toString('ascii', offset, end) !== `${entry.oid} blob ${entry.size}`) throw Error('Git blob header mismatch');
+    offset = end + 1;
+    const next = offset + entry.size;
+    if (next >= output.length || output[next] !== 10) throw Error('Truncated Git blob');
+    committed.set(entry.name, Buffer.from(output.subarray(offset, next)));
+    offset = next + 1;
+  }
+  if (offset !== output.length) throw Error('Unexpected Git batch output');
+  batch = []; batchBytes = 0;
+}
+for (const entry of tree) {
+  safePath(root, entry.name);
+  if (entry.type !== 'blob' || !['100644', '100755'].includes(entry.mode) || !Number.isSafeInteger(entry.size) || entry.size < 0 || entry.size > 64 * 1024 * 1024) throw Error('Unsupported source entry: ' + entry.name);
+  if (sourceOverrides.includes(entry.name)) continue;
+  if (batch.length && batchBytes + entry.size > 32 * 1024 * 1024) readBatch();
+  batch.push(entry); batchBytes += entry.size;
+}
+readBatch();
 const sourceBytes = name => sourceRevision && !sourceOverrides.includes(name)
-  ? execFileSync('git', ['-C', root, 'show', sourceRevision + ':' + name], { maxBuffer: 64 * 1024 * 1024 })
-  : fs.readFileSync(safePath(root, name));
-const files = [...new Set(git(sourceRevision
-  ? ['ls-tree', '-r', '--name-only', '-z', sourceRevision]
-  : ['ls-files', '--cached', '--others', '--exclude-standard', '-z']).split('\0'))]
+  ? committed.get(name) : fs.readFileSync(safePath(root, name));
+const files = [...new Set(sourceRevision ? tree.map(entry => entry.name)
+  : git(['ls-files', '--cached', '--others', '--exclude-standard', '-z']).split('\0'))]
   .filter(name => name && !excluded(name) && (sourceRevision || fs.existsSync(safePath(root, name)))).sort();
 const app = JSON.parse(sourceBytes('app.json').toString('utf8'));
 function androidNativeAppConfig(value) {

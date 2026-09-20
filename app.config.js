@@ -8,10 +8,7 @@ module.exports = ({ config }) => {
   // EAS supplies EXPO_PUBLIC variables to both config resolution and Metro.
   // Do not ship a production iOS build with silently disabled launch analytics.
   if (process.env.EAS_BUILD_PLATFORM === 'ios' && buildProfile === 'production') {
-    const analyticsKey = process.env.EXPO_PUBLIC_AMPLITUDE_API_KEY?.trim();
-    if (!analyticsKey || analyticsKey === 'your_amplitude_api_key_here') {
-      throw new Error('iOS production requires EXPO_PUBLIC_AMPLITUDE_API_KEY in the EAS production environment');
-    }
+    require('./config/validateIosProduction')();
   }
   const ids = profiles[profile];
   for (const platform of ['android', 'ios']) {
