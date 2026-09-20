@@ -547,3 +547,12 @@ Source and call-site inspection only: no build, lint, tests or device QA ran for
 - Reviewed existing rewarded startup/Settings preload, native modal handoff, Premium operation/verification boundary and opaque startup-preview readiness. Store verification and SDK/OS behavior are not established by this source review.
 
 Reviewed the shared-policy changes since `development-policies` commit `2d86ce0`: ad lifecycle/rotation and callback ownership, purchase integrity, splash handoff, version source/register rules, and release-mapping applicability. Execution-only guidance (ad QA authorization, artifact/device/store validation) is not an app feature and was not executed. Existing release entrypoints were inspected for mapping handling; no artifact validation is claimed. No app version was changed, so this task does not certify or rewrite the live version register. Build, lint, tests, device QA, store/console changes and uploads were not performed.
+
+
+## Policy clarification follow-up (012793e) — 2026-09-20
+
+- No new code correction was identified for this delta. The existing Premium interface separates paymentPending from operation state, rejects duplicate purchases and allows manual restore. Reconciliation uses the actual store and installed verifier; unresolved pending cancellation and late-callback ordering still need exact-platform evidence, not a synthetic timeout result.
+- build-local-apk.ps1 makes AAB work conditional on IncludeBundle. Existing EAS remote numbering and local version-code overrides are distinct from app.json and remain documented separately. No source version, remote counter or version-register cell was changed.
+- Shown reward attempts retain their reward-only listener until an earned callback; an early-close terminal cleanup boundary is not established. Source retention is not proof of bounded native resources or live reward delivery.
+
+Reviewed the shared-policy changes from 714a660 to 012793e (artifact applicability, version-source exceptions, pending transactions and retained reward callbacks). Findings above are scoped source inspection, not full app compliance. Existing approved ad/recovery exceptions remain. No build, lint, tests, dependency installation, device QA, credential/store changes or upload ran. Documentation and source changes are delivered separately per repository.
