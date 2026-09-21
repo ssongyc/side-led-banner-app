@@ -6,7 +6,7 @@ import {
   skiaTextBlockHeightPx,
 } from "@/utils/skiaTextBlockMetrics";
 
-export const SKIA_BLOCK_HEIGHT_SAFETY_PX = 2;
+const SKIA_BLOCK_HEIGHT_SAFETY_PX = 2;
 
 export type SkiaFontProbe = {
   rowHeightPxAtProbe: number;

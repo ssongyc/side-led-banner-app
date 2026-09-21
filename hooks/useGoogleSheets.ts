@@ -6,7 +6,7 @@ import { fetchText } from "@/utils/ApiClient";
 import Papa from "papaparse";
 import { useCallback, useEffect, useState } from "react";
 
-export const GOOGLE_SHEET_CSV_URL =
+const GOOGLE_SHEET_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4uzvVy0xudw8AviSG0o-JsE5IiuBdpYt4tAAxDXFSK9l0i2To3cZ2pBqCDc3AoRoeENUW_QC5s4_d/pub?gid=0&single=true&output=csv";
 
 /**

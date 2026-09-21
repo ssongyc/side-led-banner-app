@@ -11,10 +11,10 @@
 
 현재 소스 버전은 **1.1.2 (app.json의 Android versionCode 29)**이며 Settings는 Expo 버전을 읽어 **V1.1.2**를 표시합니다. 소스 설정, 로컬 빌드의 버전 코드, 실제 스토어 배포 버전은 별개입니다.
 
-- 최근 기록된 로컬 APK/AAB는 **1.1.2 (30)**, 소스 `bc23fad724df28f07f558c805e00ba4c8d7bc2c3`, 실행 ID `20260921-083708-471023bf`입니다. 30은 빌드 시 명시한 override입니다. 프로덕션 AdMob·기존 서명·SDK 36·Billing 9.1.0·4개 ABI·16 KiB 정렬·동일 빌드 R8 매핑의 로컬 검증 결과는 [Android 빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md)에 있습니다. 이 산출물에는 이후 `7368d44`와 `5cf3182`의 변경이 포함되지 않았습니다.
-- `5cf3182`에는 방향별 배너 재사용, 광고 진단·문구 정리, 스크롤의 미지원 JS 속성 제거, 검증 하네스 갱신, Android 캐시·작업 이력 재사용 개선이 포함되었습니다. 당시 타입 검사와 상태 검증 **26개가 통과**했습니다. React/네이티브 화면 통합 QA와 최신 소스의 새 APK/AAB·iOS 빌드는 별도이며, 빌드 효율화의 추가 시간 단축은 아직 측정하지 않았습니다.
+- 최근 기록된 로컬 APK/AAB는 **1.1.2 (30)**, 소스 `7919f58d10f512de68e32ac80a3cf2765276502a`, 실행 ID `20260921-150419-3b6c4768`입니다. 30은 빌드 시 명시한 override입니다. 프로덕션 AdMob·기존 서명·SDK 36·Billing 9.1.0·4개 ABI·16 KiB 정렬·동일 빌드 R8 매핑의 로컬 검증 결과는 [Android 빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md)에 있습니다. 이 산출물에는 `7368d44`·`5cf3182`의 광고 개선과 `7919f58`의 정리가 포함됩니다. 총 7분 36초, Gradle 6분 3초이며 작업 1,086개 재사용·73개 실행입니다.
+- `5cf3182`에는 방향별 배너 재사용, 광고 진단·문구 정리, 스크롤의 미지원 JS 속성 제거, 검증 하네스 갱신, Android 캐시·작업 이력 재사용 개선이 포함되었습니다. 당시 타입 검사와 상태 검증 **26개가 통과**했습니다. 최신 Android APK/AAB는 위 실행 기록에서 생성·로컬 검증했습니다. 이후 Android 실기기에서 세 탭 스크롤·화면 복귀·테스트 광고 보상 흐름을 확인했습니다. iOS 빌드·실기기 동작은 미검증이며, 이번 증분 시간은 캐시 복원 변경만의 효과를 따로 측정한 결과가 아닙니다.
 - V1.1.2에는 iOS Play 종료의 상태 표시줄 선복원·네이티브 안전 영역·페이드 제거와 어두운 상태 표시줄, Amplitude 초기화·사용자 식별 후 새 앱 실행당 한 번 기록하는 `App Opened`가 반영되어 있습니다. [UI 기록](docs/UI_INTERACTION_1.0.9_27.md)과 [현재 광고 동작·검증 제한](docs/ADVERTISING.md)을 참고하세요.
-- 실제 광고 노출, 최신 기기별 화면 동작, Play 업로드·처리 및 스토어 버전 사용 가능 여부는 로컬 소스/산출물 검증으로 확인되지 않습니다. 아래 날짜별 단락과 커밋·푸시 미실행 표기는 각 작업 당시의 역사적 기록입니다.
+- Galaxy SM-M336K(Android 16)의 설치 APK 해시 일치, Test Ad 재생·닫기, 보상 후 잠금 해제와 재시작 유지 및 제한된 성능 측정은 [실기기 QA 기록](docs/QA_20260910.md#2026-09-21--v112-30-후속-실기기-qa)에 정리했습니다. 실제 2시간 만료, iOS 동작, 구매·복원, production 공급률·수익, Play 업로드·처리 및 스토어 버전 사용 가능 여부는 미검증입니다. 아래 날짜별 단락과 커밋·푸시 미실행 표기는 각 작업 당시의 역사적 기록입니다.
 
 ## 과거 소스 변경 이력 — 2026-09-09~10
 
@@ -97,7 +97,7 @@ Upgrade to Pro 설정 항목과 `/premium` 라우트는 제외했습니다. 구�
 
 ## 광고 동작 — 현재 소스
 
-현재 광고 구현은 큰 적응형 배너, SDK 초기화의 제한된 재시도, test/production 분리, 명시적 웹 진단 모드와 Android Activity 몰입형 처리를 포함합니다. [광고 구현 및 검증 제한](docs/ADVERTISING.md)을 참고하세요. 최신 소스와 로컬 산출물의 차이는 상단 「현재 문서의 기준」을 참고하세요. 실제 광고 노출·배치는 미검증입니다.
+현재 광고 구현은 큰 적응형 배너, SDK 초기화의 제한된 재시도, test/production 분리, 명시적 웹 진단 모드와 Android Activity 몰입형 처리를 포함합니다. [광고 구현 및 검증 제한](docs/ADVERTISING.md)을 참고하세요. 최신 소스와 로컬 산출물의 차이는 상단 「현재 문서의 기준」을 참고하세요. Android 한 기기에서 Test Ad 배너 표시와 보상 광고 재생·닫기·기능 잠금 해제를 확인했습니다. 전체 기기별 배치, 광고 조기 종료·만료 및 production 공급률·수익 검증을 의미하지 않습니다.
 
 
 리워드 상태는 슬롯별 `idle/loading/loaded/showing/failed`와 실패 원인 `load/show/open-timeout/expiry/unavailable/initialization/configuration`에서 하나의 UI 스냅샷으로 계산합니다. 중복 전역 실패 플래그는 사용하지 않습니다.
@@ -571,3 +571,8 @@ Source review only; build, lint, tests and device startup verification were not 
 ## 미사용 API·문서 정리 — 2026-09-21
 
 Git 관리 소스의 참조를 확인하여 `utils/fontPreload.ts` 내부에서만 호출하는 `collectPriorityFontIds`와 `loadFontIds`의 불필요한 export를 제거했습니다. 함수와 폰트 로딩 동작은 유지합니다. 삭제할 미사용 실행 파일은 확인하지 못했습니다. 플랫폼별 구현, Expo Router 진입점, QA용 `getAdTrace`, 명시적으로 보관한 `disabled-features/premium` 및 기존 빌드 증거는 유지했습니다. 이번 정리는 소스·문서 확인만 수행했으며 빌드·린트·테스트·커밋·푸시는 실행하지 않았습니다.
+
+
+### 후속 참조·README 정리
+
+내부에서만 사용하는 `GOOGLE_SHEET_CSV_URL`, `parseAppLanguagePreference`, `SKIA_BLOCK_HEIGHT_SAFETY_PX`의 불필요한 export를 제거했습니다. 함수·상수와 실행 동작은 유지하며, 확실한 미사용 파일은 확인하지 못해 삭제하지 않았습니다. 플랫폼별 구현, 보관된 Premium 화면, QA 도구와 빌드 증빙은 보존합니다. 현재 기준의 Android QA 설명을 갱신하되 날짜별 과거 기록은 유지했습니다. 이번 정리에서는 빌드·린트·테스트·커밋·푸시를 실행하지 않았습니다.

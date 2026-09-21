@@ -11,7 +11,7 @@ function isAppLocaleKey(value: string): value is AppLocaleKey {
   return (APP_LOCALE_KEYS as readonly string[]).includes(value);
 }
 
-export function parseAppLanguagePreference(
+function parseAppLanguagePreference(
   raw: string | null | undefined,
 ): AppLanguagePreference | null {
   if (!raw) return null;
