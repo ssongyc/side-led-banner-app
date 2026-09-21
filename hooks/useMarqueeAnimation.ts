@@ -1,4 +1,7 @@
-import { useSettings } from "@/contexts/settingsContext";
+import {
+  useSettingsContent,
+  useSettingsMotion,
+} from "@/contexts/settingsContext";
 import {
   buildMarqueeDisplayText,
   normalizeOneLineJoinMode,
@@ -35,9 +38,10 @@ export function useMarqueeAnimation({
   viewportWidthPx = 0,
   effectBleedPx = 0,
 }: UseMarqueeAnimationParams = {}) {
-  const { config } = useSettings();
-  const { previewText: text, playOption, oneLineJoinMode: oneLineJoinModeRaw } = config.content;
-  const speed = config.motion.textMoveSpeed;
+  const { content } = useSettingsContent();
+  const { motion } = useSettingsMotion();
+  const { previewText: text, playOption, oneLineJoinMode: oneLineJoinModeRaw } = content;
+  const speed = motion.textMoveSpeed;
   const translateX = useSharedValue(0);
   const totalShiftRef = useRef(0);
   const [textWidth, setTextWidth] = useState(0);

@@ -1,4 +1,7 @@
-import { useSettings } from "@/contexts/settingsContext";
+import {
+  useSettingsAppearance,
+  useSettingsContent,
+} from "@/contexts/settingsContext";
 import { useMemo } from "react";
 
 import { useSkiaAppearanceFont } from "@/hooks/useSkiaAppearanceFont";
@@ -115,9 +118,10 @@ function resolveTextMetrics(
 const SKIA_PROBE_FONT_SIZE = FONT_SIZE_MAX;
 
 export function useTextMetrics(input: TextMetricsInput) {
-  const { config } = useSettings();
-  const { font: appearanceFont, fontWeight, fontSize, lineSpacing } = config.appearance;
-  const { previewText: text, playOption } = config.content;
+  const { appearance } = useSettingsAppearance();
+  const { content } = useSettingsContent();
+  const { font: appearanceFont, fontWeight, fontSize, lineSpacing } = appearance;
+  const { previewText: text, playOption } = content;
 
   const probeFont = useSkiaAppearanceFont(
     appearanceFont,

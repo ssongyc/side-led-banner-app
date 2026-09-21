@@ -1,4 +1,4 @@
-import { useSettingsRest } from "@/contexts/settingsContext";
+import { useSettingsAppearance } from "@/contexts/settingsContext";
 import { useEffect } from "react";
 import {
   cancelAnimation,
@@ -20,9 +20,9 @@ function blinkHalfCycleMs(speed: number) {
 const BLINK_EASING = Easing.inOut(Easing.ease);
 
 export function useBlinkOpacityStyle(isActive = true) {
-  const { config } = useSettingsRest();
-  const active = config.appearance.effectSelectedItems.includes("Blink");
-  const blinkSpeed = config.appearance.blinkSpeed;
+  const { appearance } = useSettingsAppearance();
+  const active = appearance.effectSelectedItems.includes("Blink");
+  const blinkSpeed = appearance.blinkSpeed;
   // One linear cycle retains both direction and easing progress across a pause.
   const phase = useSharedValue(0);
   const opacity = useDerivedValue(() => {

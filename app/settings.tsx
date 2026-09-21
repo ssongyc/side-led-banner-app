@@ -7,7 +7,10 @@ import {
   resolveDropdownMaxHeight,
   settingsFooterStyles,
 } from "@/constants/styles";
-import { useSettingsRest } from "@/contexts/settingsContext";
+import {
+  useSettingsLocalizationContext,
+  useSettingsUI,
+} from "@/contexts/settingsContext";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { type Href, useFocusEffect, useRouter } from "expo-router";
@@ -45,12 +48,9 @@ export default function SettingsScreen() {
   const [languageDropdownContentHeight, setLanguageDropdownContentHeight] =
     useState(0);
   const [languageDropdownWidth, setLanguageDropdownWidth] = useState(0);
-  const {
-    updateUI,
-    textSectionLabel,
-    rewardAdLabel,
-    resolvedAppLocale,
-  } = useSettingsRest();
+  const { updateUI } = useSettingsUI();
+  const { textSectionLabel, rewardAdLabel, resolvedAppLocale } =
+    useSettingsLocalizationContext();
   const compactHeight = windowH - insets.top - insets.bottom < 480;
   const rootPaddingTop = Platform.OS === "web" ? 0 : insets.top;
 

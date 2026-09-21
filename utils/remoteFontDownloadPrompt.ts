@@ -13,9 +13,15 @@ export interface FontDownloadPromptState {
   visible: boolean;
   progress: number;
   fontId: FontId | null;
+  status: "idle" | "downloading" | "failed";
 }
 
-let state: FontDownloadPromptState = { visible: false, progress: 0, fontId: null };
+let state: FontDownloadPromptState = {
+  visible: false,
+  progress: 0,
+  fontId: null,
+  status: "idle",
+};
 const listeners = new Set<() => void>();
 
 function setState(next: Partial<FontDownloadPromptState>): void {
@@ -42,7 +48,12 @@ let activeController: AbortController | null = null;
 export function cancelFontDownload(): void {
   activeController?.abort();
   activeController = null;
-  setState({ visible: false, progress: 0, fontId: null });
+  setState({
+    visible: false,
+    progress: 0,
+    fontId: null,
+    status: "idle",
+  });
 }
 
 export async function requestFontDownload(fontId: FontId): Promise<boolean> {
@@ -56,7 +67,12 @@ export async function requestFontDownload(fontId: FontId): Promise<boolean> {
   const controller = new AbortController();
   activeController = controller;
 
-  setState({ visible: true, progress: 0, fontId });
+  setState({
+    visible: true,
+    progress: 0,
+    fontId,
+    status: "downloading",
+  });
 
   try {
     await ensureRemoteFontSetDownloaded(remoteSet, {
@@ -67,12 +83,22 @@ export async function requestFontDownload(fontId: FontId): Promise<boolean> {
     });
     if (activeController !== controller) return false;
     activeController = null;
-    setState({ visible: false, progress: 0, fontId: null });
+    setState({
+      visible: false,
+      progress: 0,
+      fontId: null,
+      status: "idle",
+    });
     return true;
   } catch {
     if (activeController === controller) {
       activeController = null;
-      setState({ visible: false, progress: 0, fontId: null });
+      setState({
+        visible: true,
+        progress: 0,
+        fontId,
+        status: "failed",
+      });
     }
     return false;
   }

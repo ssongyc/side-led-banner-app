@@ -18,7 +18,13 @@ import {
   View,
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
-import { useSettings } from "../../contexts/settingsContext";
+import {
+  useSettingsAppearance,
+  useSettingsContent,
+  useSettingsLocalizationContext,
+  useSettingsMotion,
+  useSettingsUI,
+} from "../../contexts/settingsContext";
 import { SettingsSliderBlock } from "./settingsSliderBlock";
 
 export const TextSection = () => {
@@ -59,16 +65,12 @@ export const TextSection = () => {
     [],
   );
 
-  const {
-    config,
-    updateConfig,
-    fontItems,
-    textSectionLabel,
-    resolvedAppLocale,
-    isProActive,
-    openRewardAdModal,
-    ui,
-  } = useSettings();
+  const { appearance, updateConfig, fontItems } = useSettingsAppearance();
+  const { content } = useSettingsContent();
+  const { motion } = useSettingsMotion();
+  const { textSectionLabel, resolvedAppLocale } =
+    useSettingsLocalizationContext();
+  const { isProActive, openRewardAdModal, ui } = useSettingsUI();
 
   const fontDropdownMaxHeight = useMemo(
     () => resolveDropdownMaxHeight(fontDropdownContentHeight, windowH),
@@ -82,7 +84,7 @@ export const TextSection = () => {
     [],
   );
 
-  const { playOption, oneLineJoinMode: oneLineJoinModeRaw } = config.content;
+  const { playOption, oneLineJoinMode: oneLineJoinModeRaw } = content;
   const oneLineJoinMode = normalizeOneLineJoinMode(oneLineJoinModeRaw);
   const {
     font,
@@ -92,14 +94,14 @@ export const TextSection = () => {
     textSelectedColor,
     outLine,
     dropShadow,
-  } = config.appearance;
-  const { textMoveSpeed } = config.motion;
+  } = appearance;
+  const { textMoveSpeed } = motion;
 
   const displayFontValue = useMemo(() => {
     if (fontItems.some((item) => item.value === font)) return font;
     return getDefaultForLocale(resolvedAppLocale);
   }, [font, fontItems, resolvedAppLocale]);
-  const { effectSelectedItems } = config.appearance;
+  const { effectSelectedItems } = appearance;
   const isPixelEffect = effectSelectedItems.includes("Pixel");
   const fontSizeSliderMin = useMemo(
     () =>

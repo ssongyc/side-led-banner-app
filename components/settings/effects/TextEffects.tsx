@@ -3,17 +3,28 @@ import { btnStyles } from "@/constants/btnStyles";
 import { DEFAULT_GRADIENT_BACKGROUND_PRESET_ID } from "@/constants/gradientBackgroundPresets";
 import { hasPixelLedEffect } from "@/constants/pixelLed";
 import { effectSectionLockStyles as fxLock, styles } from "@/constants/styles";
-import type { BannerConfig, useSettingsRest } from "@/contexts/settingsContext";
+import type {
+  BannerConfig,
+  useSettingsAppearance,
+  useSettingsLocalizationContext,
+  useSettingsUI,
+} from "@/contexts/settingsContext";
 import type { EffectSectionLabelKey } from "@/language/effectSectionLabels";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import { SettingsSliderBlock, type SettingsSliderBlockProps } from "../settingsSliderBlock";
 
-type Props = Pick<ReturnType<typeof useSettingsRest>,
-  "config" | "updateConfig" | "effectItems" | "effectSectionLabel" |
-  "effectChipLabel" | "resolvedAppLocale" | "isProActive" | "openRewardAdModal"
->;
+type Props = {
+  config: Pick<BannerConfig, "appearance">;
+  updateConfig: ReturnType<typeof useSettingsAppearance>["updateConfig"];
+  effectItems: string[];
+  effectSectionLabel: ReturnType<typeof useSettingsLocalizationContext>["effectSectionLabel"];
+  effectChipLabel: ReturnType<typeof useSettingsLocalizationContext>["effectChipLabel"];
+  resolvedAppLocale: ReturnType<typeof useSettingsLocalizationContext>["resolvedAppLocale"];
+  isProActive: boolean;
+  openRewardAdModal: ReturnType<typeof useSettingsUI>["openRewardAdModal"];
+};
 
 const LOCK_ICON = require("@/assets/images/icon_lock_type2.png");
 const PRO_LOCKED_EFFECTS = new Set(["Pixel", "Gradient", "Glow"]);

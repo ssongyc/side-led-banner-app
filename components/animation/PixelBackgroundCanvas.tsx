@@ -28,12 +28,12 @@ import {
   Paint,
   Rect,
   RuntimeShader,
-  Skia,
   useImage,
 } from "@shopify/react-native-skia";
 import React, { useMemo } from "react";
 import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
+import { getCachedSkiaRuntimeEffect } from "@/utils/skiaRuntimeEffectCache";
 
 const TABLET_MIN_SHORTEST_SIDE_DP = 600;
 
@@ -207,21 +207,30 @@ export function PixelBackgroundCanvas({
 }
 
 function usePixelDotShaderLayers(dotSize: number, backgroundColor: string) {
-  const backgroundSource = useMemo(() => {
-    const source = Skia.RuntimeEffect.Make(DOT_MATRIX_BACKGROUND_SKSL);
-    if (!source) throw new Error("Failed to compile dot matrix background shader.");
-    return source;
-  }, []);
-  const photoBackgroundSource = useMemo(() => {
-    const source = Skia.RuntimeEffect.Make(DOT_MATRIX_PHOTO_BACKGROUND_SKSL);
-    if (!source) throw new Error("Failed to compile photo background shader.");
-    return source;
-  }, []);
-  const staticOffSource = useMemo(() => {
-    const source = Skia.RuntimeEffect.Make(DOT_MATRIX_STATIC_OFF_SKSL);
-    if (!source) throw new Error("Failed to compile static off LED shader.");
-    return source;
-  }, []);
+  const backgroundSource = useMemo(
+    () =>
+      getCachedSkiaRuntimeEffect(
+        DOT_MATRIX_BACKGROUND_SKSL,
+        "Failed to compile dot matrix background shader.",
+      ),
+    [],
+  );
+  const photoBackgroundSource = useMemo(
+    () =>
+      getCachedSkiaRuntimeEffect(
+        DOT_MATRIX_PHOTO_BACKGROUND_SKSL,
+        "Failed to compile photo background shader.",
+      ),
+    [],
+  );
+  const staticOffSource = useMemo(
+    () =>
+      getCachedSkiaRuntimeEffect(
+        DOT_MATRIX_STATIC_OFF_SKSL,
+        "Failed to compile static off LED shader.",
+      ),
+    [],
+  );
   const pixelDotUniforms = useMemo(() => pixelLedDotUniforms(dotSize), [dotSize]);
   const defaultLedUniforms = useMemo(
     () => resolveDefaultLedFromBackground(backgroundColor),

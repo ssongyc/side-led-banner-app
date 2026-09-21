@@ -87,11 +87,11 @@ export interface UIState {
   /** 현재 폰트 크기 기준으로 설정 가능한 행간 슬라이더 최댓값 */
   lineSpacingSliderMax: number;
 }
-//여기서 제공할 config 및 업데이트 함수 정의
+// Settings values are split by change frequency so unrelated updates do not
+// invalidate every consumer.
 interface SettingsContextValue {
   config: BannerConfig;
   ui: UIState;
-  /** `appLanguage === "system"`일 때 기기 로케일, 아니면 `appLanguage`와 동일 */
   resolvedAppLocale: AppLocaleKey;
   updateConfig: <K extends keyof BannerConfig>(
     group: K,
@@ -104,65 +104,188 @@ interface SettingsContextValue {
   handleTextChange: (text: string) => void;
   fontItems: { label: string; value: string }[];
   effectItems: string[];
-  /** playOption은 유지된 채로 이전 슬롯을 자동 저장합니다*/
   loadPreset: (index: number) => void;
-  /** 파싱 전체(디버그용). */
   sheetParseResult: GoogleSheetParseResult | null;
   sheetStringsLoading: boolean;
   sheetStringsError: Error | null;
   refetchSheetStrings: () => Promise<void>;
-  /** 시트 우선, 없으면 코드 fallback */
   textSectionLabel: (key: TextSectionLabelKey) => string;
   effectSectionLabel: (key: EffectSectionLabelKey) => string;
   effectChipLabel: (effectId: string) => string;
   rewardAdLabel: (key: RewardAdLabelKey) => string;
-  /**
-   * 게시 CSV 행·셀 내용이 바뀔 때마다 바뀜.
-   */
   sheetStringsRevision: number;
-  /** 스크립트(locale)별 마지막으로 선택된 폰트 — 다른 언어 폰트 선택 시 해당 스크립트 문자의 fallback으로 사용 */
   lastFontByLocale: Partial<Record<AppLocaleKey, string>>;
 }
-/** content(타이핑 경로)를 제외한 나머지 — 타이핑 시 재렌더되지 않아야 하는 컴포넌트가 구독 */
+
 type RestContextValue = Omit<SettingsContextValue, "config"> & {
   config: Omit<BannerConfig, "content">;
 };
-/** previewText 등 content만 담음 — 타이핑할 때만 값이 바뀜 */
+
+interface AppearanceContextValue {
+  appearance: BannerConfig["appearance"];
+  fontItems: { label: string; value: string }[];
+  effectItems: string[];
+  lastFontByLocale: Partial<Record<AppLocaleKey, string>>;
+}
+interface BackgroundContextValue {
+  background: BannerConfig["background"];
+}
+interface MotionContextValue {
+  motion: BannerConfig["motion"];
+}
 interface ContentContextValue {
   content: BannerConfig["content"];
 }
+interface UIContextValue {
+  ui: UIState;
+  isProActive: boolean;
+}
+interface LocalizationContextValue {
+  resolvedAppLocale: AppLocaleKey;
+  sheetParseResult: GoogleSheetParseResult | null;
+  sheetStringsLoading: boolean;
+  sheetStringsError: Error | null;
+  refetchSheetStrings: () => Promise<void>;
+  textSectionLabel: (key: TextSectionLabelKey) => string;
+  effectSectionLabel: (key: EffectSectionLabelKey) => string;
+  effectChipLabel: (effectId: string) => string;
+  rewardAdLabel: (key: RewardAdLabelKey) => string;
+  sheetStringsRevision: number;
+}
+interface SettingsActionsContextValue {
+  updateConfig: SettingsContextValue["updateConfig"];
+  updateUI: SettingsContextValue["updateUI"];
+  activatePro: () => void;
+  openRewardAdModal: () => void;
+  handleTextChange: (text: string) => void;
+  loadPreset: (index: number) => void;
+}
 
-const RestContext = createContext<RestContextValue | null>(null);
+const AppearanceContext = createContext<AppearanceContextValue | null>(null);
+const BackgroundContext = createContext<BackgroundContextValue | null>(null);
+const MotionContext = createContext<MotionContextValue | null>(null);
 const ContentContext = createContext<ContentContextValue | null>(null);
+const UIContext = createContext<UIContextValue | null>(null);
+const LocalizationContext = createContext<LocalizationContextValue | null>(null);
+const SettingsActionsContext =
+  createContext<SettingsActionsContextValue | null>(null);
 
-/**
- * content(타이핑 경로)를 구독하지 않는 훅.
- * 배경/이펙트 패널처럼 previewText와 무관한 컴포넌트는 이 훅을 사용해야
- * 타이핑할 때마다 불필요하게 재렌더되지 않습니다.
- */
-export const useSettingsRest = () => {
-  const ctx = useContext(RestContext);
-  if (!ctx)
-    throw new Error("useSettingsRest must be used within SettingsProvider");
-  return ctx;
+function useRequiredContext<T>(
+  context: React.Context<T | null>,
+  hookName: string,
+): T {
+  const value = useContext(context);
+  if (!value) {
+    throw new Error(`${hookName} must be used within SettingsProvider`);
+  }
+  return value;
+}
+
+export const useSettingsAppearance = () => {
+  const value = useRequiredContext(AppearanceContext, "useSettingsAppearance");
+  const { updateConfig } = useRequiredContext(
+    SettingsActionsContext,
+    "useSettingsAppearance",
+  );
+  return useMemo(() => ({ ...value, updateConfig }), [value, updateConfig]);
 };
 
+export const useSettingsBackground = () => {
+  const value = useRequiredContext(BackgroundContext, "useSettingsBackground");
+  const { updateConfig } = useRequiredContext(
+    SettingsActionsContext,
+    "useSettingsBackground",
+  );
+  return useMemo(() => ({ ...value, updateConfig }), [value, updateConfig]);
+};
+
+export const useSettingsMotion = () => {
+  const value = useRequiredContext(MotionContext, "useSettingsMotion");
+  const { updateConfig } = useRequiredContext(
+    SettingsActionsContext,
+    "useSettingsMotion",
+  );
+  return useMemo(() => ({ ...value, updateConfig }), [value, updateConfig]);
+};
+
+export const useSettingsContent = () => {
+  const value = useRequiredContext(ContentContext, "useSettingsContent");
+  const { updateConfig, handleTextChange } = useRequiredContext(
+    SettingsActionsContext,
+    "useSettingsContent",
+  );
+  return useMemo(
+    () => ({ ...value, updateConfig, handleTextChange }),
+    [value, updateConfig, handleTextChange],
+  );
+};
+
+export const useSettingsUI = () => {
+  const value = useRequiredContext(UIContext, "useSettingsUI");
+  const {
+    updateUI,
+    activatePro,
+    openRewardAdModal,
+    loadPreset,
+  } = useRequiredContext(SettingsActionsContext, "useSettingsUI");
+  return useMemo(
+    () => ({
+      ...value,
+      updateUI,
+      activatePro,
+      openRewardAdModal,
+      loadPreset,
+    }),
+    [value, updateUI, activatePro, openRewardAdModal, loadPreset],
+  );
+};
+
+export const useSettingsLocalizationContext = () =>
+  useRequiredContext(LocalizationContext, "useSettingsLocalizationContext");
+
 /**
- * 기존 호환용 통합 훅 — rest + content를 모두 구독하므로, previewText가 바뀔 때도
- * appearance/background만 바뀔 때도 재렌더됩니다. content가 실제로 필요한 컴포넌트에서만 사용해주세요.
+ * Compatibility hook for existing consumers that need several settings groups.
+ * Prefer the domain hooks above for focused consumers.
  */
+export const useSettingsRest = (): RestContextValue => {
+  const appearance = useRequiredContext(AppearanceContext, "useSettingsRest");
+  const background = useRequiredContext(BackgroundContext, "useSettingsRest");
+  const motion = useRequiredContext(MotionContext, "useSettingsRest");
+  const ui = useRequiredContext(UIContext, "useSettingsRest");
+  const localization = useRequiredContext(
+    LocalizationContext,
+    "useSettingsRest",
+  );
+  const actions = useRequiredContext(SettingsActionsContext, "useSettingsRest");
+
+  return useMemo(
+    () => ({
+      ...actions,
+      ...localization,
+      ui: ui.ui,
+      isProActive: ui.isProActive,
+      fontItems: appearance.fontItems,
+      effectItems: appearance.effectItems,
+      lastFontByLocale: appearance.lastFontByLocale,
+      config: {
+        appearance: appearance.appearance,
+        background: background.background,
+        motion: motion.motion,
+      },
+    }),
+    [actions, localization, ui, appearance, background, motion],
+  );
+};
+
 export const useSettings = (): SettingsContextValue => {
-  const rest = useContext(RestContext);
-  const contentCtx = useContext(ContentContext);
-  if (!rest || !contentCtx) {
-    throw new Error("useSettings must be used within SettingsProvider");
-  }
+  const rest = useSettingsRest();
+  const { content } = useRequiredContext(ContentContext, "useSettings");
   return useMemo(
     () => ({
       ...rest,
-      config: { ...rest.config, content: contentCtx.content },
+      config: { ...rest.config, content },
     }),
-    [rest, contentCtx],
+    [rest, content],
   );
 };
 
@@ -570,31 +693,34 @@ export function SettingsProvider({ children, onStartupStateChange }: {
     }
     return items;
   }, [config.appearance.font, config.appearance.effectSelectedItems]);
-  // content는 별도 Context로 분리 — previewText 등이 바뀌어도 이쪽(appearance/background/motion/ui)
-  // 구독하는 곳은 재렌더되지 않아야 함 ***성능
-  const restConfig = useMemo(
+  const appearanceValue = useMemo<AppearanceContextValue>(
     () => ({
       appearance: config.appearance,
-      background: config.background,
-      motion: config.motion,
-    }),
-    [config.appearance, config.background, config.motion],
-  );
-
-  const restValue = useMemo(
-    () => ({
-      config: restConfig,
-      ui,
-      resolvedAppLocale,
-      updateConfig,
-      updateUI,
-      isProActive,
-      activatePro,
-      openRewardAdModal,
-      handleTextChange,
       fontItems,
       effectItems,
-      loadPreset,
+      lastFontByLocale: config.appearance.fontByLocale,
+    }),
+    [config.appearance, fontItems, effectItems],
+  );
+  const backgroundValue = useMemo<BackgroundContextValue>(
+    () => ({ background: config.background }),
+    [config.background],
+  );
+  const motionValue = useMemo<MotionContextValue>(
+    () => ({ motion: config.motion }),
+    [config.motion],
+  );
+  const contentValue = useMemo<ContentContextValue>(
+    () => ({ content: config.content }),
+    [config.content],
+  );
+  const uiValue = useMemo<UIContextValue>(
+    () => ({ ui, isProActive }),
+    [ui, isProActive],
+  );
+  const localizationValue = useMemo<LocalizationContextValue>(
+    () => ({
+      resolvedAppLocale,
       sheetParseResult,
       sheetStringsLoading,
       sheetStringsError,
@@ -604,21 +730,9 @@ export function SettingsProvider({ children, onStartupStateChange }: {
       effectChipLabel,
       rewardAdLabel,
       sheetStringsRevision,
-      lastFontByLocale: restConfig.appearance.fontByLocale,
     }),
     [
-      restConfig,
-      ui,
       resolvedAppLocale,
-      updateConfig,
-      updateUI,
-      isProActive,
-      activatePro,
-      openRewardAdModal,
-      handleTextChange,
-      fontItems,
-      effectItems,
-      loadPreset,
       sheetParseResult,
       sheetStringsLoading,
       sheetStringsError,
@@ -628,6 +742,24 @@ export function SettingsProvider({ children, onStartupStateChange }: {
       effectChipLabel,
       rewardAdLabel,
       sheetStringsRevision,
+    ],
+  );
+  const actionsValue = useMemo<SettingsActionsContextValue>(
+    () => ({
+      updateConfig,
+      updateUI,
+      activatePro,
+      openRewardAdModal,
+      handleTextChange,
+      loadPreset,
+    }),
+    [
+      updateConfig,
+      updateUI,
+      activatePro,
+      openRewardAdModal,
+      handleTextChange,
+      loadPreset,
     ],
   );
 
@@ -641,16 +773,21 @@ export function SettingsProvider({ children, onStartupStateChange }: {
       locale: resolvedAppLocale, retry: retryStorage });
   }, [presetsStorageReady, storageLoadFailed, resolvedAppLocale, retryStorage, onStartupStateChange]);
 
-  const contentValue = useMemo(
-    () => ({ content: config.content }),
-    [config.content],
-  );
-
   return (
-    <RestContext.Provider value={restValue}>
-      <ContentContext.Provider value={contentValue}>
-        {presetsStorageReady ? children : null}
-      </ContentContext.Provider>
-    </RestContext.Provider>
+    <SettingsActionsContext.Provider value={actionsValue}>
+      <LocalizationContext.Provider value={localizationValue}>
+        <UIContext.Provider value={uiValue}>
+          <MotionContext.Provider value={motionValue}>
+            <BackgroundContext.Provider value={backgroundValue}>
+              <AppearanceContext.Provider value={appearanceValue}>
+                <ContentContext.Provider value={contentValue}>
+                  {presetsStorageReady ? children : null}
+                </ContentContext.Provider>
+              </AppearanceContext.Provider>
+            </BackgroundContext.Provider>
+          </MotionContext.Provider>
+        </UIContext.Provider>
+      </LocalizationContext.Provider>
+    </SettingsActionsContext.Provider>
   );
 }

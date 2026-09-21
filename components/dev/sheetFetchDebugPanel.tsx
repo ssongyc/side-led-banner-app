@@ -1,6 +1,6 @@
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { uiThemeFontStyle } from "@/constants/appFonts";
-import { useSettingsRest } from "@/contexts/settingsContext";
+import { useSettingsLocalizationContext } from "@/contexts/settingsContext";
 import { hideAndroidNavigationBar } from "@/utils/SystemChrome";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -33,7 +33,7 @@ function SheetFetchDebugPanelInner() {
     sheetStringsLoading: loading,
     sheetStringsError: error,
     refetchSheetStrings: refetch,
-  } = useSettingsRest();
+  } = useSettingsLocalizationContext();
 
   useEffect(() => {
     if (loading) return;

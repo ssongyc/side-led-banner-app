@@ -1,5 +1,8 @@
-import { fontDownloadModalStyles as styles, WATCH_AD_BUTTON_COLORS } from "@/constants/styles";
-import { useSettingsRest } from "@/contexts/settingsContext";
+import {
+  fontDownloadModalStyles as styles,
+  WATCH_AD_BUTTON_COLORS,
+} from "@/constants/styles";
+import { useSettingsLocalizationContext } from "@/contexts/settingsContext";
 import { fontDownloadLabel } from "@/language/fontDownloadLabels";
 import {
   cancelFontDownload,
@@ -8,8 +11,20 @@ import {
 } from "@/utils/remoteFontDownloadPrompt";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { BackHandler, Pressable, Text, TouchableOpacity, View } from "react-native";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import {
+  BackHandler,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -19,9 +34,9 @@ import { scheduleOnRN } from "react-native-worklets";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function FontDownloadModal() {
-  const { resolvedAppLocale } = useSettingsRest();
+  const { resolvedAppLocale } = useSettingsLocalizationContext();
   const insets = useSafeAreaInsets();
-  const { visible, progress } = useSyncExternalStore(
+  const { visible, progress, status } = useSyncExternalStore(
     subscribeFontDownloadPrompt,
     getFontDownloadPromptSnapshot,
   );
@@ -53,20 +68,30 @@ export function FontDownloadModal() {
     return () => sub.remove();
   }, [mounted]);
 
-  const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
+  const overlayStyle = useAnimatedStyle(() => ({
+    opacity: overlayOpacity.value,
+  }));
 
   if (!mounted) return null;
 
   const percent = progress < 0 ? null : Math.round(progress * 100);
+  const failed = status === "failed";
 
   return (
     <Animated.View
       style={[
         styles.root,
-        { paddingTop: 12 + insets.top, paddingBottom: 12 + insets.bottom, paddingLeft: 12 + insets.left, paddingRight: 12 + insets.right },
+        {
+          paddingTop: 12 + insets.top,
+          paddingBottom: 12 + insets.bottom,
+          paddingLeft: 12 + insets.left,
+          paddingRight: 12 + insets.right,
+        },
         overlayStyle,
       ]}
       pointerEvents={visible ? "auto" : "none"}
+      accessibilityViewIsModal={visible}
+      importantForAccessibility={visible ? "yes" : "no-hide-descendants"}
     >
       <Pressable
         style={[styles.dim, { backgroundColor: "rgba(0,0,0,0.45)" }]}
@@ -78,29 +103,55 @@ export function FontDownloadModal() {
             style={styles.closeButton}
             onPress={cancelFontDownload}
             accessibilityRole="button"
-            accessibilityLabel="Close"
+            accessibilityLabel={fontDownloadLabel(
+              "close",
+              resolvedAppLocale,
+            )}
           >
             <Ionicons name="close" size={22} color="#8A8A8A" />
           </TouchableOpacity>
 
-          <Text style={styles.title} allowFontScaling={false}>
-            {fontDownloadLabel("fontDownloadTitle", resolvedAppLocale)}
+          <Text
+            style={styles.title}
+            allowFontScaling={false}
+            accessibilityLiveRegion={failed ? "assertive" : "polite"}
+          >
+            {fontDownloadLabel(
+              failed ? "fontDownloadFailed" : "fontDownloadTitle",
+              resolvedAppLocale,
+            )}
           </Text>
 
-          <View style={styles.progressTrack}>
-            <LinearGradient
-              colors={WATCH_AD_BUTTON_COLORS}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[
-                styles.progressFill,
-                { width: `${Math.max(0, Math.min(100, percent ?? 0))}%` },
-              ]}
-            />
-          </View>
-          <Text style={styles.progressText} allowFontScaling={false}>
-            {percent == null ? "" : `${percent}%`}
-          </Text>
+          {failed ? (
+            <Text style={styles.errorText} allowFontScaling={false}>
+              {fontDownloadLabel(
+                "fontDownloadFailedMessage",
+                resolvedAppLocale,
+              )}
+            </Text>
+          ) : (
+            <>
+              <View style={styles.progressTrack}>
+                <LinearGradient
+                  colors={WATCH_AD_BUTTON_COLORS}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: `${Math.max(
+                        0,
+                        Math.min(100, percent ?? 0),
+                      )}%`,
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={styles.progressText} allowFontScaling={false}>
+                {percent == null ? "" : `${percent}%`}
+              </Text>
+            </>
+          )}
         </View>
       </View>
     </Animated.View>

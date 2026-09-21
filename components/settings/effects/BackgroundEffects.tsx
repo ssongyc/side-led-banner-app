@@ -1,12 +1,21 @@
 import { uiThemeFontStyle } from "@/constants/appFonts";
 import { effectSectionLockStyles as fxLock, styles } from "@/constants/styles";
-import type { useSettingsRest } from "@/contexts/settingsContext";
+import type {
+  BannerConfig,
+  useSettingsAppearance,
+  useSettingsLocalizationContext,
+  useSettingsUI,
+} from "@/contexts/settingsContext";
 import React from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
-type Props = Pick<ReturnType<typeof useSettingsRest>,
-  "config" | "updateConfig" | "effectSectionLabel" | "isProActive" | "openRewardAdModal"
->;
+type Props = {
+  config: Pick<BannerConfig, "appearance">;
+  updateConfig: ReturnType<typeof useSettingsAppearance>["updateConfig"];
+  effectSectionLabel: ReturnType<typeof useSettingsLocalizationContext>["effectSectionLabel"];
+  isProActive: boolean;
+  openRewardAdModal: ReturnType<typeof useSettingsUI>["openRewardAdModal"];
+};
 
 const LOCK_ICON = require("@/assets/images/icon_lock_type2.png");
 const PRO_LOCKED_BG_EFFECTS = new Set([

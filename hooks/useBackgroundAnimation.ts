@@ -9,7 +9,7 @@ import {
   isSpeechBubblePreset,
   type SpeechBubblePresetId,
 } from "@/constants/speechBubblePresets";
-import { useSettingsRest } from "@/contexts/settingsContext";
+import { useSettingsAppearance } from "@/contexts/settingsContext";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export type BackgroundEffectPreset =
@@ -69,8 +69,8 @@ export type BackgroundEffectId = BackgroundEffectAnimationResult["id"];
 
 //각 배경 이펙트마다 렌더링 가능한 상태로 바꿈
 export function useBackgroundAnimation(isActive = true) {
-  const { config } = useSettingsRest();
-  const preset: BackgroundEffectPreset = config.appearance.backgroundEffectPreset as BackgroundEffectPreset;
+  const { appearance } = useSettingsAppearance();
+  const preset = appearance.backgroundEffectPreset as BackgroundEffectPreset;
   const [frameIndex, setFrameIndex] = useState(0);
   const remainingMs = useRef(FRAME_DURATION_MS);
   const isEnabled = preset === "effect1";

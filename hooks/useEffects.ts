@@ -13,7 +13,11 @@ import {
   resolvePixelShaderSizePx,
   resolvePixelTextShaderUniforms,
 } from "@/constants/pixelLed";
-import { useSettings } from "@/contexts/settingsContext";
+import {
+  useSettingsAppearance,
+  useSettingsContent,
+  useSettingsLocalizationContext,
+} from "@/contexts/settingsContext";
 import { computeEffectSpace } from "@/utils/recordTile";
 import { useMemo } from "react";
 
@@ -23,7 +27,9 @@ export type EffectsInput = {
 
 /** Skia마퀴효과용 */
 export function useEffects(input: EffectsInput = {}) {
-  const { config, resolvedAppLocale } = useSettings();
+  const { appearance } = useSettingsAppearance();
+  const { content } = useSettingsContent();
+  const { resolvedAppLocale } = useSettingsLocalizationContext();
   const {
     effectSelectedItems,
     gradientBackgroundPreset,
@@ -32,8 +38,8 @@ export function useEffects(input: EffectsInput = {}) {
     glowColor,
     dropShadow,
     pixelColorMix,
-  } = config.appearance;
-  const { playOption } = config.content;
+  } = appearance;
+  const { playOption } = content;
 
   const isPixelEffect = hasPixelLedEffect(effectSelectedItems);
   const isPixelCircleGrid = resolvePixelFontCircleGridMode(effectSelectedItems) != null;

@@ -1,35 +1,17 @@
 import type { RemoteFontFaceSet, RemoteFontSource } from "@/constants/remoteFonts";
+import { fetchBinaryBlob } from "@/utils/ApiClient";
+import {
+  runRemoteFontDownload,
+  type RemoteFontDownloadOptions,
+} from "@/utils/remoteFontFlight";
+import { isPlausibleFontFile } from "@/utils/remoteFontValidation";
+
+export type { RemoteFontDownloadOptions } from "@/utils/remoteFontFlight";
 
 const downloadedFonts = new Map<string, string>();
-const inFlightDownloads = new Map<string, Promise<string>>();
-
-export interface RemoteFontDownloadOptions {
-  signal?: AbortSignal;
-  onProgress?: (fraction: number) => void;
-}
 
 export function isRemoteFontDownloaded(source: RemoteFontSource): boolean {
   return downloadedFonts.has(source.fileName);
-}
-
-async function readResponseWithProgress(
-  response: Response,
-  onProgress?: (fraction: number) => void,
-): Promise<Blob> {
-  const total = Number(response.headers.get("content-length") ?? -1);
-  if (!onProgress || !response.body || total <= 0) return response.blob();
-
-  const reader = response.body.getReader();
-  const chunks: BlobPart[] = [];
-  let received = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value.slice().buffer);
-    received += value.byteLength;
-    onProgress(received / total);
-  }
-  return new Blob(chunks);
 }
 
 export async function ensureRemoteFontDownloaded(
@@ -37,28 +19,28 @@ export async function ensureRemoteFontDownloaded(
   options?: RemoteFontDownloadOptions,
 ): Promise<string> {
   const downloaded = downloadedFonts.get(source.fileName);
-  if (downloaded) return downloaded;
+  if (downloaded) {
+    options?.onProgress?.(1);
+    return downloaded;
+  }
 
-  const pending = inFlightDownloads.get(source.fileName);
-  if (pending) return pending;
-
-  const promise = fetch(source.url, { signal: options?.signal })
-    .then(async (response) => {
-      if (!response.ok) {
-        throw new Error(
-          `Remote font download failed (${response.status}): ${source.url}`,
-        );
+  return runRemoteFontDownload(
+    source.fileName,
+    options,
+    async (sharedOptions) => {
+      const blob = await fetchBinaryBlob(source.url, sharedOptions);
+      const signature = new Uint8Array(
+        await blob.slice(0, 4).arrayBuffer(),
+      );
+      if (!isPlausibleFontFile(blob.size, signature)) {
+        throw new Error(`Downloaded font is invalid: ${source.fileName}`);
       }
-      const blob = await readResponseWithProgress(response, options?.onProgress);
       const uri = URL.createObjectURL(blob);
       downloadedFonts.set(source.fileName, uri);
+      sharedOptions.onProgress(1);
       return uri;
-    })
-    .finally(() => {
-      inFlightDownloads.delete(source.fileName);
-    });
-  inFlightDownloads.set(source.fileName, promise);
-  return promise;
+    },
+  );
 }
 
 export function isRemoteFontSetDownloaded(set: RemoteFontFaceSet): boolean {

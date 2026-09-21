@@ -1,11 +1,19 @@
 import { btnStyles } from "@/constants/btnStyles";
 import { GRADIENT_BACKGROUND_PRESETS } from "@/constants/gradientBackgroundPresets";
 import { styles } from "@/constants/styles";
-import type { useSettingsRest } from "@/contexts/settingsContext";
+import type {
+  BannerConfig,
+  useSettingsAppearance,
+  useSettingsLocalizationContext,
+} from "@/contexts/settingsContext";
 import React from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
-type Props = Pick<ReturnType<typeof useSettingsRest>, "config" | "updateConfig" | "effectSectionLabel">;
+type Props = {
+  config: Pick<BannerConfig, "appearance">;
+  updateConfig: ReturnType<typeof useSettingsAppearance>["updateConfig"];
+  effectSectionLabel: ReturnType<typeof useSettingsLocalizationContext>["effectSectionLabel"];
+};
 
 export function GradientEffects({ config, updateConfig, effectSectionLabel }: Props) {
   const { effectSelectedItems, gradientBackgroundPreset } = config.appearance;

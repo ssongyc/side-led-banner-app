@@ -494,6 +494,13 @@ export const fontDownloadModalStyles = StyleSheet.create({
     fontWeight: "700",
     color: WATCH_AD_BUTTON_COLORS[1],
   },
+  errorText: {
+    ...uiThemeFontStyle,
+    fontSize: moderateScale(14),
+    color: "#B3261E",
+    textAlign: "center",
+    lineHeight: moderateScale(20),
+  },
 });
 
 export const heartBackgroundTickerStyles = StyleSheet.create({

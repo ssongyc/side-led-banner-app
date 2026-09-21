@@ -12,7 +12,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSettingsRest } from "../../contexts/settingsContext";
+import {
+  useSettingsBackground,
+  useSettingsLocalizationContext,
+  useSettingsUI,
+} from "../../contexts/settingsContext";
 import { SettingsSliderBlock } from "./settingsSliderBlock";
 
 const LOCK_ICON = require("@/assets/images/icon_lock_type2.png");
@@ -32,9 +36,11 @@ for (let i = 0; i < tail.length; i += COLS) {
 
 
 export const BackgroundSection = () => {
-  const { config, updateConfig, textSectionLabel, isProActive, openRewardAdModal } = useSettingsRest();
+  const { background, updateConfig } = useSettingsBackground();
+  const { textSectionLabel } = useSettingsLocalizationContext();
+  const { isProActive, openRewardAdModal } = useSettingsUI();
   const { backgroundColor, backgroundBlur, backgroundImageUri } =
-    config.background;
+    background;
 
   const setBackgroundBlur = (value: number) =>
     updateConfig("background", { backgroundBlur: value });

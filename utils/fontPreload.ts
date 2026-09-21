@@ -5,15 +5,12 @@ import {
   getEagerFontIdsForLocale,
   getFontAssetIds,
   getFontIdsInLocaleMap,
-  getRemoteFontIdsForIds,
   type FontId,
 } from "@/constants/appFonts";
 import type { AppLocaleKey } from "@/constants/language";
-import { REMOTE_FONT_FACE_SETS } from "@/constants/remoteFonts";
 import { loadTypeface, preloadSkiaTypefaces } from "@/hooks/useCachedSkiaFont";
 import { readAppLanguage } from "@/utils/appLanguageStorage";
 import { readPresetSlotsJson } from "@/utils/presetStorage";
-import { ensureRemoteFontSetDownloaded } from "@/utils/remoteFontLoader";
 import * as Font from "expo-font";
 
 type PresetSlotLike = {
@@ -108,9 +105,6 @@ export async function createDeferredFontPreloadTasks(device: AppLocaleKey): Prom
     tasks.push(async () => {
       if (!await loadTypeface(asset)) throw new Error("Optional Skia font preload failed");
     });
-  }
-  for (const remoteId of getRemoteFontIdsForIds(priorityIds)) {
-    tasks.push(() => ensureRemoteFontSetDownloaded(REMOTE_FONT_FACE_SETS[remoteId]));
   }
   addTextFonts(buildRemainingFontAssets(priorityIds));
   return tasks;

@@ -1,4 +1,4 @@
-import { useSettingsRest } from "@/contexts/settingsContext";
+import { useSettingsLocalizationContext } from "@/contexts/settingsContext";
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AppState, Platform, Text, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
 import { useIsFocused } from "expo-router/react-navigation";
@@ -41,7 +41,7 @@ export function BannerPlacementProvider({ children }: { children: React.ReactNod
   const [height, setHeight] = useState(50);
   const attach = useCallback((owner: symbol, label: string) => setPlacement({ owner, label }), []);
   const detach = useCallback((owner: symbol) => setPlacement(current => current?.owner === owner ? null : current), []);
-  const { rewardAdLabel } = useSettingsRest();
+  const { rewardAdLabel } = useSettingsLocalizationContext();
   const pathname = usePathname();
   const { adsAllowed } = usePremium();
   const insets = useSafeAreaInsets();

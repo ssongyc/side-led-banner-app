@@ -474,16 +474,6 @@ export function getFontAssetIds(ids: FontId[]): number[] {
   return assets;
 }
 
-export function getRemoteFontIdsForIds(ids: FontId[]): RemoteFontId[] {
-  const out = new Set<RemoteFontId>();
-  ids.forEach((id) => {
-    const set = APP_FONT_FACE_SETS[id];
-    if (isRemoteFontMarker(set.regular)) out.add(set.regular.remote);
-    if (isRemoteFontMarker(set.bold)) out.add(set.bold.remote);
-  });
-  return Array.from(out);
-}
-
 export const APP_THEME_FONT_FAMILY = "AppTheme";
 export const APP_THEME_FONT_FAMILY_BOLD = "AppTheme-Bold";
 

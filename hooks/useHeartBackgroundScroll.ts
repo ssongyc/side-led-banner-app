@@ -1,12 +1,16 @@
-import { useSettingsRest } from "@/contexts/settingsContext";
+import {
+  useSettingsAppearance,
+  useSettingsMotion,
+} from "@/contexts/settingsContext";
 import { useEffect } from "react";
 import { useFrameCallback, useSharedValue } from "react-native-reanimated";
 
 /** Heart tiles have their own phase; text wrapping must never reset it. */
 export function useHeartBackgroundScroll(isActive: boolean) {
-  const { config } = useSettingsRest();
-  const speed = config.motion.textMoveSpeed;
-  const enabled = config.appearance.backgroundEffectPreset === "heartBgA";
+  const { appearance } = useSettingsAppearance();
+  const { motion } = useSettingsMotion();
+  const speed = motion.textMoveSpeed;
+  const enabled = appearance.backgroundEffectPreset === "heartBgA";
   const translateX = useSharedValue(0);
   const running = enabled && isActive && speed > 0;
   const { setActive } = useFrameCallback((frame) => {

@@ -10,7 +10,11 @@ import {
   getDefaultForLocale,
   resolveFontFaceSet,
 } from "@/constants/appFonts";
-import { useSettings } from "@/contexts/settingsContext";
+import {
+  useSettingsAppearance,
+  useSettingsContent,
+  useSettingsLocalizationContext,
+} from "@/contexts/settingsContext";
 import { useCachedSkiaFont, useResolvedFontAssetRef } from "@/hooks/useCachedSkiaFont";
 import { useSkiaAppearanceFont } from "@/hooks/useSkiaAppearanceFont";
 import {
@@ -149,9 +153,11 @@ export function usePreviewPanelCanvas({
   speechBubbleLayout = null,
   isPixelMode = false,
 }: UsePreviewPanelCanvasParams) {
-  const { config, resolvedAppLocale, lastFontByLocale } = useSettings();
-  const { font: appearanceFont, fontWeight, letterSpacing } = config.appearance;
-  const { playOption } = config.content;
+  const { appearance, lastFontByLocale } = useSettingsAppearance();
+  const { content } = useSettingsContent();
+  const { resolvedAppLocale } = useSettingsLocalizationContext();
+  const { font: appearanceFont, fontWeight, letterSpacing } = appearance;
+  const { playOption } = content;
   const skiaAppearanceFont = appearanceFontOverride ?? appearanceFont;
   const skiaFont = useSkiaAppearanceFont(
     skiaAppearanceFont,

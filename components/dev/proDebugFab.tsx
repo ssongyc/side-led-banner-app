@@ -1,10 +1,10 @@
 import { uiThemeFontStyle } from "@/constants/appFonts";
-import { useSettingsRest } from "@/contexts/settingsContext";
+import { useSettingsUI } from "@/contexts/settingsContext";
 import React from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 
 export function ProDebugFab() {
-  const { isProActive, activatePro, updateUI } = useSettingsRest();
+  const { isProActive, activatePro, updateUI } = useSettingsUI();
 
   if (!__DEV__) return null;
 

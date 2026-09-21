@@ -1,5 +1,6 @@
 import { DOT_MATRIX_TEXT_SKSL } from "@/components/animation/dotMatrixTextShader";
 import { usePreviewPanelCanvas } from "@/hooks/usePreviewPanelCanvas";
+import { getCachedSkiaRuntimeEffect } from "@/utils/skiaRuntimeEffectCache";
 import type { useTilePicture } from "@/hooks/useTilePicture";
 import {
     Canvas,
@@ -7,7 +8,6 @@ import {
     Paint,
     Rect,
     RuntimeShader,
-    Skia,
 } from "@shopify/react-native-skia";
 import React, { useMemo } from "react";
 import { useDerivedValue, type SharedValue } from "react-native-reanimated";
@@ -148,16 +148,22 @@ export function MarqueeCanvas({
   previewTextColor,
   backgroundColor,
 }: MarqueeCanvasProps) {
-  const dotMatrixTextSource = useMemo(() => {
-    const source = Skia.RuntimeEffect.Make(DOT_MATRIX_TEXT_SKSL);
-    if (!source) throw new Error("Failed to compile dot matrix text shader.");
-    return source;
-  }, []);
-  const outlineRingDotSource = useMemo(() => {
-    const source = Skia.RuntimeEffect.Make(OUTLINE_RING_DOT_SKSL);
-    if (!source) throw new Error("Failed to compile outline ring dot shader.");
-    return source;
-  }, []);
+  const dotMatrixTextSource = useMemo(
+    () =>
+      getCachedSkiaRuntimeEffect(
+        DOT_MATRIX_TEXT_SKSL,
+        "Failed to compile dot matrix text shader.",
+      ),
+    [],
+  );
+  const outlineRingDotSource = useMemo(
+    () =>
+      getCachedSkiaRuntimeEffect(
+        OUTLINE_RING_DOT_SKSL,
+        "Failed to compile outline ring dot shader.",
+      ),
+    [],
+  );
   const layout = canvas.skiaCanvasLayout;
   const splitGlowFromDots = isPixelTextDots && isGlowEffect;
   const hasPixelOutlineDots = pixelOutlineRings > 0;

@@ -2,6 +2,14 @@
 
 README에 누적돼 있던 이전 작업 기록입니다. 각 절의 “현재”, “미검증”, “다음 빌드”는 **그 작업 당시**의 상태입니다. 현재 설정이나 작업 지시로 사용하지 마세요. 최신 소스·APK 포함 범위와 증분 빌드 절차는 [README](../README.md)를 기준으로 합니다. 과거 실기기 결과는 Expo 57 및 이후 변경의 검증을 대신하지 않습니다.
 
+## 2026-09-22 원격 폰트 다운로드 수명주기 정리
+
+- 선택하지 않은 원격 폰트를 메인 화면 공개 후 자동으로 내려받던 유휴 프리로드를 제거했습니다. 저장된 선택 폰트와 화면 렌더링에 실제 필요한 문자 폴백은 기존 필요 시 로드 경로를 유지합니다.
+- 원격 바이너리 요청을 `ApiClient` 경계로 모으고, 동일 파일의 동시 요청은 진행률을 공유하며 마지막 소비자가 취소할 때만 실제 요청을 중단하도록 정리했습니다.
+- 네이티브 다운로드는 `.part` 임시 파일에 저장한 뒤 최소 크기와 TrueType/OpenType 서명을 확인하고 캐시 파일로 이동합니다. 중단되거나 유효하지 않은 파일은 다음 실행에서 정상 캐시로 취급하지 않습니다.
+- 다운로드 실패는 지원 언어로 모달에 표시하고, 모달 접근성 격리와 닫기 버튼 레이블을 보완했습니다.
+- 이번 변경은 정적 소스 검토와 diff 확인만 수행했습니다. 빌드·린트·테스트 및 실기기 다운로드 검증은 실행하지 않았습니다.
+
 ## 2026-09-15 폰트 원격화 및 언어별 상용 문자 subset 적용
 
 - 각 언어별 기본값을 제외한 폰트들은 remoteFace()로 GitHub Release(fonts-v1)에서 다운로드하도록 전환했습니다. 각 언어 설정에서 실제로 그 폰트를 선택할 때 다운로드됩니다. 앱 부팅 시에는 기본값 + 저장된 프리셋 전체에서 쓰인 폰트를 우선적으로 다운로드합니다.
@@ -364,3 +372,9 @@ README에 누적돼 있던 이전 작업 기록입니다. 각 절의 “현재�
 - AAB: `LedPopV111.aab`, 241,001,033 bytes, SHA-256 `59A4871140262CAFDD11FCF95FEF361A6CF821B64245B2B5F3AB40968BCDB08B`.
 - Universal APK from the exact AAB: `LedPopV111.apk`, 271,134,760 bytes, SHA-256 `64DC9658F9919270BB14A46DAC2C8C759ED0593015116E82F7AE5A6305576428`.
 - Existing upload signer, production AdMob, version 1.1.1(29), SDK 36, Billing 9.1.0, four ABIs, 16 KiB alignment, R8 8.13.23 mapping and AAB/APK Hermes/native equality passed static verification. Device runtime, live ads, Play upload and mapping registration were not performed.
+
+## 2026-09-22 Settings 구독 분리 및 Skia RuntimeEffect 지연 캐시
+
+- Settings 상태의 기존 값, 저장, 프리셋, Pro 및 화면 동작을 유지하면서 구독을 appearance, background, motion, content, UI, localization으로 분리했습니다. 호환용 통합 훅은 유지하고 활성 화면과 렌더링 훅은 필요한 영역만 구독하도록 전환했습니다.
+- 동일한 SKSL 소스와 uniform을 유지한 채 6개 RuntimeEffect를 Skia 기반 컴포넌트의 최초 요청 시 컴파일하고 프로세스 단위로 재사용합니다. 모듈 로드 시 컴파일하지 않으며 실패 결과는 캐시하지 않습니다.
+- 요청에 따라 빌드, 린트 및 테스트는 실행하지 않았습니다. 직접 RuntimeEffect 컴파일 잔존 여부, 통합 Settings 구독 잔존 여부와 diff 공백 오류만 정적으로 확인했습니다.

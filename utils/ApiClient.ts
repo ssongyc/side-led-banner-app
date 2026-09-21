@@ -3,6 +3,55 @@ import type { Product, Purchase } from "expo-iap";
 import { requireNativeModule } from "expo";
 import { Platform } from "react-native";
 import * as amplitude from "@amplitude/analytics-react-native";
+import { File } from "expo-file-system";
+
+export interface BinaryRequestOptions {
+  signal?: AbortSignal;
+  onProgress?: (fraction: number) => void;
+}
+
+export function downloadBinaryFile(
+  url: string,
+  destination: File,
+  options?: BinaryRequestOptions,
+): Promise<File> {
+  return File.downloadFileAsync(url, destination, {
+    idempotent: true,
+    signal: options?.signal,
+    onProgress: options?.onProgress
+      ? ({ bytesWritten, totalBytes }) => {
+          options.onProgress!(totalBytes > 0 ? bytesWritten / totalBytes : -1);
+        }
+      : undefined,
+  });
+}
+
+export async function fetchBinaryBlob(
+  url: string,
+  options?: BinaryRequestOptions,
+): Promise<Blob> {
+  const response = await fetch(url, { signal: options?.signal });
+  if (!response.ok) {
+    throw new Error(`ApiClient request failed: HTTP ${response.status}`);
+  }
+
+  const total = Number(response.headers.get("content-length") ?? -1);
+  if (!options?.onProgress || !response.body || total <= 0) {
+    return response.blob();
+  }
+
+  const reader = response.body.getReader();
+  const chunks: BlobPart[] = [];
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value.slice().buffer);
+    received += value.byteLength;
+    options.onProgress(received / total);
+  }
+  return new Blob(chunks);
+}
 
 // One launch event per JS app lifetime, including repeated root effects.
 let appOpenedQueued = false;

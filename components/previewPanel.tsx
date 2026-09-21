@@ -14,7 +14,10 @@ import {
 import {
   normalizePreviewTextMaxLines,
   PREVIEW_TEXT_MAX_LINES,
-  useSettings,
+  useSettingsAppearance,
+  useSettingsBackground,
+  useSettingsContent,
+  useSettingsUI,
 } from "@/contexts/settingsContext";
 import { useBackgroundAnimation } from "@/hooks/useBackgroundAnimation";
 import { useBlinkOpacityStyle } from "@/hooks/useBlinkOpacityStyle";
@@ -97,22 +100,17 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
   const previewHeight = previewBox.height;
   const [inputScrollViewportW, setInputScrollViewportW] = useState(0);
 
-  const {
-    config,
-    handleTextChange,
-    updateConfig,
-    ui,
-    loadPreset,
-    isProActive,
-    openRewardAdModal,
-  } = useSettings();
+  const { appearance, updateConfig } = useSettingsAppearance();
+  const { background } = useSettingsBackground();
+  const { content, handleTextChange } = useSettingsContent();
+  const { ui, loadPreset, isProActive, openRewardAdModal } = useSettingsUI();
   const { activePreset } = ui;
 
-  const { previewText } = config.content;
+  const { previewText } = content;
   const { textSelectedColor, gradientBackgroundPreset, dropShadow } =
-    config.appearance;
+    appearance;
   const { backgroundColor, backgroundImageUri, backgroundBlur } =
-    config.background;
+    background;
   const hasBgPhoto =
     backgroundImageUri != null && backgroundImageUri.length > 0;
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -185,7 +183,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
   useEffect(() => {
     reportStartupPreviewReady(startupPreviewReady);
     return () => reportStartupPreviewReady(false);
-  }, [startupPreviewReady, reportStartupPreviewReady, config.appearance.font,
+  }, [startupPreviewReady, reportStartupPreviewReady, appearance.font,
     effects.pixelSkiaFontOverride, previewFontSize, previewBox.width, previewBox.height]);
 
   const { opacity: blinkOpacity } = useBlinkOpacityStyle(isAnimationActive);

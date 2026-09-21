@@ -6,7 +6,10 @@ import {
   CONTENTS_INPUT_FONT_SIZE,
   CONTENTS_INPUT_VIEWPORT_HEIGHT,
 } from "@/constants/styles";
-import { useSettings } from "@/contexts/settingsContext";
+import {
+  useSettingsContent,
+  useSettingsLocalizationContext,
+} from "@/contexts/settingsContext";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Platform, ScrollView, TextInput, TextLayoutEvent, useWindowDimensions } from "react-native";
 
@@ -23,8 +26,9 @@ export function useTextInput(params: {
   textInputRef: RefObject<TextInput | null>;
 }) {
   const { inputScrollViewportW } = params;
-  const { config, resolvedAppLocale: appLocale } = useSettings();
-  const { previewText } = config.content;
+  const { content } = useSettingsContent();
+  const { resolvedAppLocale: appLocale } = useSettingsLocalizationContext();
+  const { previewText } = content;
   const { width: windowWidth } = useWindowDimensions();
 
   // 텍스트인풋은 항상 언어별 기본 폰트로만 표시 + 3줄

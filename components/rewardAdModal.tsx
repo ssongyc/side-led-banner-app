@@ -1,7 +1,7 @@
 import { adUnavailableReason, shouldTrackAdInteraction } from "@/utils/adAvailability";
 import { appFontFamilyForText } from "@/constants/appFonts";
 import { rewardAdModalStyles as styles } from "@/constants/styles";
-import { useSettingsRest } from "@/contexts/settingsContext";
+import { useSettingsLocalizationContext } from "@/contexts/settingsContext";
 import { trackAnalyticsEvent } from "@/utils/ApiClient";
 import { REWARD_AD_STATUS_TEXTS, REWARD_AD_BUTTON_TEXTS, type RewardAdLabelKey } from "@/language/rewardAdLabels";
 import { Ionicons } from "@expo/vector-icons";
@@ -255,7 +255,7 @@ export function RewardAdModal({
   onRetry,
   isAdReady,
 }: Props) {
-  const { rewardAdLabel, resolvedAppLocale } = useSettingsRest();
+  const { rewardAdLabel, resolvedAppLocale } = useSettingsLocalizationContext();
   const insets = useSafeAreaInsets();
   const drag = useRef({ x: 0, y: 0, moved: false });
   const watchAdFontFamily =

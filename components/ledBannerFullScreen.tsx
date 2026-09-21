@@ -4,7 +4,10 @@ import { MarqueeCanvas } from "@/components/animation/MarqueeCanvas";
 import { GradientBackdrop } from "@/components/skia/GradientBackdrop";
 import { type GradientBackdropId } from "@/constants/gradientBackgroundPresets";
 import { ledBannerFullScreenStyles as styles } from "@/constants/styles";
-import { useSettingsRest } from "@/contexts/settingsContext";
+import {
+  useSettingsAppearance,
+  useSettingsBackground,
+} from "@/contexts/settingsContext";
 import { useBackgroundAnimation } from "@/hooks/useBackgroundAnimation";
 import { useBlinkOpacityStyle } from "@/hooks/useBlinkOpacityStyle";
 import { useEffects } from "@/hooks/useEffects";
@@ -46,9 +49,10 @@ export const LedBannerFullScreen = ({
   visible,
   onClose,
 }: LedBannerFullScreenProps) => {
-  const { config } = useSettingsRest();
-  const { textSelectedColor, gradientBackgroundPreset, dropShadow } = config.appearance;
-  const { backgroundColor, backgroundImageUri, backgroundBlur } = config.background;
+  const { appearance } = useSettingsAppearance();
+  const { background } = useSettingsBackground();
+  const { textSelectedColor, gradientBackgroundPreset, dropShadow } = appearance;
+  const { backgroundColor, backgroundImageUri, backgroundBlur } = background;
   const hasBgPhoto = backgroundImageUri != null && backgroundImageUri.length > 0;
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
