@@ -9,9 +9,12 @@
 
 ## 현재 문서의 기준
 
-현재 소스 버전은 **1.1.2 (Android versionCode 29)**이며 Settings는 Expo 버전을 읽어 **V1.1.2**를 표시합니다. 버전 갱신 당시 Android versionCode와 iOS buildNumber는 변경하지 않았습니다. 9월 19~20일 광고 변경은 소스 반영 단계이며 새 빌드·실기기 QA를 수행하지 않았습니다. 이 문서에 기록된 최근 로컬 검증 APK/AAB는 main `14b698f`의 **1.1.1 (29)**이며 실행 기록은 `artifacts/apk-runs/20260914-224723-f9b4673c`입니다. 프로덕션 AdMob, 기존 서명, SDK 36, Billing 9.1.0, 4개 ABI, 16 KiB 정렬과 동일 빌드 R8 매핑의 정적 검증을 통과했습니다. 실기기 실행·실제 광고 노출·Play 업로드와 매핑 등록은 수행하지 않았습니다. 아래 이전 버전 문단은 각 시점의 역사적 기록입니다.
+현재 소스 버전은 **1.1.2 (app.json의 Android versionCode 29)**이며 Settings는 Expo 버전을 읽어 **V1.1.2**를 표시합니다. 소스 설정, 로컬 빌드의 버전 코드, 실제 스토어 배포 버전은 별개입니다.
 
-V1.1.2 소스에는 iOS Play 종료의 상태 표시줄 선복원·네이티브 안전 영역·페이드 제거와 어두운 상태 표시줄을 반영했습니다. Amplitude 초기화·사용자 식별 후 새 앱 실행당 한 번 `App Opened`를 기록합니다. 상세 동작과 미검증 범위는 [UI 변경 기록](docs/UI_INTERACTION_1.0.9_27.md)과 [광고·분석 문서](docs/ADVERTISING.md)를 참고하세요. 최근 광고 변경의 빌드·린트·테스트·실기기 검증은 수행하지 않았습니다. 아래의 커밋·푸시 미실행 표기는 각 작업 당시 기록입니다.
+- 최근 기록된 로컬 APK/AAB는 **1.1.2 (30)**, 소스 `bc23fad724df28f07f558c805e00ba4c8d7bc2c3`, 실행 ID `20260921-083708-471023bf`입니다. 30은 빌드 시 명시한 override입니다. 프로덕션 AdMob·기존 서명·SDK 36·Billing 9.1.0·4개 ABI·16 KiB 정렬·동일 빌드 R8 매핑의 로컬 검증 결과는 [Android 빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md)에 있습니다. 이 산출물에는 이후 `7368d44`와 `5cf3182`의 변경이 포함되지 않았습니다.
+- `5cf3182`에는 방향별 배너 재사용, 광고 진단·문구 정리, 스크롤의 미지원 JS 속성 제거, 검증 하네스 갱신, Android 캐시·작업 이력 재사용 개선이 포함되었습니다. 당시 타입 검사와 상태 검증 **26개가 통과**했습니다. React/네이티브 화면 통합 QA와 최신 소스의 새 APK/AAB·iOS 빌드는 별도이며, 빌드 효율화의 추가 시간 단축은 아직 측정하지 않았습니다.
+- V1.1.2에는 iOS Play 종료의 상태 표시줄 선복원·네이티브 안전 영역·페이드 제거와 어두운 상태 표시줄, Amplitude 초기화·사용자 식별 후 새 앱 실행당 한 번 기록하는 `App Opened`가 반영되어 있습니다. [UI 기록](docs/UI_INTERACTION_1.0.9_27.md)과 [현재 광고 동작·검증 제한](docs/ADVERTISING.md)을 참고하세요.
+- 실제 광고 노출, 최신 기기별 화면 동작, Play 업로드·처리 및 스토어 버전 사용 가능 여부는 로컬 소스/산출물 검증으로 확인되지 않습니다. 아래 날짜별 단락과 커밋·푸시 미실행 표기는 각 작업 당시의 역사적 기록입니다.
 
 ## 과거 소스 변경 이력 — 2026-09-09~10
 
@@ -94,10 +97,10 @@ Upgrade to Pro 설정 항목과 `/premium` 라우트는 제외했습니다. 구�
 
 ## 광고 동작 — 현재 소스
 
-현재 광고 구현은 큰 적응형 배너, SDK 초기화의 제한된 재시도, test/production 분리, 명시적 웹 진단 모드와 Android Activity 몰입형 처리를 포함합니다. [광고 구현 및 검증 제한](docs/ADVERTISING.md)을 참고하세요. 최근 1.1.0 (28) APK/AAB에서 프로덕션 광고 설정의 정적 포함을 확인했으며, 실기기 광고 노출·배치는 미검증입니다.
+현재 광고 구현은 큰 적응형 배너, SDK 초기화의 제한된 재시도, test/production 분리, 명시적 웹 진단 모드와 Android Activity 몰입형 처리를 포함합니다. [광고 구현 및 검증 제한](docs/ADVERTISING.md)을 참고하세요. 최신 소스와 로컬 산출물의 차이는 상단 「현재 문서의 기준」을 참고하세요. 실제 광고 노출·배치는 미검증입니다.
 
 
-리워드 상태는 슬롯별 `idle/loading/loaded/showing/failed`와 실패 원인 `load/show/open-timeout/expiry/initialization/configuration`에서 하나의 UI 스냅샷으로 계산합니다. 중복 전역 실패 플래그는 사용하지 않습니다.
+리워드 상태는 슬롯별 `idle/loading/loaded/showing/failed`와 실패 원인 `load/show/open-timeout/expiry/unavailable/initialization/configuration`에서 하나의 UI 스냅샷으로 계산합니다. 중복 전역 실패 플래그는 사용하지 않습니다.
 
 리워드 광고는 무료 사용자 상태가 확인되고 광고 SDK 초기화가 완료되면 선로딩합니다. 준비·로딩·재생 중인 광고가 있으면 같은 로드 주기를 중복 시작하지 않습니다. 광고가 열리면 다음 광고도 선로딩하며, 로드 완료만으로 재생하지 않습니다.
 
@@ -518,7 +521,7 @@ Added a delayed-response notice without cancelling or duplicating SDK requests, 
 
 광고 파일·API의 앱/플랫폼별 참조와 QA 참조를 확인했습니다. 삭제할 미사용 광고 파일은 발견하지 못했으며, 외부 소비자가 없는 웹 내부 타입 `DiagnosticAdEvent`의 export만 제거했습니다. 웹의 명시적 미지원 경계, 진단 코드와 `getAdTrace` QA 용도는 유지합니다.
 
-기존 `scripts/qa-ad-state.cjs`는 보존 대상입니다. 다만 새 `performance.now()` 기준과 초기화 구독 API에 대한 하네스가 아직 동기화되지 않았으므로 다음 자동 QA 전에 갱신해야 합니다. 과거 통과 기록은 해당 당시 소스의 결과이며 현재 광고 변경의 통과 증거가 아닙니다. 이번 정리에서는 빌드·린트·테스트·커밋·푸시를 실행하지 않았습니다.
+기존 `scripts/qa-ad-state.cjs`는 보존 대상입니다. 이 9월 20일 기록 당시에는 새 `performance.now()` 기준과 초기화 구독 API의 동기화가 필요했습니다. 이후 `5cf3182`에서 하네스를 갱신했고 26개 상태 검증이 통과했습니다. 과거 통과 기록은 해당 당시 소스의 결과이며 현재 광고 변경의 통과 증거가 아닙니다. 이번 정리에서는 빌드·린트·테스트·커밋·푸시를 실행하지 않았습니다.
 
 ## Pending changes consolidated — 2026-09-20
 
@@ -563,3 +566,8 @@ Reviewed the shared-policy changes from 714a660 to 012793e (artifact applicabili
 RootLayout now requests the native splash handoff on requestAnimationFrame and retains one hideAsync promise across readiness-effect reruns. Cleanup cancels an unissued frame and ignores stale results; it does not duplicate an in-flight native dismissal. Only the existing explicit failure-retry action clears the promise. Main-first bypass, complete artwork/text readiness and manual startup recovery remain unchanged; no fixed wait was added. This is the React Native equivalent of explicitly scheduling a frame, not use of Flutter APIs.
 
 Source review only; build, lint, tests and device startup verification were not performed.
+
+
+## 미사용 API·문서 정리 — 2026-09-21
+
+Git 관리 소스의 참조를 확인하여 `utils/fontPreload.ts` 내부에서만 호출하는 `collectPriorityFontIds`와 `loadFontIds`의 불필요한 export를 제거했습니다. 함수와 폰트 로딩 동작은 유지합니다. 삭제할 미사용 실행 파일은 확인하지 못했습니다. 플랫폼별 구현, Expo Router 진입점, QA용 `getAdTrace`, 명시적으로 보관한 `disabled-features/premium` 및 기존 빌드 증거는 유지했습니다. 이번 정리는 소스·문서 확인만 수행했으며 빌드·린트·테스트·커밋·푸시는 실행하지 않았습니다.

@@ -39,7 +39,7 @@ async function readPresetFontIds(): Promise<FontId[]> {
 }
 
 /** 부팅 시 즉시 로드해야 할 폰트: 현재 로케일 + 모든 언어 default + 프리셋에서 쓰인 폰트 */
-export async function collectPriorityFontIds(device: AppLocaleKey): Promise<FontId[]> {
+async function collectPriorityFontIds(device: AppLocaleKey): Promise<FontId[]> {
   const [locale, presetFontIds] = await Promise.all([
     resolveStoredLocale(device),
     readPresetFontIds(),
@@ -70,7 +70,7 @@ async function loadAssetsWithRetry(assets: Record<string, number>): Promise<void
   }
 }
 
-export function loadFontIds(ids: FontId[]): Promise<void> {
+function loadFontIds(ids: FontId[]): Promise<void> {
   return loadAssetsWithRetry(buildFontAssets(ids));
 }
 
