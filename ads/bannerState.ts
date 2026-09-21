@@ -52,7 +52,10 @@ function createBannerPlacement() {
     owner = null;
     // Only the root host's actual teardown releases ownership. Screen exits never
     // call this: their in-flight native view and callbacks remain alive.
-    if (state.phase === "loading" || state.phase === "loaded") {
+    if (state.phase === "loaded") {
+      // A successful cycle ended with actual disposal (for example ad removal).
+      update({ phase: "idle", attempt: 0, extraUsed: false, dueAt: null, messageUntil: 0 });
+    } else if (state.phase === "loading") {
       update({ phase: "stopped", dueAt: null, messageUntil: 0 });
     }
   }

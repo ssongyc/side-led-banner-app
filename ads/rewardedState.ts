@@ -15,7 +15,7 @@ type RewardedSlot = {
   ad: RewardedAdHandle | null;
   attempt: number;
   loadedAt: number | null;
-  failure: "load" | "show" | "open-timeout" | "expiry" | "configuration" | "initialization" | null;
+  failure: "load" | "unavailable" | "show" | "open-timeout" | "expiry" | "configuration" | "initialization" | null;
   state: SlotState;
   retryTimer: ReturnType<typeof setTimeout> | null;
   retryAt: number | null;
@@ -258,6 +258,15 @@ function handleSlotError(slotName: SlotName) {
     return;
   }
 
+  if (slot.state === "loaded") {
+    trace(slotName, "loaded_inventory_failed");
+    disposeSlot(slotName);
+    slots[slotName].state = "failed";
+    slots[slotName].failure = "unavailable";
+    notifySubscribers();
+    return;
+  }
+
   if (slot.state !== "loading") return;
 
   const retryDelay = LOAD_RETRY_DELAYS_MS[slot.attempt - 1];
@@ -405,7 +414,7 @@ function getCanRetryState() {
   const current = slots.current;
   return AppState.currentState === "active" && getPremiumSnapshot().entitlement === "free" &&
     (isLoadedSlotExpired(current) || (current.state === "failed" &&
-    (current.failure === "expiry" || current.failure === "show" || current.failure === "initialization" || (current.failure === "load" && current.attempt >= 3))));
+    (current.failure === "unavailable" || current.failure === "expiry" || current.failure === "show" || current.failure === "initialization" || (current.failure === "load" && current.attempt >= 3))));
 }
 
 export function getAdSnapshot() {
@@ -477,10 +486,34 @@ export function showRewarded() {
       try {
         await beginRewardedPresentation(flow);
         pendingSubscription.remove();
-        if (cancelled || AppState.currentState !== "active" || slots.current.ad !== ad || slots.current.state !== "showing" ||
-          getPremiumSnapshot().entitlement !== "free" || !ad.loaded || current.loadedAt === null || performance.now() - current.loadedAt >= AD_VALID_MS) {
+        if (slots.current !== current || current.ad !== ad || current.state !== "showing") {
           endImmersiveAd(flow);
-          onShowError(new Error("Rewarded presentation cancelled"));
+          return;
+        }
+        const expired = current.loadedAt === null || performance.now() - current.loadedAt >= AD_VALID_MS;
+        if (cancelled || AppState.currentState !== "active") {
+          endImmersiveAd(flow);
+          if (getPremiumSnapshot().entitlement === "free" && ad.loaded && ad.googleRewardOrderGuaranteed && !expired) {
+            current.state = "loaded";
+            current.failure = null;
+            scheduleSlotStatus(current);
+            trace("current", "cancelled_unshown_inventory_retained");
+            notifySubscribers();
+            return;
+          }
+        }
+        if (expired || !ad.loaded || !ad.googleRewardOrderGuaranteed) {
+          endImmersiveAd(flow);
+          disposeSlot("current");
+          slots.current.state = "failed";
+          slots.current.failure = expired ? "expiry" : "unavailable";
+          notifySubscribers();
+          return;
+        }
+        if (getPremiumSnapshot().entitlement !== "free") {
+          endImmersiveAd(flow);
+          disposeSlot("current");
+          notifySubscribers();
           return;
         }
         openWatchdog = setTimeout(() => {

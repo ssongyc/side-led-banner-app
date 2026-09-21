@@ -231,7 +231,7 @@ type Props = {
   onClose: () => void;
   adReady?: boolean;
   adFailed?: boolean;
-  adFailure?: 'load' | 'show' | 'open-timeout' | 'expiry' | 'configuration' | 'initialization' | null;
+  adFailure?: 'unavailable' | 'load' | 'show' | 'open-timeout' | 'expiry' | 'configuration' | 'initialization' | null;
   adShowFailed?: boolean;
   adDelayed?: boolean;
   adExpired?: boolean;
@@ -405,7 +405,7 @@ export function RewardAdModal({
 
         <View style={styles.adStatusArea}>
           <ReservedAdText
-            text={adUnavailableReason(resolvedAppLocale) ?? (adReady ? "" : rewardAdLabel(adFailure === "initialization" ? "rewardAdInitializationFailed" : adFailure === "configuration" ? "rewardAdConfigurationFailed" : adFailure === "open-timeout" ? "rewardAdOpenUnconfirmed" : adExpired ? "rewardAdExpired" : adShowFailed ? "rewardAdShowFailed" : adFailed ? "rewardAdLoadFailed" : adDelayed ? "rewardAdDelayed" : "rewardAdPreparing"))}
+            text={adUnavailableReason(resolvedAppLocale) ?? (adReady ? "" : rewardAdLabel(adFailure === "unavailable" ? "rewardAdUnavailable" : adFailure === "initialization" ? "rewardAdInitializationFailed" : adFailure === "configuration" ? "rewardAdConfigurationFailed" : adFailure === "open-timeout" ? "rewardAdOpenUnconfirmed" : adExpired ? "rewardAdExpired" : adShowFailed ? "rewardAdShowFailed" : adFailed ? "rewardAdLoadFailed" : adDelayed ? "rewardAdDelayed" : "rewardAdPreparing"))}
             variants={REWARD_AD_STATUS_TEXTS}
             textStyle={styles.adStatusText}
           />

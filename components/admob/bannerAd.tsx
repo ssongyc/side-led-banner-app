@@ -62,7 +62,7 @@ export function BannerPlacementProvider({ children }: { children: React.ReactNod
   return <PlacementContext.Provider value={{ height, attach, detach }}>
     <View style={{ flex: 1 }}>
       {children}
-      {slots.map(slot => <PersistentBanner key={slot.id} placementId={slot.id}
+      {adsAllowed && slots.map(slot => <PersistentBanner key={slot.id} placementId={slot.id}
         adaptiveWidth={Platform.OS === "ios" ? slot.width : undefined}
         visible={visible && slot.id === activeId}
         delayedLabel={rewardAdLabel("rewardAdDelayed")}

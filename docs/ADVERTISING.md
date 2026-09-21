@@ -244,3 +244,11 @@ Reviewed installed RN Google Mobile Ads 16.5.0 / Flutter Google Mobile Ads sourc
 Final shared SDK initialization failure now records the banner placement's ten-second notice and seventy-second recovery deadline. A visible foreground placement may consume its single extra cycle at that deadline, reset a retryable initialization failure and reuse the shared initialization promise. Configuration failure is excluded. The extra-cycle guard and deadline survive hiding and re-entry; initialization recovery and later banner load failures share the same extra-cycle allowance. No periodic refresh or rewarded presentation is added.
 
 Source/diff review only; no build, lint, automated tests, device QA, commit, push or console changes. Actual SDK request timing and retained hidden-view behavior remain unverified.
+
+
+## Loaded inventory, pre-show cancellation and ad removal — 2026-09-21
+
+- An SDK error for an already loaded current/next rewarded slot now disposes that invalid inventory and publishes `unavailable`, independently of exhausted load attempts. The existing manual/Settings recovery may prepare or reuse inventory; it never shows automatically. The modal has authored unavailable text in all seven supported languages, included in its reserved status sizing.
+- Background cancellation during the native pre-show handoff retains a still-valid Google ad with its original loaded timestamp and remaining expiry. The cancelled tap is not replayed. Expired/unusable inventory is classified separately; stale handoff completion cannot replace a newer slot. Issued/unknown presentations retain their existing terminal/reward handling.
+- When `adsAllowed` becomes false, root-owned banner views are unmounted rather than parked offscreen. Ordinary Settings navigation still retains them. Disposal after a completed successful cycle permits a later eligible fresh cycle; an unresolved issued request remains stopped without refunding attempts. Existing failure deadlines/extra-cycle limits survive teardown.
+- Source/diff and call-site review only. No build, lint, tests, device QA, console changes, commit or push. Native disposal, purchase/reward transitions, cancellation and SDK refresh visibility remain device-unverified. UMP remains excluded by the existing user decision.
