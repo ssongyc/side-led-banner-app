@@ -171,6 +171,11 @@ export default function Index() {
   return (
     <MainScreen style={[styles.container, Platform.OS !== "ios" && { paddingTop: insets.top, paddingBottom: isPlaying ? 0 : (initialWindowMetrics?.insets.bottom ?? 0) }]}>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+        <View
+          style={{ flex: 1 }}
+          accessibilityElementsHidden={rewardAdVisible}
+          importantForAccessibility={rewardAdVisible ? "no-hide-descendants" : "auto"}
+        >
         <PreviewPanel
           onCursorMovers={onCursorMovers}
           onUndoRedoControl={onUndoRedoControl}
@@ -266,6 +271,7 @@ export default function Index() {
         </View>
         
         <AdDiagnostics />
+        </View>
         {!isPremium && <RewardAdModal
           visible={rewardAdVisible}
           onClose={() => updateUI({ rewardAdVisible: false })}

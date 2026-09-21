@@ -346,6 +346,8 @@ export function RewardAdModal({
     <Animated.View
       style={[styles.root, { paddingTop: 12 + insets.top, paddingBottom: 12 + insets.bottom, paddingLeft: 12 + insets.left, paddingRight: 12 + insets.right }, overlayStyle]}
       pointerEvents={visible ? "auto" : "none"}
+      accessibilityViewIsModal={visible}
+      importantForAccessibility={visible ? "yes" : "no-hide-descendants"}
     >
       <Pressable
         style={[styles.dim, { backgroundColor: "rgba(0,0,0,0.45)" }]}

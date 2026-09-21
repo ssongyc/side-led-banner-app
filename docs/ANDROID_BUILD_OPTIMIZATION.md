@@ -197,3 +197,14 @@ Baseline for this improvement: main `7368d44ffcf7544d667f44fc86c9ae4603d13cdb`, 
 - APK: `C:\dev\Led Banner\artifacts\apk-runs\20260921-150419-3b6c4768\apk-deliveries\20260921-151117-f9550d597a464cc8874eeb5cd28a1842\LedPopV112.apk`; SHA-256 `0C56845470CB761E7825712E88441B308EA2591DFDFE803608BE6721D9074C11`; export UTC `2026-09-21T06:11:17.4103859Z`.
 - AAB: `C:\dev\Led Banner\artifacts\apk-runs\20260921-150419-3b6c4768\aab-deliveries\20260921-151036-e1c10e9a40c74624bfa505573da782cd\LedPopV112.aab`; SHA-256 `2CF1AA2FD2EA887DFAFF1E2CAD153E9E0EAC3E2405D141216DBD0FE46D3F4B18`; export UTC `2026-09-21T06:10:36.4870890Z`.
 - Mapping SHA-256 `1405B7F92B5D9BE6B8CDF59000CD6D8AD34841147CB7B33FADA5A9101A603104`. Previous artifacts retained; final signed bytes and export timestamps verified.
+
+## Latest V1.1.2(30) production export — 2026-09-22
+
+Retained run `20260922-003235-4e1bd97d/build-result.json` records clean pinned source `a49fed6e711156b841a486528dc63241baae414c`, production ads, build-only versionCode 30, existing signing, one Gradle worker and `:app:bundleRelease`. The universal APK was derived from the same AAB with bundletool 1.18.3. Total recorded wrapper duration was 492.82 seconds (8m13s); this is not an isolated performance benchmark.
+
+- APK SHA-256: `4F800A29E3BCB169F784996EBFD80F8884CE743049DF58FB2F4810ACBBEF3261`; export UTC `2026-09-21T15:40:54.9429901Z` (September 22 KST).
+- AAB SHA-256: `ACAD949EA6C58FA782D9CE0C7EA0F92825BF15019E05327B528770B4ED899D74`; export UTC `2026-09-21T15:40:17.5822635Z` (September 22 KST).
+- Same-build mapping SHA-256: `1405B7F92B5D9BE6B8CDF59000CD6D8AD34841147CB7B33FADA5A9101A603104`.
+- The installed Android APK matched this hash. Observed test-ad rewards, expiry after more than two hours, UI and performance results are recorded in [the September 22 QA section](QA_20260910.md#2026-09-22--최신-v112-30-설치-apk-최종-qa). Later accessibility isolation and unused-export cleanup are source changes and are not included in these artifacts.
+
+This entry consolidates existing build evidence during the requested main delivery. No build, lint or tests were rerun; Play upload and all-track version-code availability remain unverified. Original artifacts, logs and traces remain in the ignored local artifacts directory, rather than Git.

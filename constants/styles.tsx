@@ -3,10 +3,10 @@ import { moderateScale } from "@/constants/scale";
 import { Platform, StyleSheet } from "react-native";
 
 export const CONTENTS_INPUT_FONT_SIZE = moderateScale(18);
-export const CONTENTS_INPUT_LINE_HEIGHT = Math.round(
+const CONTENTS_INPUT_LINE_HEIGHT = Math.round(
   CONTENTS_INPUT_FONT_SIZE * 1.3,
 );
-export const CONTENTS_INPUT_VIEWPORT_MARGIN = moderateScale(16);
+const CONTENTS_INPUT_VIEWPORT_MARGIN = moderateScale(16);
 export const CONTENTS_INPUT_VIEWPORT_HEIGHT =
   3 * CONTENTS_INPUT_LINE_HEIGHT + CONTENTS_INPUT_VIEWPORT_MARGIN;
 

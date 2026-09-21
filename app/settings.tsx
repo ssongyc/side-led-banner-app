@@ -320,7 +320,7 @@ interface SettingsFooterProps {
   onPrivacyPress: () => void;
 }
 
-export function SettingsFooter({
+function SettingsFooter({
   onLogoPress,
   termsLabel,
   privacyLabel,
