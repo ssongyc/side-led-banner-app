@@ -28,7 +28,7 @@ export type RewardAdLabelKey =
   | "rewardAdConfigurationFailed"
   | "rewardAdOpenUnconfirmed"
   | "rewardAdRetry"
-  | "rewardAdUnavailable";
+  | "bannerAdUnavailable";
 
 const LABELS: Record<RewardAdLabelKey, Record<AppLocaleKey, string>> = {
   rewardAdInitializationFailed: {
@@ -202,7 +202,7 @@ const LABELS: Record<RewardAdLabelKey, Record<AppLocaleKey, string>> = {
     fr: "Regarder la pub",
     es: "Ver anuncio",
   },
-  rewardAdUnavailable: {
+  bannerAdUnavailable: {
     ko: "광고 사용 불가",
     en: "Ad Unavailable",
     ja: "広告を利用できません",
@@ -264,7 +264,7 @@ export function tRewardAdLabel(
 ): string {
   const fb = LABELS[key];
   // Authored modal status copy must not be replaced by a remotely matched Sheet row.
-  if (key === "rewardAdUnavailable" || key === "rewardAdInitializationFailed" || key === "rewardAdConfigurationFailed" || key === "rewardAdOpenUnconfirmed" || key === "rewardAdDelayed" || key === "rewardAdExpired" || key === "rewardAdPreparing" || key === "rewardAdPreparingButton" ||
+  if (key === "bannerAdUnavailable" || key === "rewardAdUnavailable" || key === "rewardAdInitializationFailed" || key === "rewardAdConfigurationFailed" || key === "rewardAdOpenUnconfirmed" || key === "rewardAdDelayed" || key === "rewardAdExpired" || key === "rewardAdPreparing" || key === "rewardAdPreparingButton" ||
       key === "rewardAdLoadFailed" || key === "rewardAdShowFailed" || key === "rewardAdRetry") return fb[locale];
   const opts = REWARD_SHEET_PICK[key];
 

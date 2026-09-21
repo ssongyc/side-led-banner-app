@@ -268,7 +268,7 @@ export default function SettingsScreen() {
       {!compactHeight && footer}
       {(Platform.OS === "web" || adsAllowed) && <BannerAdComponent
         style={{ alignSelf: "stretch", marginBottom: 12 }}
-        unavailableLabel={rewardAdLabel("rewardAdUnavailable")}
+        unavailableLabel={rewardAdLabel("bannerAdUnavailable")}
       />}
     </View>
   );

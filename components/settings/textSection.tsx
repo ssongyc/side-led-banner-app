@@ -143,7 +143,6 @@ export const TextSection = () => {
       contentContainerStyle={styles.scrollViewContainer}
       keyboardShouldPersistTaps="handled"
       directionalLockEnabled
-      delaysContentTouches={false}
       canCancelContentTouches
     >
       {/* text - font select */}

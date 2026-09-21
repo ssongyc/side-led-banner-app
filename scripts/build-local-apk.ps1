@@ -105,6 +105,8 @@ try {
  $timingState.active.exitCode=$LASTEXITCODE
  if($LASTEXITCODE -ne 0){throw 'Source preparation failed'}
  $plan=Get-Content (Join-Path $resolved '.source-plan.json') -Raw | ConvertFrom-Json
+ Copy-Item -LiteralPath (Join-Path $resolved '.source-plan.json') -Destination (Join-Path $record 'source-plan.json')
+ $restoredNativeCaches=[Collections.Generic.List[string]]::new()
  if($ResumeNative -and ($plan.nativeRequired -or $plan.installRequired)){throw 'ResumeNative requested but inputs changed; rerun without ResumeNative'}
  Push-Location $resolved
  try {
@@ -117,7 +119,7 @@ try {
    & node $prepare install-start
    if($LASTEXITCODE -ne 0){throw 'Installation state update failed'}
    $timingState.active.log='npm-ci.log'
-   & npm ci > npm-ci.log 2>&1
+   & npm ci --prefer-offline > npm-ci.log 2>&1
    $timingState.active.exitCode=$LASTEXITCODE
    Copy-Item -LiteralPath (Join-Path $resolved 'npm-ci.log') -Destination (Join-Path $record 'npm-ci.log')
    if($LASTEXITCODE -ne 0){throw 'Dependency installation failed; inspect npm-ci.log'}
@@ -144,10 +146,10 @@ try {
    $timingState.active.exitCode=$LASTEXITCODE
    Copy-Item -LiteralPath (Join-Path $resolved 'prebuild.log') -Destination (Join-Path $record 'prebuild.log')
    if($LASTEXITCODE -ne 0){throw 'Prebuild failed; previous native output is archived, not resumed'}
-   # Reuse only generated app build caches at the same fixed absolute path.
-   # Never restore app/src, manifests or Gradle configuration from the archive.
+   # Reuse generated outputs AND Gradle task history at the same fixed absolute path.
+   # Gradle validates changed inputs/toolchains; this does not restore native source/configuration.
    if($null -ne $archive){
-    foreach($relative in @('app/build','app/.cxx')){
+    foreach($relative in @('.gradle','build','app/build','app/.cxx')){
      $cached=Join-Path $archive $relative
      $destination=Join-Path $native $relative
      if(Test-Path -LiteralPath $cached){
@@ -155,10 +157,12 @@ try {
       if(Test-Path -LiteralPath $destination){throw 'Fresh native project unexpectedly contains build cache'}
       if([IO.Path]::GetFullPath($cached) -ne (Join-Path $archive $relative) -or [IO.Path]::GetFullPath($destination) -ne (Join-Path $native $relative)){throw 'Unexpected generated cache path'}
       Move-Item -LiteralPath $cached -Destination $destination
+      $restoredNativeCaches.Add($relative)
      }
     }
    }
   }else{Skip-AndroidBuildStage $timingState 'nativeGeneration'}
+  @{ restoredNativeCaches=@($restoredNativeCaches.ToArray()); nativeRegenerated=[bool]($plan.nativeRequired -or $plan.installRequired); installationRequired=[bool]$plan.installRequired } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'cache-reuse.json')
   Start-AndroidBuildStage $timingState 'nativeConfiguration'
   $gradle=Get-Content android/app/build.gradle -Raw
   $pattern='(?s)(release\s*\{.*?signingConfig\s*(?:=\s*)?)signingConfigs\.(?:debug|localVerified)'

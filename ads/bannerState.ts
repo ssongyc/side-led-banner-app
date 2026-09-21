@@ -1,4 +1,4 @@
-// Sessions outlive route changes; each iOS orientation/width retains its own budget.
+// Two fixed orientation placements preserve budgets across routes and width changes.
 type Phase = "idle" | "loading" | "loaded" | "waiting" | "failed" | "stopped";
 type Snapshot = { phase: Phase; attempt: number; requestId: number; dueAt: number | null; messageUntil: number; extraUsed: boolean };
 function createBannerPlacement() {
@@ -47,6 +47,10 @@ function createBannerPlacement() {
     update({ phase: "idle", attempt: 0, extraUsed: true, dueAt: null, messageUntil: 0 });
     return true;
   }
+  function discardLoadedBanner(token: symbol) {
+    if (owner !== token || state.phase !== "loaded") return;
+    update({ phase: "idle", attempt: 0, extraUsed: false, dueAt: null, messageUntil: 0 });
+  }
   function releaseBanner(token: symbol) {
     if (owner !== token) return;
     owner = null;
@@ -60,7 +64,7 @@ function createBannerPlacement() {
     }
   }
 
-  return { initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, requestBanner, bannerLoaded, bannerFailed, releaseBanner };
+  return { discardLoadedBanner, initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, requestBanner, bannerLoaded, bannerFailed, releaseBanner };
 }
 
 const placements = new Map<string, ReturnType<typeof createBannerPlacement>>();

@@ -1,6 +1,44 @@
-# Advertising behavior — 2026-09-09 source update
+# Advertising behavior and verification status
 
-## Status
+## Current correction — orientation reuse and visibility
+
+- At most two native banner hosts exist: portrait and landscape, on Android and iOS. They are created only after that direction is visible, with a 250 ms resize-settlement gate. Returning to a direction reuses the same host, loaded ad and retry ledger. Wider hosts retain fitting creatives unchanged; only settled width overflow retires a successfully loaded incompatible ad. Unknown pending work is retained hidden until a genuine result. No creative is stretched or cropped to fit.
+- Status text uses a separate visible host, so a pending oversized native ad cannot hide its delayed-load notice. Hidden orientation hosts cannot receive touches or accessibility focus. There is no per-pixel placement collection.
+- `adsAllowed` describes store entitlement (`free` versus `unknown`/`owned`), not the separate two-hour video-only reward. The earlier temporary-ad-removal wording should not be read as suppressing banners during that reward. Store verification, purchase ownership and video reward remain separate.
+- Current shared policy permits SDK-owned Google optimized refresh. Earlier Disabled console records below are historical configuration evidence, not a current universal requirement. No console setting was changed here. Refresh failures preserve usable inventory; there is no app periodic timer. SDK-managed retry/refresh ownership and hidden-view request suppression still require exact-build runtime evidence before enabling refresh in the console.
+- The three unsupported JS `delaysContentTouches` props were removed. Installed RN sets `_scrollView.delaysContentTouches = NO` in both Fabric and legacy native ScrollView implementations. `canCancelContentTouches`, scrolling, and slider/touch arbitration were preserved.
+- SDK source review: Android banner view teardown calls `AdView.destroy()`; iOS teardown removes the banner from its superview and clears its stored reference. The JS wrapper exposes no explicit refresh pause/resume contract. Source inspection does not prove that SDK-internal refresh/recovery cannot overlap before teardown; this remains a blocker for claiming verified refresh ownership.
+- Previous state-test and type-check evidence below applies to the earlier revision. Current execution results are recorded separately; native reuse/resize/refresh tests remain unverified without a connected test device.
+
+### Verification — orientation correction
+
+- Baseline: main `7368d44ffcf7544d667f44fc86c9ae4603d13cdb` plus the previous uncommitted advertising and Android-build-efficiency changes. Those changes were preserved.
+- TypeScript `--noEmit`: passed after removing only the unsupported ScrollView props. No APK/AAB or iOS compilation was run.
+- `node --test scripts/qa-ad-state.cjs`: 26/26 passed. The added orientation-state test checks reuse identity, request identity and exhausted retry-budget preservation. This does not mount React/native views and is not a substitute for integration/device QA.
+- `git diff --check`: passed. `adb devices -l`: no connected devices. Remaining exact-build checks: repeated portrait/landscape returns, narrow/wide split-screen changes, delayed callbacks during resize, store entitlement changes, status visibility, real native disposal and SDK refresh ownership.
+- No lint, native build, device installation, ad viewing, console change, commit or push.
+
+### Main delivery scope — 2026-09-21
+
+This delivery includes all thirteen pending files from this conversation: banner orientation reuse/visibility and retirement, diagnostic metadata, distinct authored banner/rewarded labels, ScrollView prop cleanup, the synchronized regression harness, README and advertising documentation, and the previously pending Android build-cache/history improvements and run evidence. No unknown or other-worker changes were identified in the pending diff. The earlier verification records above are preserved; build, lint and tests are not rerun for this documentation/Git delivery. Current source still requires native device QA, and the build-cache speed improvement is not yet measured.
+
+## Previous implementation — 2026-09-21 follow-up
+
+- Settings now uses one root-owned native banner placement on both platforms. iOS width updates settle for 250 ms before retiring successfully loaded inventory; resizing cannot allocate one placement or retry budget per pixel. Only one issued request is retained. Request widths remain pinned until a genuine SDK callback.
+- During ad removal, a loaded banner is removed immediately; an already-issued unresolved banner is hidden and retains its callback route until success/failure, then its native view is removed. No new requests run while ads are disallowed. This replaces the earlier September 21 unconditional unmount/`stopped` path for ordinary entitlement changes. Unexpected root teardown still stops unresolved work without refunding attempts. No arbitrary timeout declares failure or drops the callback.
+- On return to free eligibility, settled successful inventory may start a new cycle; genuine failure deadlines and the extra-cycle budget survive. Ordinary navigation continues to retain the same native view. A never-settling SDK request remains pending, bounded to one native view; its device behavior is not proven by state tests.
+- Traces remain local, bounded to 120 entries, and silent in production console output. They include native platform build number when exposed by Expo Constants, the Expo-config app version with its source label, and embedded `extra.gitSha` or `unmeasured`. Banner traces include placement and request identifiers. No diagnostics upload was added.
+- The state harness has been synchronized with placement access, monotonic timers, initialization subscriptions, SDK disposal/source admission, and explicit pre-show failure classification. Current checks cover genuine settlement versus pending disposal, retry-deadline preservation, unsupported rewarded sources, and existing reward/retry flows.
+- Execution evidence is recorded below. Historical passing builds/tests do not cover later source changes. Current native layout, iPad resize, temporary ad-removal return, rewarded playback and immersive transitions still require device QA. `adb devices -l` returned no connected devices during this task; no ad was viewed, app installed, store uploaded, or console setting changed.
+- Existing UMP exclusion, Google-only rewarded admission, manual retry and production AdMob profile decisions are unchanged.
+
+### Verification for this follow-up
+
+- `node --test scripts/qa-ad-state.cjs`: 25/25 passed after harness synchronization, including pending settlement, deadline preservation and unsupported-source admission. These are isolated state tests, not native view tests.
+- `node node_modules/typescript/bin/tsc --noEmit --pretty false`: failed on existing `delaysContentTouches` ScrollView prop types in Text/Background/Effects, and a duplicated advertising label key. The advertising duplicate was corrected by separating `bannerAdUnavailable` (short banner label) from `rewardAdUnavailable` (prepared rewarded inventory guidance); the three unrelated scroll props were left unchanged. A second type check reports only those three existing ScrollView errors.
+- No native build or lint run; no connected Android device. No commit/push. Existing build-efficiency edits in README, ANDROID_BUILD_OPTIMIZATION.md and build-local-apk.ps1 were preserved.
+
+## Historical status
 
 2026-09-10: the 06f8847 APK includes the source changes below. Galaxy SM-M336K QA observed bounded banner cycles and rewarded failure/manual recovery without autoplay. Twenty-one isolated regression tests pass. A new show-time readiness/expiry guard is source-only. Actual rewarded playback/reward/immersive transitions remain unverified. See [QA evidence](QA_20260910.md). The following September 9 build status is historical.
 

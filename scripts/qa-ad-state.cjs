@@ -12,6 +12,7 @@ function harness() {
     Date: class extends Date { constructor(...args) { super(...(args.length ? args : [now])); } static now() { return now; } },
     setTimeout(fn, delay) { const id = ++sequence; timers.set(id, { at: now + delay, fn }); return id; },
     clearTimeout(id) { timers.delete(id); },
+    performance: { now: () => now },
     __DEV__: false, console,
   };
   return {
@@ -26,16 +27,17 @@ function harness() {
   };
 }
 const flush = async () => { for (let n=0;n<12;n++) await Promise.resolve(); };
-function banner() { const h=harness(); return { ...h, api:h.load('ads/bannerState.ts'), token:Symbol('owner') }; }
+function banner() { const h=harness(); return { ...h, api:h.load('ads/bannerState.ts').getBannerPlacement('settings'), token:Symbol('owner') }; }
 function rewarded() {
   const h=harness(), ads=[], appListeners=new Set(); let rewards=0, shows=0, premium='free', prepare=async()=>{}, show=async()=>{};
   const app={currentState:'active',addEventListener(_name,fn){appListeners.add(fn);return {remove(){appListeners.delete(fn);}};}};
   const api=h.load('ads/rewardedState.ts',{
+    './showFailure':h.load('ads/showFailure.ts'),
     './AdClient':{rewardedAdEvents:{loaded:'loaded',opened:'opened',earnedReward:'earned',closed:'closed',error:'error'},
-      createNativeRewardedAd(){const handlers=new Map();const ad={loaded:false,load(){ad.loadTime=h.now();},addAdEventListener(name,fn){handlers.set(name,fn);return()=>handlers.delete(name);},emit(name){if(name==='loaded')ad.loaded=true;handlers.get(name)?.();},handlers};ads.push(ad);return ad;},
-      beginRewardedPresentation:()=>prepare(),endRewardedPresentation:async()=>{},showRewardedAd:async ad=>{shows++;return show(ad);}},
+      createNativeRewardedAd(){const handlers=new Map();const ad={loaded:false,googleRewardOrderGuaranteed:true,dispose(){handlers.clear();},load(){ad.loadTime=h.now();},addAdEventListener(name,fn){handlers.set(name,fn);return()=>handlers.delete(name);},emit(name){if(name==='loaded')ad.loaded=true;handlers.get(name)?.();},handlers};ads.push(ad);return ad;},
+      disposeRewardedAd:ad=>ad.dispose(),beginRewardedPresentation:()=>prepare(),endRewardedPresentation:async()=>{},showRewardedAd:async ad=>{shows++;return show(ad);}},
     '@/ads/adConfiguration':{getAdConfiguration:()=>({rewarded:'test-boundary-only'})},
-    '@/ads/initializeMobileAds':{initializeMobileAds:async()=>{},getMobileAdsState:()=> 'ready',retryMobileAdsInitialization(){}},
+    '@/ads/initializeMobileAds':{initializeMobileAds:async()=>{},getMobileAdsState:()=> 'ready',retryMobileAdsInitialization(){},isMobileAdsLoadDelayed:()=>false,subscribeMobileAdsState:()=>()=>{}},
     '@/ads/adTrace':{recordAdEvent(){}},'@/utils/ApiClient':{getPremiumSnapshot:()=>({entitlement:premium})},
     'react-native':{AppState:app,Platform:{OS:'android'}},
   });
@@ -65,8 +67,8 @@ test('banner: remount preserves remaining retry deadline and rejects stale owner
 test('banner: loaded view survives refresh failure; later successful placement may start anew',()=>{
  const {api:a,token:t}=banner();a.claimBanner(t);a.requestBanner(t);const id=a.getBannerState().requestId;a.bannerLoaded(t,id);assert.equal(a.bannerFailed(t,id),false);assert.equal(a.getBannerState().phase,'loaded');a.releaseBanner(t);a.claimBanner(t);a.requestBanner(t);assert.equal(a.getBannerState().attempt,1);assert.ok(a.getBannerState().requestId>id);
 });
-test('banner: cancelling third in-flight request cannot reset budget or invent failure',()=>{
- const {api:a,token:t,advance}=banner();a.claimBanner(t);for(let i=0;i<3;i++){a.requestBanner(t);a.releaseBanner(t);advance(12000);a.claimBanner(t);}a.requestBanner(t);assert.equal(a.getBannerState().phase,'stopped');assert.equal(a.getBannerState().attempt,3);assert.equal(a.getBannerState().messageUntil,0);
+test('banner: unexpected teardown of an in-flight request cannot reset budget or invent failure',()=>{
+ const {api:a,token:t,advance}=banner();a.claimBanner(t);for(let i=0;i<3;i++){a.requestBanner(t);a.releaseBanner(t);advance(12000);a.claimBanner(t);}a.requestBanner(t);assert.equal(a.getBannerState().phase,'stopped');assert.equal(a.getBannerState().attempt,1);assert.equal(a.getBannerState().messageUntil,0);
 });
 test('rewarded: startup deduplicates and terminal failure needs manual retry without auto-show',async()=>{
  const h=rewarded(),a=h.api;a.loadRewardedAd();a.loadRewardedAd();await flush();assert.equal(h.ads.length,1);
@@ -81,10 +83,10 @@ test('rewarded: early close grants no reward and loading alone never presents',a
  const h=rewarded(),a=h.api;a.loadRewardedAd();await flush();h.ads[0].emit('loaded');assert.equal(h.shows(),0);a.showRewarded();await flush();h.ads[0].emit('opened');h.ads[0].emit('closed');assert.equal(h.rewards(),0);
 });
 test('rewarded: show rejection fails immediately and does not retry show',async()=>{
- const h=rewarded(),a=h.api;h.setShow(async()=>{throw Error('show rejected');});a.loadRewardedAd();await flush();h.ads[0].emit('loaded');a.showRewarded();await flush();assert.equal(a.getAdSnapshot().showFailed,true);h.advance(60000);assert.equal(h.shows(),1);assert.equal(h.rewards(),0);
+ const h=rewarded(),a=h.api;h.setShow(async()=>{throw Object.assign(Error('show rejected'),{code:'not-ready'});});a.loadRewardedAd();await flush();h.ads[0].emit('loaded');a.showRewarded();await flush();assert.equal(a.getAdSnapshot().showFailed,true);h.advance(60000);assert.equal(h.shows(),1);assert.equal(h.rewards(),0);
 });
 test('rewarded: background during native preparation cancels presentation',async()=>{
- const h=rewarded(),a=h.api;let resolve;h.setPrepare(()=>new Promise(r=>resolve=r));a.loadRewardedAd();await flush();h.ads[0].emit('loaded');a.showRewarded();h.background();resolve();await flush();assert.equal(h.shows(),0);assert.equal(a.getAdSnapshot().showFailed,true);
+ const h=rewarded(),a=h.api;let resolve;h.setPrepare(()=>new Promise(r=>resolve=r));a.loadRewardedAd();await flush();h.ads[0].emit('loaded');a.showRewarded();h.background();resolve();await flush();assert.equal(h.shows(),0);assert.equal(a.getAdSnapshot().loaded,true);assert.equal(a.getAdSnapshot().showFailed,false);
 });
 test('rewarded: expired ready ad is never shown',async()=>{
  const h=rewarded(),a=h.api;a.loadRewardedAd();await flush();h.ads[0].emit('loaded');h.advance(3600001);assert.equal(a.isRewardedReady(),false);a.showRewarded();await flush();assert.equal(h.shows(),0);
@@ -96,21 +98,21 @@ test('rewarded: non-free entitlement prevents SDK loads and shows',async()=>{
  const h=rewarded();h.setPremium('premium');h.api.loadRewardedAd();h.api.showRewarded();await flush();assert.equal(h.ads.length,0);assert.equal(h.shows(),0);
 });
 test('rewarded: readiness is rechecked after asynchronous native preparation',async()=>{
- const h=rewarded(),a=h.api;let resolve;h.setPrepare(()=>new Promise(r=>resolve=r));a.loadRewardedAd();await flush();h.ads[0].emit('loaded');a.showRewarded();h.ads[0].loaded=false;resolve();await flush();assert.equal(h.shows(),0);assert.equal(a.getAdSnapshot().showFailed,true);
+ const h=rewarded(),a=h.api;let resolve;h.setPrepare(()=>new Promise(r=>resolve=r));a.loadRewardedAd();await flush();h.ads[0].emit('loaded');a.showRewarded();h.ads[0].loaded=false;resolve();await flush();assert.equal(h.shows(),0);assert.equal(a.getAdSnapshot().failure,'unavailable');
 });
 test('rewarded: expiry during asynchronous native preparation cancels show',async()=>{
- const h=rewarded(),a=h.api;let resolve;h.setPrepare(()=>new Promise(r=>resolve=r));a.loadRewardedAd();await flush();h.ads[0].emit('loaded');a.showRewarded();h.advance(3600001);resolve();await flush();assert.equal(h.shows(),0);assert.equal(a.getAdSnapshot().showFailed,true);
+ const h=rewarded(),a=h.api;let resolve;h.setPrepare(()=>new Promise(r=>resolve=r));a.loadRewardedAd();await flush();h.ads[0].emit('loaded');a.showRewarded();h.advance(3600001);resolve();await flush();assert.equal(h.shows(),0);assert.equal(a.getAdSnapshot().failure,'expiry');
 });
 test('SDK initialization: shared promise, bounded 6/12 retries, manual recovery',async()=>{
  const h=harness();let calls=0,ready=false;
- const a=h.load('ads/initializeMobileAds.ts',{'react':{useSyncExternalStore(){}},'./AdClient':{initializeAdSdk:async()=>{calls++;if(!ready)throw Error('offline');return [{state:1}];}},'./adConfiguration':{getAdConfiguration:()=>({})},'./adTrace':{recordAdEvent(){}}});
- const first=a.initializeMobileAds(),second=a.initializeMobileAds();assert.equal(first,second);let rejected=false;first.catch(()=>rejected=true);await flush();assert.equal(calls,1);h.advance(5999);await flush();assert.equal(calls,1);h.advance(1);await flush();assert.equal(calls,2);h.advance(12000);await flush();assert.equal(calls,3);assert.equal(a.getMobileAdsState(),'failed');assert.equal(rejected,true);
- await a.initializeMobileAds().catch(()=>{});assert.equal(calls,3);ready=true;a.retryMobileAdsInitialization();await a.initializeMobileAds();assert.equal(a.getMobileAdsState(),'ready');assert.equal(calls,4);
+ const a=h.load('ads/initializeMobileAds.ts',{'react':{useSyncExternalStore(){}},'react-native':{AppState:{currentState:'active',addEventListener(){return {remove(){}};}}},'./AdClient':{initializeAdSdk:async()=>{calls++;if(!ready)throw Error('offline');return [{state:1}];}},'./adConfiguration':{getAdConfiguration:()=>({})},'./adTrace':{recordAdEvent(){}}});
+ const first=a.initializeMobileAds(),second=a.initializeMobileAds();assert.equal(first,second);let rejected=false;first.catch(()=>rejected=true);await flush();h.advance(0);await flush();assert.equal(calls,1);h.advance(5999);await flush();assert.equal(calls,1);h.advance(1);await flush();assert.equal(calls,2);h.advance(12000);await flush();assert.equal(calls,3);assert.equal(a.getMobileAdsState(),'failed');assert.equal(rejected,true);
+ await a.initializeMobileAds().catch(()=>{});assert.equal(calls,3);ready=true;a.retryMobileAdsInitialization();const recovery=a.initializeMobileAds();await flush();h.advance(0);await recovery;assert.equal(a.getMobileAdsState(),'ready');assert.equal(calls,4);
 });
 test('SDK initialization: cancel invalidates an unresolved SDK completion',async()=>{
  const h=harness();let resolve;
- const a=h.load('ads/initializeMobileAds.ts',{'react':{useSyncExternalStore(){}},'./AdClient':{initializeAdSdk:()=>new Promise(r=>resolve=r)},'./adConfiguration':{getAdConfiguration:()=>({})},'./adTrace':{recordAdEvent(){}}});
- const pending=a.initializeMobileAds();pending.catch(()=>{});await flush();a.suspendMobileAdsInitialization();resolve([{state:1}]);await flush();assert.equal(a.getMobileAdsState(),'idle');assert.equal(h.timers.size,0);
+ const a=h.load('ads/initializeMobileAds.ts',{'react':{useSyncExternalStore(){}},'react-native':{AppState:{currentState:'active',addEventListener(){return {remove(){}};}}},'./AdClient':{initializeAdSdk:()=>new Promise(r=>resolve=r)},'./adConfiguration':{getAdConfiguration:()=>({})},'./adTrace':{recordAdEvent(){}}});
+ const pending=a.initializeMobileAds();pending.catch(()=>{});await flush();h.advance(0);await flush();a.suspendMobileAdsInitialization();resolve([{state:1}]);await flush();assert.equal(a.getMobileAdsState(),'idle');assert.equal(h.timers.size,0);
 });
 function web(enabled=true,outcome='success'){
  const h=harness();h.env.queueMicrotask=queueMicrotask;let state='loading';const listeners=new Set(),events=[];
@@ -128,9 +130,9 @@ test('web diagnostics: dispose and state replacement cancel pending events',asyn
  for(const dispose of [true,false]){const h=web(),ad=h.create();h.select('ready');ad.show();if(dispose)ad.dispose();else h.select('loading');await flush();assert.deepEqual(h.events,['LOADED']);}
 });
 test('ad trace: production console silent, local buffer bounded, errors retained',()=>{
- const h=harness();let logs=0;h.env.console={info(){logs++;}};const a=h.load('ads/adTrace.ts',{'react-native':{Platform:{OS:'android'}}});
+ const h=harness();let logs=0;h.env.console={info(){logs++;}};const a=h.load('ads/adTrace.ts',{'react-native':{Platform:{OS:'android'}},'expo-constants':{__esModule:true,default:{platform:{android:{versionCode:30}},expoConfig:{version:'1.1.2',extra:{}} }}});
  for(let i=0;i<125;i++)a.recordAdEvent('banner','failed',{attempt:i},Object.assign(new Error('network unavailable'),{code:'network'}));
- assert.equal(logs,0);assert.equal(a.getAdTrace().length,120);assert.equal(a.getAdTrace()[0].attempt,5);assert.equal(a.getAdTrace()[0].errorMessage,'network unavailable');
+ assert.equal(logs,0);assert.equal(a.getAdTrace().length,120);assert.equal(a.getAdTrace()[0].attempt,5);assert.equal(a.getAdTrace()[0].errorMessage,'network unavailable');assert.equal(a.getAdTrace()[0].buildNumber,30);assert.equal(a.getAdTrace()[0].gitSha,'unmeasured');
 });
 test('preset model: text spacing, deep copies, migration and non-Pro cleanup preserve input',()=>{
  const h=harness();const deps={'@/constants/colorPalette':h.load('constants/colorPalette.tsx'),'@/constants/pixelLed':h.load('constants/pixelLed.ts'),'@/utils/viewMode':h.load('utils/viewMode.ts')};
@@ -139,4 +141,41 @@ test('preset model: text spacing, deep copies, migration and non-Pro cleanup pre
  const cleaned=a.nonProSanitize(original);assert.equal(cleaned.content.previewText,original.content.previewText);assert.equal(cleaned.appearance.letterSpacing,24);assert.equal(JSON.stringify(original),before);assert.equal(cleaned.appearance.effectSelectedItems.includes('Glow'),false);assert.equal(cleaned.appearance.effectSelectedItems.includes('Blink'),true);
  assert.equal(a.normalizePreviewTextMaxLines(' A  B\r\n라라라 하늘'),' A  B\n라라라 하늘');assert.equal(a.normalizePreviewTextMaxLines('1\n2\n3\n4'),null);
  const old=a.normalizePresetSlot({content:{previewText:'  X  Y '},appearance:{letterSpacing:17}});assert.equal(old.content.previewText,'  X  Y ');assert.equal(old.appearance.letterSpacing,17);
+});
+
+
+test('banner: pending disposal is refused; settled inventory can be retired without stale callbacks',()=>{
+ const {api:a,token:t}=banner();a.claimBanner(t);a.requestBanner(t);const id=a.getBannerState().requestId;
+ a.discardLoadedBanner(t);assert.equal(a.getBannerState().phase,'loading');assert.equal(a.getBannerState().attempt,1);
+ a.bannerLoaded(t,id);a.discardLoadedBanner(t);assert.equal(a.getBannerState().phase,'idle');
+ a.requestBanner(t);assert.equal(a.getBannerState().attempt,1);assert.ok(a.getBannerState().requestId>id);assert.equal(a.bannerFailed(t,id),false);
+});
+test('banner: retirement cannot erase a failed request deadline',()=>{
+ const {api:a,token:t,advance}=banner();a.claimBanner(t);a.requestBanner(t);a.bannerFailed(t,a.getBannerState().requestId);
+ const due=a.getBannerState().dueAt;a.discardLoadedBanner(t);assert.equal(a.getBannerState().dueAt,due);
+ a.requestBanner(t);assert.equal(a.getBannerState().attempt,1);advance(6000);a.requestBanner(t);assert.equal(a.getBannerState().attempt,2);
+});
+test('rewarded: unsupported source never becomes ready',async()=>{
+ const h=rewarded();h.api.loadRewardedAd();await flush();h.ads[0].googleRewardOrderGuaranteed=false;h.ads[0].emit('loaded');
+ assert.equal(h.api.isRewardedReady(),false);assert.equal(h.api.getAdSnapshot().failure,'configuration');h.api.showRewarded();await flush();assert.equal(h.shows(),0);
+});
+
+test('ad labels: banner status and rewarded recovery instructions remain distinct',()=>{
+ const h=harness();const a=h.load('language/rewardAdLabels.ts',{'@/language/matchSheetRows':{pickLocaleFromSheetRows(){throw Error('Status text must be bundled');}}});
+ assert.equal(a.tRewardAdLabel('bannerAdUnavailable','en'),'Ad Unavailable');
+ assert.equal(a.tRewardAdLabel('rewardAdUnavailable','en'),'The prepared ad is unavailable. Please prepare it again.');
+});
+
+test('banner: orientation return preserves live request and exhausted recovery budget',()=>{
+ const h=harness(), registry=h.load('ads/bannerState.ts');
+ const portrait=registry.getBannerPlacement('settings-portrait'), landscape=registry.getBannerPlacement('settings-landscape');
+ const p=Symbol(),l=Symbol();portrait.claimBanner(p);landscape.claimBanner(l);
+ portrait.requestBanner(p);const request=portrait.getBannerState().requestId;portrait.bannerLoaded(p,request);
+ landscape.requestBanner(l);landscape.bannerFailed(l,landscape.getBannerState().requestId);
+ assert.equal(registry.getBannerPlacement('settings-portrait'),portrait);portrait.requestBanner(p);
+ assert.equal(portrait.getBannerState().requestId,request);assert.equal(portrait.getBannerState().phase,'loaded');
+ for(let i=1;i<6;i++){h.advance(i===3?70000:(i%3===1?6000:12000));landscape.requestBanner(l);landscape.bannerFailed(l,landscape.getBannerState().requestId);}
+ h.advance(100000);registry.getBannerPlacement('settings-landscape').requestBanner(l);
+ assert.equal(landscape.getBannerState().attempt,6);assert.equal(landscape.getBannerState().extraUsed,true);
+ assert.equal(portrait.getBannerState().requestId,request);
 });

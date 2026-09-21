@@ -20,7 +20,6 @@ export const EffectSection = () => {
       contentContainerStyle={styles.scrollViewContainer}
       keyboardShouldPersistTaps="handled"
       directionalLockEnabled
-      delaysContentTouches={false}
       canCancelContentTouches
     >
       <TextEffects

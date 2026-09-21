@@ -48,38 +48,46 @@ export function BannerPlacementProvider({ children }: { children: React.ReactNod
   const viewport = useWindowDimensions();
   const width = Math.floor(viewport.width - insets.left - insets.right);
   const visible = !!placement && pathname === "/settings" && adsAllowed;
-  const activeId = Platform.OS === "ios"
-    ? `${viewport.width > viewport.height ? "landscape" : "portrait"}-${width}` : "settings";
+  // Settle resize events without creating a placement/budget for every pixel.
+  const [settledWidth, setSettledWidth] = useState(width);
+  useEffect(() => {
+    if (width <= 0) return;
+    const timer = setTimeout(() => setSettledWidth(width), 250);
+    return () => clearTimeout(timer);
+  }, [width]);
+  const orientation = viewport.width > viewport.height ? "landscape" : "portrait";
   const [slots, setSlots] = useState<{ id: string; width: number; height: number }[]>([]);
   useEffect(() => {
-    if (!visible || width <= 0) return;
-    setSlots(current => current.some(slot => slot.id === activeId)
-      ? current : [...current, { id: activeId, width, height: 50 }]);
-  }, [visible, width, activeId]);
-  useEffect(() => {
-    setHeight(slots.find(slot => slot.id === activeId)?.height ?? 50);
-  }, [activeId, slots]);
+    if (!visible || width <= 0 || width !== settledWidth) return;
+    setSlots(current => {
+      const slot = current.find(value => value.id === orientation);
+      if (!slot) return [...current, { id: orientation, width, height: 50 }];
+      return slot.width === width ? current : current.map(value => value.id === orientation ? { ...value, width } : value);
+    });
+  }, [visible, width, settledWidth, orientation]);
+  useEffect(() => { setHeight(slots.find(slot => slot.id === orientation)?.height ?? 50); }, [orientation, slots]);
   return <PlacementContext.Provider value={{ height, attach, detach }}>
     <View style={{ flex: 1 }}>
       {children}
-      {adsAllowed && slots.map(slot => <PersistentBanner key={slot.id} placementId={slot.id}
-        adaptiveWidth={Platform.OS === "ios" ? slot.width : undefined}
-        visible={visible && slot.id === activeId}
+      {slots.map(slot => <PersistentBanner key={slot.id} placementId={`settings-${slot.id}`} adsAllowed={adsAllowed}
+        adaptiveWidth={slot.width} availableWidth={slot.id === orientation ? width : slot.width}
+        visible={visible && slot.id === orientation}
+        resizeSettled={width === settledWidth && slot.width === width}
         delayedLabel={rewardAdLabel("rewardAdDelayed")}
         unavailableLabel={placement?.label ?? ""} onHeight={height => setSlots(current =>
-          current.find(value => value.id === slot.id)?.height === height ? current :
-            current.map(value => value.id === slot.id ? { ...value, height } : value))}
+          current.map(value => value.id === slot.id && value.height !== height ? { ...value, height } : value))}
         bottom={insets.bottom + 12} left={insets.left} right={insets.right} />)}
+
     </View>
   </PlacementContext.Provider>;
 }
 
-function PersistentBanner({ placementId, adaptiveWidth, visible, delayedLabel, unavailableLabel, onHeight, bottom, left, right }: {
-  placementId: string; adaptiveWidth?: number;
+function PersistentBanner({ placementId, adaptiveWidth, availableWidth, resizeSettled, adsAllowed, visible, delayedLabel, unavailableLabel, onHeight, bottom, left, right }: {
+  placementId: string; adaptiveWidth: number; availableWidth: number; resizeSettled: boolean; adsAllowed: boolean;
   visible: boolean; delayedLabel: string; unavailableLabel: string; onHeight: (height: number) => void;
   bottom: number; left: number; right: number;
 }) {
-  const { initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, releaseBanner, requestBanner, bannerLoaded, bannerFailed } = getBannerPlacement(placementId);
+  const { discardLoadedBanner, initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, releaseBanner, requestBanner, bannerLoaded, bannerFailed } = getBannerPlacement(placementId);
   const sdkState = useMobileAdsState();
   const sdkDelayed = useMobileAdsLoadDelayed();
   const [foreground, setForeground] = useState(AppState.currentState === "active");
@@ -97,6 +105,24 @@ function PersistentBanner({ placementId, adaptiveWidth, visible, delayedLabel, u
   const token = useRef(Symbol("settings-banner"));
   const [owned, setOwned] = useState(false);
   const [width, setWidth] = useState(adaptiveWidth ?? 0);
+  // Keep an issued native request alive while hidden until its real callback.
+  // Dispose settled inventory on ad removal or confirmed width overflow.
+  // A narrower valid creative fits a larger host unchanged. Only an actual
+  // width overflow is incompatible; a rotation alone never retires inventory.
+  const sizeChanged = width > adaptiveWidth;
+  const fitsViewport = width <= availableWidth;
+  useEffect(() => {
+    if (state.phase === "loading") return;
+    if (adsAllowed && (!visible || !resizeSettled)) return;
+    if (!adsAllowed || sizeChanged) {
+      if (state.phase === "loaded") recordAdEvent("banner", "inventory_retired", {
+        placementId, requestId: state.requestId, reason: adsAllowed ? "width_overflow" : "entitlement",
+        requestedWidth: width, availableWidth: adaptiveWidth,
+      });
+      discardLoadedBanner(token.current);
+    }
+    if (sizeChanged) setWidth(adaptiveWidth);
+  }, [adsAllowed, visible, resizeSettled, sizeChanged, adaptiveWidth, state.phase, owned]);
   const [, redraw] = useState(0);
   const [config] = useState(() => { try { return getAdConfiguration(); } catch { return null; } });
   const startedAt = useRef(0);
@@ -120,13 +146,13 @@ function PersistentBanner({ placementId, adaptiveWidth, visible, delayedLabel, u
     const timer = setTimeout(() => {
       if (!canRequest.current || AppState.currentState !== "active" || !beginInitializationRecovery(token.current)) return;
       retryMobileAdsInitialization();
-      recordAdEvent("banner", "initialization_extra_cycle_started", { placementId });
+      traceBanner("initialization_extra_cycle_started", { placementId });
       void initializeMobileAds().catch(() => { /* Shared state reports the genuine result. */ });
     }, Math.max(0, state.dueAt - performance.now()));
     return () => clearTimeout(timer);
   }, [eligible, owned, config, sdkState, state.dueAt, state.extraUsed]);
   useEffect(() => {
-    if (!eligible || !owned || sdkState !== "ready" || !config || width <= 0) return;
+    if (!eligible || !owned || sdkState !== "ready" || !config || width <= 0 || sizeChanged || !resizeSettled) return;
     if (state.phase === "idle") {
       if (canRequest.current && AppState.currentState === "active") requestBanner(token.current);
       return;
@@ -136,7 +162,7 @@ function PersistentBanner({ placementId, adaptiveWidth, visible, delayedLabel, u
       if (canRequest.current && AppState.currentState === "active") requestBanner(token.current);
     }, Math.max(0, state.dueAt - performance.now()));
     return () => clearTimeout(id);
-  }, [eligible, owned, sdkState, config, width, state.phase, state.dueAt]);
+  }, [eligible, owned, sdkState, config, width, state.phase, state.dueAt, sizeChanged, resizeSettled]);
   useEffect(() => {
     if (!eligible) return;
     if (!sdkFailed) sdkFailedAt.current = null;
@@ -151,7 +177,7 @@ function PersistentBanner({ placementId, adaptiveWidth, visible, delayedLabel, u
     lastRequest.current = state.requestId;
     startedAt.current = performance.now();
     requestedAtUtc.current = new Date().toISOString();
-    recordAdEvent("banner", "view_request", { attempt: state.attempt, requestId: state.requestId, width, profile: config?.profile });
+    traceBanner("view_request", { attempt: state.attempt, requestId: state.requestId, width, profile: config?.profile });
   }, [owned, state.phase, state.requestId, state.attempt, width, config]);
   useEffect(() => {
     if (!eligible || state.phase !== "loading") return;
@@ -163,6 +189,9 @@ function PersistentBanner({ placementId, adaptiveWidth, visible, delayedLabel, u
   const delayed = sdkDelayed || (state.phase === "loading" && lastRequest.current === state.requestId && performance.now() - startedAt.current >= 45000);
   const unavailable = sdkFailed || state.phase === "failed";
   const messageVisible = sdkFailed ? sdkFailedAt.current === null || performance.now() < sdkFailedAt.current + 10_000 : performance.now() < state.messageUntil;
+  function traceBanner(stage: string, detail: Record<string, unknown> = {}, error?: unknown) {
+    recordAdEvent("banner", stage, { ...detail, placementId, requestId: state.requestId, state: state.phase }, error);
+  }
   const requestId = state.requestId;
   // Pin the request's width: layout/background changes must not issue an implicit SDK load.
   const requestSize = useRef({ requestId: 0, width: 0 });
@@ -171,29 +200,30 @@ function PersistentBanner({ placementId, adaptiveWidth, visible, delayedLabel, u
   }
   // Do not use display:none or conditionally remove the ad on blur: Fabric can
   // tear down that native view. Park this one view outside the viewport instead.
-  return <View collapsable={false} removeClippedSubviews={false} pointerEvents={eligible ? "auto" : "none"}
-    accessibilityElementsHidden={!eligible} importantForAccessibility={eligible ? "auto" : "no-hide-descendants"}
-    style={{ position: "absolute", left, right: adaptiveWidth === undefined ? right : undefined, width: adaptiveWidth, bottom: eligible ? bottom : -10000,
-      opacity: eligible ? 1 : 0, alignItems: "center", justifyContent: "center", minHeight: 50 }}
+  return <>
+    {eligible && ((!unavailable && delayed) || (unavailable && messageVisible)) ?
+      <View pointerEvents="none" style={{ position: "absolute", left, right, bottom, alignItems: "center", minHeight: 50 }}>
+        <Text allowFontScaling={false}>{unavailable ? unavailableLabel : delayedLabel}</Text>
+      </View> : null}
+    <View collapsable={false} removeClippedSubviews={false} pointerEvents={eligible && fitsViewport ? "auto" : "none"}
+    accessibilityElementsHidden={!eligible || !fitsViewport} importantForAccessibility={eligible && fitsViewport ? "auto" : "no-hide-descendants"}
+    style={{ position: "absolute", left: left + Math.max(0, availableWidth - width) / 2, width, bottom: eligible && fitsViewport ? bottom : -10000,
+      opacity: eligible && fitsViewport ? 1 : 0, alignItems: "center", justifyContent: "center", minHeight: 50 }}
     onLayout={event => {
-      const next = Math.floor(event.nativeEvent.layout.width);
-      if (adaptiveWidth === undefined) setWidth(current => current === next ? current : next);
       onHeight(Math.max(50, event.nativeEvent.layout.height));
     }}>
-    {!unavailable && delayed ? <Text allowFontScaling={false}>{delayedLabel}</Text> : null}
-    {unavailable && messageVisible ? <Text allowFontScaling={false}>{unavailableLabel}</Text> : null}
-    {owned && config && requestSize.current.width > 0 && (state.phase === "loading" || state.phase === "loaded") ?
+    {owned && config && requestSize.current.width > 0 && (state.phase === "loading" || (adsAllowed && !sizeChanged && state.phase === "loaded")) ?
       <AdaptiveBannerAd key={requestId} unitId={config.banner} width={requestSize.current.width} requestOptions={REQUEST_OPTIONS}
-        onSizeChange={size => recordAdEvent("banner", "size_changed", { ...size, attempt: state.attempt })}
+        onSizeChange={size => traceBanner("size_changed", { ...size, attempt: state.attempt })}
         onAdImpression={() => {
           if (getBannerState().requestId !== requestId) return;
-          recordAdEvent("banner", "impression", { requestId, attempt: state.attempt,
+          traceBanner("impression", { requestId, attempt: state.attempt,
             placementEligible: canRequest.current, appState: AppState.currentState });
         }}
         onAdLoaded={size => {
           const refresh = getBannerState().phase === "loaded";
           if (!bannerLoaded(token.current, requestId)) return;
-          recordAdEvent("banner", refresh ? "sdk_refresh_complete" : "load_complete", {
+          traceBanner(refresh ? "sdk_refresh_complete" : "load_complete", {
             attempt: state.attempt, ...size, requestedAt: refresh ? null : requestedAtUtc.current,
             elapsedMs: refresh ? null : performance.now() - startedAt.current,
           });
@@ -201,11 +231,11 @@ function PersistentBanner({ placementId, adaptiveWidth, visible, delayedLabel, u
         onAdFailedToLoad={error => {
           const current = getBannerState();
           if (current.requestId !== requestId) return;
-          if (current.phase === "loaded") { recordAdEvent("banner", "sdk_refresh_failed", { attempt: state.attempt, requestedAt: null }, error); return; }
+          if (current.phase === "loaded") { traceBanner("sdk_refresh_failed", { attempt: state.attempt, requestedAt: null }, error); return; }
           if (!bannerFailed(token.current, requestId)) return;
-          recordAdEvent("banner", "load_failed", { attempt: state.attempt, elapsedMs: performance.now() - startedAt.current }, error);
+          traceBanner("load_failed", { attempt: state.attempt, elapsedMs: performance.now() - startedAt.current }, error);
           const next = getBannerState();
-          if (next.dueAt !== null) recordAdEvent("banner", next.phase === "failed" ? "extra_cycle_scheduled" : "retry_scheduled", { attempt: next.attempt + 1, dueAt: next.dueAt });
+          if (next.dueAt !== null) traceBanner(next.phase === "failed" ? "extra_cycle_scheduled" : "retry_scheduled", { attempt: next.attempt + 1, dueAt: next.dueAt });
         }} /> : null}
-  </View>;
+  </View></>;
 }
