@@ -51,15 +51,29 @@ function PixelBackgroundImage({
   uri,
   width,
   height,
+  fillViewport,
 }: {
   uri: string;
   width: number;
   height: number;
+  fillViewport: boolean;
 }) {
   const image = useImage(uri);
   if (!image) return null;
   return (
-    <Image image={image} x={0} y={0} width={width} height={height} fit="contain" />
+    <>
+      {fillViewport ? (
+        <Image
+          image={image}
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          fit="cover"
+        />
+      ) : null}
+      <Image image={image} x={0} y={0} width={width} height={height} fit="contain" />
+    </>
   );
 }
 
@@ -125,6 +139,7 @@ export function PixelBackgroundCanvas({
               uri={backgroundImageUri!}
               width={width}
               height={height}
+              fillViewport={isFullscreen}
             />
             {showGradientBackdrop ? (
               <GradientBackdrop

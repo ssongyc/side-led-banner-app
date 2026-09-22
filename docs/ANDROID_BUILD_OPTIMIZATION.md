@@ -237,7 +237,7 @@ Dependency schema 2 and native schema 4 now remove only the root `package.json.v
 - APK: `apk-deliveries/20260922-102440-ddae9ec66dde44cdab013ab3bf490e38/LedPopV112.apk`.
 - Reviewed notices: Expo config-plugin-compatible AdMob app-ID warning, NO_COLOR/FORCE_COLOR, Expo RawPropsParser deprecation and future Gradle 10 compatibility. No standalone lint/test, device QA or Play upload was performed during the build.
 
-## Latest V1.1.2(30) production export — 2026-09-22 14:58 KST
+## V1.1.2(30) production export — 2026-09-22 14:58 KST
 
 - Run `20260922-145251-06390196` completed from clean, synchronized main `7f37cf506b86c6326f5b8eef9f7a6db0e8adaae1` with production AdMob, the existing upload signing identity, all four ABIs, one Gradle worker and build-only versionCode 30. The first `-ResumeNative` request stopped before compilation because the native fingerprint required regeneration; the successful invocation regenerated native inputs without `npm ci` and restored `.gradle`, `build`, `app/build` and `app/.cxx` at the fixed path.
 - compile-ok: Gradle reported `BUILD SUCCESSFUL in 4m 32s`; 1,159 actionable tasks comprised 75 executed, 2 from cache and 1,082 up-to-date. Native generation took 24.95 seconds, compilation 273.49 seconds, APK conversion 24.93 seconds and artifact verification 24.56 seconds. Total recorded wrapper time was 355.27 seconds (5m55s).
@@ -245,3 +245,13 @@ Dependency schema 2 and native schema 4 now remove only the root `package.json.v
 - AAB: `aab-deliveries/20260922-145755-505334db1f524b8e93fbd79f46e4d6c1/LedPopV112.aab`, 222,857,722 bytes, SHA-256 `586399C39703E4BD747B7DD1F8D6A244B5BC30135ABA3580668D30EEC0F3D1E7`.
 - APK: `apk-deliveries/20260922-145821-0fdc881b6ad8462ca153dd3a40282c65/LedPopV112.apk`, 253,042,728 bytes, SHA-256 `7C53A59B25533790B78AB7E2A589DB1D14D4286BC154BB0CFDF519A96F02D6D6`. The universal APK derives from the same AAB through pinned bundletool 1.18.3. Mapping SHA-256 is `1405B7F92B5D9BE6B8CDF59000CD6D8AD34841147CB7B33FADA5A9101A603104`.
 - Reviewed non-blocking notices were the Expo-config-plugin-compatible AdMob app-ID warning, NO_COLOR/FORCE_COLOR and future Gradle 10 deprecations. Runtime QA and Play upload were not performed. The later transparent sign-board frames and Pixelation Mix selection indicator are not included in these artifacts.
+
+## Latest V1.1.2(30) production export — 2026-09-22 19:44 KST
+
+- Run `20260922-193040-6d14ebfe` used clean synchronized main `7d9316fdbd44ca04aa7c095288bc2047ea4dbf43`, production AdMob, existing signing, all four ABIs, one worker and build-only versionCode 30. It includes transparent sign-board frames and the Pixelation Mix selection indicator. The subsequent fullscreen photo-fill change is source-only and is not included.
+- The initial ResumeNative request stopped before compilation because native inputs changed. The successful run skipped dependency installation, regenerated native configuration in 23.65 seconds and restored the existing native caches. Resource changes invalidated R8 inputs (R.jar, linked resources and keep.xml); no cache or release optimization was disabled.
+- compile-ok: `BUILD SUCCESSFUL in 12m 6s`; 1,159 actionable tasks: 84 executed, 1,075 up-to-date, 0 from cache. Total wrapper time was 808.35 seconds; APK conversion 27.14 seconds and artifact verification 27.01 seconds. AAB was built once and universal APK derived through bundletool 1.18.3.
+- All 421 static artifact checks passed: existing signer, production AdMob, V1.1.2(30), SDK 36, Billing metadata, four ABIs, required 16 KiB alignment, matching payloads and embedded same-build R8 mapping. Full build-log review found non-blocking Expo-plugin AdMob configuration notices, output-color notices, R8 informational rules and future Gradle 10 deprecations.
+- AAB: `aab-deliveries/20260922-194317-939d30db88914e228f0c7f9ba03f9412/LedPopV112.aab`, 223,120,887 bytes; SHA-256 `036F32A64DB0C2CD5003DEBA947B083A20CFED5DFFCFC1571421BB78195F5C51`; export `2026-09-22T10:43:17.9426375Z`.
+- APK: `apk-deliveries/20260922-194347-bbfb8558c2e74d29b777196feb0aa034/LedPopV112.apk`, 253,313,686 bytes; SHA-256 `270A74F3016EB6FA1A0D823740C995F62F6A6CBD0D5668886B470A233AAD5DBF`; export `2026-09-22T10:43:47.4508673Z`. Mapping SHA-256: `1405B7F92B5D9BE6B8CDF59000CD6D8AD34841147CB7B33FADA5A9101A603104`.
+- Runtime QA and Play upload were not performed. Play code eligibility across all tracks remains unverified. This documentation delivery runs no additional build, lint or tests; original local records remain under the run directory.

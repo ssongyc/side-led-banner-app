@@ -11,10 +11,10 @@
 
 현재 소스 버전은 **1.1.2 (app.json의 Android versionCode 29)**이며 Settings는 Expo 버전을 읽어 **V1.1.2**를 표시합니다. 소스 설정, 로컬 빌드의 버전 코드, 실제 스토어 배포 버전은 별개입니다.
 
-- 최근 기록된 로컬 APK/AAB는 **1.1.2 (30)**, clean main `7f37cf506b86c6326f5b8eef9f7a6db0e8adaae1`, 실행 ID `20260922-145251-06390196`입니다. 30은 빌드 시 명시한 override입니다. 고정 빌드 폴더·기존 서명·production AdMob으로 생성했으며 전체 래퍼 시간은 355.27초(약 5분 55초), Gradle은 4분 32초였습니다. 정적 검사 421개가 모두 통과했습니다. [실행 기록](artifacts/apk-runs/20260922-145251-06390196/build-result.json)과 [Android 빌드 이력](docs/ANDROID_BUILD_OPTIMIZATION.md)을 참고하세요. 이후의 표지판 투명 프레임과 Pixelation Mix 선택 표시는 현재 소스 변경이며 이 산출물에는 포함되지 않습니다.
-- `5cf3182`에는 방향별 배너 재사용, 광고 진단·문구 정리, 스크롤의 미지원 JS 속성 제거, 검증 하네스 갱신, Android 캐시·작업 이력 재사용 개선이 포함되었습니다. 당시 타입 검사와 상태 검증 **26개가 통과**했습니다. 최신 Android APK/AAB는 위 실행 기록에서 생성·로컬 검증했습니다. 이후 Android 실기기에서 세 탭 스크롤·화면 복귀·테스트 광고 보상 흐름을 확인했습니다. iOS 빌드·실기기 동작은 미검증이며, 이번 증분 시간은 캐시 복원 변경만의 효과를 따로 측정한 결과가 아닙니다.
+- 최근 기록된 로컬 APK/AAB는 **1.1.2 (30)**, clean main `7d9316fdbd44ca04aa7c095288bc2047ea4dbf43`, 실행 ID `20260922-193040-6d14ebfe`입니다. 30은 빌드 시 명시한 override입니다. 기존 서명·production AdMob으로 AAB를 한 번 빌드하고 동일 AAB에서 universal APK를 생성했습니다. 전체 래퍼 시간은 808.35초(약 13분 28초), Gradle은 12분 6초이며 84 executed / 1075 up-to-date / 0 from-cache입니다. 의존성 설치는 생략하고 기존 네이티브 캐시를 복원했습니다. 정적 검사 421개가 모두 통과했습니다. [실행 기록](artifacts/apk-runs/20260922-193040-6d14ebfe/build-result.json)과 [단계별 시간](artifacts/apk-runs/20260922-193040-6d14ebfe/stage-timings.json)을 참고하세요. 표지판 투명 프레임과 Pixelation Mix 선택 표시는 포함되며, 이후의 Play 사진 여백 채움 수정은 이 산출물에 포함되지 않습니다. 이 산출물의 실기기 QA와 Play 업로드는 미실행입니다.
+- `5cf3182`에는 방향별 배너 재사용, 광고 진단·문구 정리, 스크롤의 미지원 JS 속성 제거, 검증 하네스 갱신, Android 캐시·작업 이력 재사용 개선이 포함되었습니다. 당시 타입 검사와 상태 검증 **26개가 통과**했습니다. 최신 Android APK/AAB의 생성·로컬 검증 범위는 위 실행 기록을 따릅니다. 이전 설치 APK에서는 Android 실기기의 세 탭 스크롤·화면 복귀·테스트 광고 보상 흐름을 확인했으며 최신 산출물의 재검증을 뜻하지 않습니다. iOS 빌드·실기기 동작은 미검증이며, 이번 증분 시간은 캐시 복원 변경만의 효과를 따로 측정한 결과가 아닙니다.
 - V1.1.2에는 iOS Play 종료의 상태 표시줄 선복원·네이티브 안전 영역·페이드 제거와 어두운 상태 표시줄, Amplitude 초기화·사용자 식별 후 새 앱 실행당 한 번 기록하는 `App Opened`가 반영되어 있습니다. [UI 기록](docs/UI_INTERACTION_1.0.9_27.md)과 [현재 광고 동작·검증 제한](docs/ADVERTISING.md)을 참고하세요.
-- Galaxy SM-M336K(Android 16)의 최신 설치 APK에서 Test Ad 재생·닫기, 보상 후 잠금 해제·재시작 유지와 이전 보상의 2시간 초과 후 재잠금을 확인했습니다. 정확한 만료 경계 순간은 측정하지 않았습니다. 화면·성능·로그 및 검증 한계는 [9월 22일 QA 기록](docs/QA_20260910.md#2026-09-22--최신-v112-30-설치-apk-최종-qa)에 정리했습니다. 접근성 수정은 소스에만 반영됐으며 새 APK의 TalkBack 검증이 필요합니다. iOS, 구매·복원, 광고 조기 종료, production 공급률·수익 및 Play 처리·버전 코드 사용 가능 여부는 미검증입니다. 날짜별 단락과 커밋·푸시 미실행 표기는 각 작업 당시의 역사적 기록입니다.
+- Galaxy SM-M336K(Android 16)의 당시 설치 APK에서 Test Ad 재생·닫기, 보상 후 잠금 해제·재시작 유지와 이전 보상의 2시간 초과 후 재잠금을 확인했습니다. 정확한 만료 경계 순간은 측정하지 않았습니다. 화면·성능·로그 및 검증 한계는 [9월 22일 QA 기록](docs/QA_20260910.md#2026-09-22--최신-v112-30-설치-apk-최종-qa)에 정리했습니다. 접근성 수정은 소스에만 반영됐으며 새 APK의 TalkBack 검증이 필요합니다. iOS, 구매·복원, 광고 조기 종료, production 공급률·수익 및 Play 처리·버전 코드 사용 가능 여부는 미검증입니다. 날짜별 단락과 커밋·푸시 미실행 표기는 각 작업 당시의 역사적 기록입니다.
 
 ## 과거 소스 변경 이력 — 2026-09-09~10
 
@@ -340,7 +340,7 @@ side-led-banner-app/
 | [react-native-svg](https://github.com/software-mansion/react-native-svg)                        | 15.15.4  | SVG 아이콘 (재생/정지 버튼 등)  |
 | [react-native-safe-area-context](https://github.com/th3rdwave/react-native-safe-area-context)   | ~5.7.0   | 노치/Safe Area 대응             |
 | [@react-navigation/native](https://reactnavigation.org/)                                        | ^7.1.8   | 기존 의존성 (테마는 expo-router)          |
-| [react-native-google-mobile-ads](https://docs.page/invertase/react-native-google-mobile-ads)    | ^16.5.0 | AdMob 배너/리워드 광고          |
+| [react-native-google-mobile-ads](https://docs.page/invertase/react-native-google-mobile-ads)    | 16.5.0 | AdMob 배너/리워드 광고          |
 | [@amplitude/analytics-react-native](https://amplitude.com/docs/sdks/analytics/react-native/react-native-sdk) | ^1.8.0 | 사용 이벤트 분석 |
 
 ## Android 빌드 프로필
@@ -412,7 +412,7 @@ main 전달 범위: QA 보고서·광고 만료 방어·picture/paint 재사용�
 
 ## 사진 배경 전체 표시 — 2026-09-10
 
-사용자 사진 배경은 일반 미리보기/전체 화면과 Pixel 모드에서 `contain`으로 표시합니다. 원본 종횡비를 유지하고 사진 전체가 표시 영역에 들어가도록 맞추며, 남는 공간에는 선택한 배경색(기존 Pixel 모드에서는 꺼진 LED 배경)을 표시합니다. 효과용 이미지의 별도 배치 방식은 유지합니다. 정적 변경 검토만 수행했으며 컴파일·린트·테스트·APK 빌드는 실행하지 않았습니다.
+당시 사용자 사진 배경은 일반 미리보기/전체 화면과 Pixel 모드에서 `contain`으로 표시하도록 변경했습니다. 원본 종횡비와 사진 전체를 보존하고 남는 공간에는 선택한 배경색을 표시했습니다. 이후 Play 전체 화면의 여백 처리 변경은 아래 2026-09-22 후속 기록을 따릅니다. 당시 정적 검토만 수행했으며 컴파일·린트·테스트·APK 빌드는 실행하지 않았습니다.
 
 ## 이번 변경 전달 및 Blur 확인 — 2026-09-10
 
@@ -597,3 +597,11 @@ Pixelation Mix는 선택 시 주황색 3px 테두리와 체크 배지를 표시�
 정리 과정에서 사진과 일반 효과가 공유하던 동일 셰이더의 중복 별칭, 더 이상 의미가 없는 CircleGrid 판별 API, 읽지 않던 locale·dot-size 매개변수, 내부 전용 상수·타입 재-export와 표지판 이동 후 불필요해진 Pixel 이미지 해석을 제거했습니다. 후속 참조 조사에서 새 프레임·Pixelation 관련 API는 모두 사용 중이었으며 삭제할 실행 파일이나 API는 확인되지 않았습니다. 원본 표지판 PNG는 출처 마스터, 새 `_Frame.png`는 런타임 자산으로 각각 역할이 있어 보존합니다.
 
 Galaxy SM-M336K에서 Background 탭 위에 남은 Effects 축소 화면과 `× Cancel`은 LED POP 컴포넌트가 아니라 `com.samsung.android.app.smartcapture`가 소유한 시스템 `CancelContainer`·드래그 표면으로 확인했습니다. 홈 화면에서도 유지됐으며 터치 해제 후 사라져 앱 탭 전환 상태와 무관함을 확인했습니다. 새 투명 프레임 6개는 제공 사진 합성과 알파·크기·참조를 정적으로 확인했고 모두 원본보다 작았습니다. 이번 후속 작업에서는 빌드·린트·테스트를 실행하지 않았으므로 새 프레임과 Mix 표시는 다음 승인된 빌드에서 실기기 확인이 필요합니다.
+
+## Play 사진 여백 채움 및 참조 정리 — 2026-09-22
+
+사용자 사진 배경은 편집 미리보기에서 `contain`으로 표시합니다. Play 전체 화면에서는 같은 사진의 `cover` 보조층으로 화면 비율 차이에서 생기는 여백을 채우고, 그 위에 `contain` 원본을 표시해 사진 전체와 원래 종횡비를 보존합니다. 일반 모드의 보조층은 확대부가 거슬리지 않도록 흐리게 표시하며, Pixel 모드는 보조층과 원본을 함께 기존 픽셀 셰이더로 처리합니다. 프레임·텍스트·효과의 합성 순서는 유지합니다. 이 후속 변경은 정적 검토만 수행했으며 컴파일·린트·테스트·APK 빌드는 실행하지 않았습니다.
+
+일반 모드의 보조층 Blur는 최소 24이며 원본의 사용자 Blur 설정은 유지합니다. Pixel 보조층에는 별도 Blur를 추가하지 않고 기존 픽셀 처리를 적용합니다. 세로·가로 Play에 적용되며 편집 미리보기는 기존 contain을 유지합니다. 원본 화질 향상이나 추가 확대 방지는 contain 원본 레이어에 대한 설명이며, 보조층은 화면을 채우기 위해 확대·잘림이 발생합니다. 기존 APK/AAB에는 이 변경이 포함되지 않았고 실제 기기의 화면·성능은 아직 검증하지 않았습니다.
+
+후속 참조 확인에서 사진 채움 상수, fillViewport 속성, PixelBackgroundImage 및 두 화면의 배경 렌더링 경로는 모두 사용 중입니다. 이번 범위에서 삭제할 미사용 파일·API는 확인되지 않았습니다. README의 최신 빌드 기준과 AdMob 의존성 고정 버전 표기를 실제 기록·package.json에 맞췄습니다. 빌드·린트·테스트·커밋·푸시는 실행하지 않았습니다.

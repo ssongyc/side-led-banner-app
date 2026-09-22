@@ -40,6 +40,8 @@ import { useMarqueeCanvasProps } from "./animation/useMarqueeCanvasProps";
 import { buildPixelBackground } from "./animation/buildPixelBackground";
 import { PixelBackgroundCanvas } from "./animation/PixelBackgroundCanvas";
 
+const FULLSCREEN_PHOTO_FILL_BLUR = 24;
+
 interface LedBannerFullScreenProps {
   visible: boolean;
   onClose: () => void;
@@ -229,12 +231,23 @@ export const LedBannerFullScreen = ({
             pointerEvents="box-none"
           >
             {hasBgPhoto && !effects.isPixelEffect ? (
-              <Image
-                source={{ uri: backgroundImageUri }}
-                style={StyleSheet.absoluteFill}
-                contentFit="contain"
-                blurRadius={backgroundBlur / 8}
-              />
+              <>
+                <Image
+                  source={{ uri: backgroundImageUri }}
+                  style={StyleSheet.absoluteFill}
+                  contentFit="cover"
+                  blurRadius={Math.max(
+                    FULLSCREEN_PHOTO_FILL_BLUR,
+                    backgroundBlur / 8,
+                  )}
+                />
+                <Image
+                  source={{ uri: backgroundImageUri }}
+                  style={StyleSheet.absoluteFill}
+                  contentFit="contain"
+                  blurRadius={backgroundBlur / 8}
+                />
+              </>
             ) : null}
             {effects.isPixelEffect ? (
               <PixelBackgroundCanvas {...pixelBackgroundProps} isActive={isAnimationActive} />
