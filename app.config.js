@@ -11,6 +11,15 @@ module.exports = ({ config }) => {
   if (process.env.EAS_BUILD_PLATFORM === 'ios' && buildProfile === 'production') {
     require('./config/validateIosProduction')();
   }
+  const ios = process.env.EAS_BUILD_PLATFORM === 'ios' && buildProfile === 'production'
+    ? {
+        ...config.ios,
+        infoPlist: {
+          ...config.ios?.infoPlist,
+          NSAppTransportSecurity: { NSAllowsArbitraryLoads: false },
+        },
+      }
+    : config.ios;
   const ids = profiles[profile];
   for (const platform of ['android', 'ios']) {
     const entry = ids[platform];
@@ -23,5 +32,5 @@ module.exports = ({ config }) => {
   if (config.plugins.filter(p => Array.isArray(p) && p[0] === 'react-native-google-mobile-ads').length !== 1) throw new Error('Expected one AdMob config plugin');
   const plugins = config.plugins.map(p => Array.isArray(p) && p[0] === 'react-native-google-mobile-ads'
     ? [p[0], { ...p[1], androidAppId: ids.android.appId, iosAppId: ids.ios.appId }] : p);
-  return { ...config, plugins, extra: { ...config.extra, advertising: { profile, ...ids } } };
+  return { ...config, ios, plugins, extra: { ...config.extra, advertising: { profile, ...ids } } };
 };

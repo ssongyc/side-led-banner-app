@@ -3,10 +3,12 @@ import { styles as base, colorPickerLockStyles as bgLock, colorPickerStyles as c
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import React, { useCallback } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   Alert,
   Image as RNImage,
+  Modal,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -41,6 +43,8 @@ export const BackgroundSection = () => {
   const { isProActive, openRewardAdModal } = useSettingsUI();
   const { backgroundColor, backgroundBlur, backgroundImageUri } =
     background;
+  const [photoPickerCoverVisible, setPhotoPickerCoverVisible] = useState(false);
+  const photoPickerLaunchPendingRef = useRef(false);
 
   const setBackgroundBlur = (value: number) =>
     updateConfig("background", { backgroundBlur: value });
@@ -51,15 +55,7 @@ export const BackgroundSection = () => {
       backgroundImageUri: null,
     });
 
-  const openAlbum = useCallback(async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        "Permission",
-        "Allow photo library access to choose a background image.",
-      );
-      return;
-    }
+  const launchAlbumPicker = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
@@ -71,6 +67,38 @@ export const BackgroundSection = () => {
       backgroundImageUri: result.assets[0].uri,
     });
   }, [updateConfig]);
+
+  const launchAndroidAlbumFromCover = useCallback(() => {
+    if (!photoPickerLaunchPendingRef.current) return;
+    photoPickerLaunchPendingRef.current = false;
+    void launchAlbumPicker().finally(() => {
+      setPhotoPickerCoverVisible(false);
+    });
+  }, [launchAlbumPicker]);
+
+  const openAlbum = useCallback(async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission",
+        "Allow photo library access to choose a background image.",
+      );
+      return;
+    }
+
+    if (Platform.OS === "android") {
+      photoPickerLaunchPendingRef.current = true;
+      setPhotoPickerCoverVisible(true);
+      return;
+    }
+
+    await launchAlbumPicker();
+  }, [launchAlbumPicker]);
+
+  const closePhotoPickerCover = useCallback(() => {
+    photoPickerLaunchPendingRef.current = false;
+    setPhotoPickerCoverVisible(false);
+  }, []);
 
 
 
@@ -176,6 +204,18 @@ export const BackgroundSection = () => {
           step={1}
         />
       </ScrollView>
+      <Modal
+        visible={photoPickerCoverVisible}
+        animationType="none"
+        presentationStyle="fullScreen"
+        statusBarTranslucent
+        navigationBarTranslucent
+        hardwareAccelerated
+        onShow={launchAndroidAlbumFromCover}
+        onRequestClose={closePhotoPickerCover}
+      >
+        <View style={{ flex: 1, backgroundColor: "#000000" }} />
+      </Modal>
     </>
   );
 };

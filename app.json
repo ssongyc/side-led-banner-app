@@ -2,7 +2,7 @@
   "expo": {
     "name": "Led Pop",
     "slug": "led-banner-app",
-    "version": "1.1.2",
+    "version": "1.1.3",
     "orientation": "default",
     "icon": "./assets/images/Logo_IOS.png",
     "scheme": "sideledbannerapp",
@@ -24,7 +24,7 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "versionCode": 29
+      "versionCode": 31
     },
     "web": {
       "output": "static",
@@ -35,7 +35,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to set the banner background."
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to set the banner background.",
+          "cameraPermission": false,
+          "microphonePermission": false
         }
       ],
       [
@@ -110,8 +112,6 @@
           ]
         }
       ],
-      "expo-tracking-transparency",
-      "expo-web-browser",
       "expo-image",
       "expo-iap",
       "./plugins/withPremiumIap",
