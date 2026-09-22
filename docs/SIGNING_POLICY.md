@@ -156,3 +156,40 @@ References: [Apple upload requirements](https://developer.apple.com/news/upcomin
 ## Android audit follow-up — 2026-09-16
 
 The existing local release entrypoint now rejects an out-of-validity signing certificate and a bundletool hash mismatch before compilation. APK-only exports must pass signature/identity/version/target-SDK/debuggable/ZIP-alignment checks; combined APK/AAB exports retain the full store verifier. Signing credentials, same-build mapping retention, file naming, export timestamps and cache reuse are preserved. No credentials, builds or verification commands were executed for this source change. See [the audit scope and remaining checks](ANDROID_BUILD_OPTIMIZATION.md#android-preflight-audit--2026-09-16).
+
+## iOS launch crash — 2026-09-22
+
+The user-provided iPhone crash report for 1.1.3 (1) confirms `DYLD / Library missing`: `ExpoModulesWorklets.framework` references `@rpath/React.framework/React`, which the installed app cannot resolve. Termination precedes JavaScript initialization. Apple ITMS-90863 also names `ReactNativeDependencies.framework`; that email alone does not establish its absence on iPhone. Mac availability settings do not repair the confirmed iPhone crash.
+
+The crashing binary identifies as `com.sunnyinnolab.ledpop`; app.json currently identifies as `com.minkyokim.sideledbannerapp`. No native ios project is tracked in this checkout; the subsequently supplied Mac configuration files are external review evidence, not a locally buildable native project. Preserve the actual App Store identity and existing signing credentials; do not regenerate or rename the Mac project from this mismatched source configuration until its owner reconciles the identifiers. Earlier EAS audit notes describe the configured route, not proof of how this Xcode archive was produced.
+
+Before the next upload, on the build Mac, run this read-only check against the exact archive intended for export (or the .app extracted from the exported IPA):
+
+```sh
+python3 scripts/verify-ios-react-frameworks.py "/path/to/LedPop.xcarchive" --expected-bundle-id com.sunnyinnolab.ledpop
+```
+
+The check scans the app executable and Mach-O files under Frameworks for the two named dynamic dependencies, requires referenced framework binaries to exist under the app's Frameworks directory, and exits nonzero on missing files, identity mismatch or inspection errors. It does not require these frameworks when no dynamic reference exists (for example, static linkage). It does not copy frameworks or modify the archive. This is a narrow presence check, not validation of architecture slices, signatures, all dyld search paths/dependencies, extensions, runtime startup or store acceptance. It is a manual gate because this repository has no local iOS archive/upload wrapper. The script was source-reviewed only; no Mac execution, build, lint, tests or upload occurred in this change.
+
+### Initial handoff before Mac files were supplied (historical)
+
+- Supply the exact build checkout revision and its Podfile, Podfile.properties.json (if present), Podfile.lock and project.pbxproj. Reconcile the bundle ID discrepancy without replacing the existing app identity.
+- Inspect the actual CocoaPods resolution, precompiled Expo/RN settings (`EXPO_USE_PRECOMPILED_MODULES`, `RCT_USE_PREBUILT_RNCORE`, `ios.buildReactNativeFromSource`, `ios.useFrameworks`) and Archive configuration. Precompiled Expo modules depend on prebuilt React; do not mix incompatible module/RN linkage settings. The local installed autolinking code already guards this combination, but the Mac's installed inputs are unknown.
+- Use the CocoaPods workspace and confirm the app target's generated embed-framework build phase and file lists include its actual dynamic React dependencies for Archive. Determine whether the failure is stale Pods, missing embedding or mismatched linkage before changing settings. Do not manually copy arbitrary framework versions or force blanket dependency upgrades/cache deletion.
+- Inspect the exported app's React and ReactNativeDependencies binaries, load commands, device architecture and signatures. Then install the corrected release build on iPhone/iPad and verify cold launch; upload with an unused iOS build number only after successful verification. The existing 1.1.3 (1) is known to crash; successful delivery is not runtime success.
+
+Reference: [Expo precompiled modules](https://docs.expo.dev/guides/prebuilt-expo-modules/). At this initial stage the Mac project/archive was pending and only detection was added. The supplied-project findings and implemented source configuration below supersede that status; archive/device verification remains pending.
+
+### Supplied Mac project follow-up — 2026-09-22
+
+The subsequently supplied ZIP contains the Mac Podfile, properties, lockfile and project.pbxproj. The Podfile defaults Expo precompiled modules on. The lockfile resolves source-style React-Core 0.86.3 (boost/DoubleConversion/RCT-Folly dependencies), with neither React-Core-prebuilt nor ReactNativeDependencies present. The app target's `[CP] Embed Pods Frameworks` phase includes precompiled ExpoModulesCore, ExpoModulesJSI and ExpoModulesWorklets but neither React nor ReactNativeDependencies. This is consistent with the crash's unresolved React dependency: precompiled Expo binaries and the resolved RN linkage are mismatched. The files do not establish why the original pod installation selected this combination (environment overrides, stale generated inputs or tool behavior remain unproven).
+
+The durable correction is `package.json` → `expo.autolinking.ios.buildFromSource: [".*"]`, an officially supported opt-out for all autolinking-managed precompiled iOS modules. After the next successful pod install, Expo modules are configured to build from source against the React Native installation selected by CocoaPods instead of using these precompiled artifacts. The resulting linkage has not yet been verified on Mac. All modules are selected rather than only ExpoModulesWorklets, because other embedded Expo binaries can reference the same missing React dependencies; this also keeps coupled worklets/reanimated modules on the same source path. React Native's own source/prebuilt policy, Android behavior, bundle identifiers, signing, ad configuration and app logic are unchanged. The first iOS compile can take longer; no runtime performance difference has been measured.
+
+For the Mac developer, after transferring the updated package.json into the exact build checkout:
+
+1. Preserve the existing native project and its store bundle ID. Do not run a clean prebuild from the currently different app.json identifier.
+2. Run the project's normal `pod install` from ios (use `bundle exec pod install` if that project manages CocoaPods through Bundler). This is required to regenerate the Pods graph and framework embedding; Archive alone cannot apply the package setting. Do not edit Podfile.lock or generated embed lists manually, or copy frameworks from another build.
+3. Open LedPop.xcworkspace and create a new Release Archive with an unused build number. Run the targeted framework checker on the new archive and exported app, then confirm cold launch on iPhone/iPad before upload. If CocoaPods or Archive fails, retain that actual output rather than adding an automatic fallback or deleting all caches.
+
+The attached native files were inspected directly in the ZIP and were not imported into source or modified. This follow-up supersedes the earlier pending-input diagnosis: the source configuration correction is now implemented, but pod resolution, archive contents and crash resolution remain unverified on Mac/device. No dependency installation, native regeneration, build, lint, tests, upload, commit or push was run.

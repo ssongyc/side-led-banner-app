@@ -9,12 +9,14 @@
 
 ## 현재 문서의 기준
 
+> **TestFlight 1.1.3 (1) 시작 충돌 확인:** 사용자 제공 iPhone 로그는 `ExpoModulesWorklets`가 참조하는 `React.framework` 누락으로 앱 코드 실행 전에 종료됨을 보여줍니다. Apple 경고에는 `ReactNativeDependencies.framework`도 포함됩니다. 이후 제공된 Mac 설정에서는 소스 방식 React Native와 사전 컴파일 Expo 프레임워크의 혼합이 확인되어, package.json에서 iOS autolinking 모듈의 소스 빌드를 명시했습니다. Mac에서 pod install·새 Archive·실기기 실행 확인은 아직 필요합니다. Mac용 읽기 전용 검사와 개발자 전달 사항은 [충돌 기록](docs/SIGNING_POLICY.md#ios-launch-crash--2026-09-22)을 참고하세요.
+
 현재 소스 버전은 **1.1.3 (app.json의 Android versionCode 31)**이며 Settings는 Expo 버전을 읽어 **V1.1.3**을 표시합니다. 소스 설정, 로컬 빌드의 버전 코드, 실제 스토어 배포 버전은 별개입니다.
 
 - 최근 기록된 로컬 APK/AAB는 **1.1.2 (30)**, clean main `89a54ffdb3c7291fe5833895b78295ab6f8290b7`, 실행 ID `20260922-202155-81159740`입니다. 30은 빌드 시 명시한 override입니다. 기존 서명·production AdMob으로 AAB를 한 번 빌드하고 동일 AAB에서 universal APK를 생성했습니다. 전체 래퍼 시간은 298.42초(약 4분 58초), Gradle은 3분 57초이며 73 executed / 1086 up-to-date입니다. 의존성 설치와 네이티브 생성은 생략하고 기존 네이티브 출력과 캐시를 재사용했습니다. 정적 검사 421개가 모두 통과했습니다. [실행 기록](artifacts/apk-runs/20260922-202155-81159740/build-result.json)과 [단계별 시간](artifacts/apk-runs/20260922-202155-81159740/stage-timings.json)을 참고하세요. 표지판 투명 프레임, Pixelation Mix 선택 표시와 Play 사진 여백 채움이 포함됩니다. 이 산출물의 실기기 QA와 Play 업로드는 미실행입니다.
 - `5cf3182`에는 방향별 배너 재사용, 광고 진단·문구 정리, 스크롤의 미지원 JS 속성 제거, 검증 하네스 갱신, Android 캐시·작업 이력 재사용 개선이 포함되었습니다. 당시 타입 검사와 상태 검증 **26개가 통과**했습니다. 최신 Android APK/AAB의 생성·로컬 검증 범위는 위 실행 기록을 따릅니다. 이전 설치 APK에서는 Android 실기기의 세 탭 스크롤·화면 복귀·테스트 광고 보상 흐름을 확인했으며 최신 산출물의 재검증을 뜻하지 않습니다. iOS 빌드·실기기 동작은 미검증이며, 이번 증분 시간은 캐시 복원 변경만의 효과를 따로 측정한 결과가 아닙니다.
 - V1.1.2에는 iOS Play 종료의 상태 표시줄 선복원·네이티브 안전 영역·페이드 제거와 어두운 상태 표시줄, Amplitude 초기화·사용자 식별 후 새 앱 실행당 한 번 기록하는 `App Opened`가 반영되어 있습니다. [UI 기록](docs/UI_INTERACTION_1.0.9_27.md)과 [현재 광고 동작·검증 제한](docs/ADVERTISING.md)을 참고하세요.
-- V1.1.3 TestFlight 준비에서는 production iOS의 임의 HTTP 허용을 차단하고, 사용하지 않는 카메라·마이크·ATT 선언과 ATT 패키지를 제거했습니다. Expo SDK 57 호환 패치 버전으로 동기화했으며 `expo install --check`와 production config introspection은 통과했습니다. 사용자가 제공한 Xcode 오류 화면에서는 rewarded 패치가 설치된 SDK에 없는 `GADResponseInfo.adNetworkClassName`을 참조해 실패했고, 현재 공식 경로인 `loadedAdNetworkResponseInfo.adNetworkClassName`과 Google 제공 상수를 사용하도록 패치 원본을 수정했습니다. 수정 후 실제 Xcode/EAS 빌드·CocoaPods·서명·IPA·TestFlight 처리는 미검증입니다. [iOS 감사 기록](docs/SIGNING_POLICY.md#ios-testflight-source-audit--2026-09-22)을 참고하세요.
+- V1.1.3 TestFlight 준비에서는 production iOS의 임의 HTTP 허용을 차단하고, 사용하지 않는 카메라·마이크·ATT 선언과 ATT 패키지를 제거했습니다. Expo SDK 57 호환 패치 버전으로 동기화했으며 `expo install --check`와 production config introspection은 통과했습니다. 사용자가 제공한 Xcode 오류 화면에서는 rewarded 패치가 설치된 SDK에 없는 `GADResponseInfo.adNetworkClassName`을 참조해 실패했고, 현재 공식 경로인 `loadedAdNetworkResponseInfo.adNetworkClassName`과 Google 제공 상수를 사용하도록 패치 원본을 수정했습니다. 이 광고 패치의 재빌드·보상 동작 검증은 미완료입니다. 별도로 제공된 TestFlight 1.1.3 (1)은 업로드되었지만 시작 시 React 프레임워크 누락으로 충돌했습니다. iOS 소스 빌드 설정 수정 후의 새 Archive·실기기 검증은 아래 절차에 따라 진행해야 합니다. [iOS 감사 기록](docs/SIGNING_POLICY.md#ios-testflight-source-audit--2026-09-22)을 참고하세요.
 - Galaxy SM-M336K(Android 16)의 당시 설치 APK에서 Test Ad 재생·닫기, 보상 후 잠금 해제·재시작 유지와 이전 보상의 2시간 초과 후 재잠금을 확인했습니다. 정확한 만료 경계 순간은 측정하지 않았습니다. 화면·성능·로그 및 검증 한계는 [9월 22일 QA 기록](docs/QA_20260910.md#2026-09-22--최신-v112-30-설치-apk-최종-qa)에 정리했습니다. 접근성 수정은 소스에만 반영됐으며 새 APK의 TalkBack 검증이 필요합니다. iOS, 구매·복원, 광고 조기 종료, production 공급률·수익 및 Play 처리·버전 코드 사용 가능 여부는 미검증입니다. 날짜별 단락과 커밋·푸시 미실행 표기는 각 작업 당시의 역사적 기록입니다.
 
 ## 과거 소스 변경 이력 — 2026-09-09~10
@@ -197,6 +199,23 @@ npm start
 AdMob 등 네이티브 모듈이 있어 Expo Go만으로 전체 기능을 검증할 수 없습니다. 해당 모듈이 포함된 개발 빌드를 사용합니다. 웹 미리보기 역시 실기기 광고·노치·시스템 UI 검증을 대신하지 않습니다.
 
 실제 앱 진입점은 `package.json`의 `expo-router/entry`와 `app/_layout.tsx`입니다. 루트 `index.js`는 사용하지 않습니다. `development` APK는 Metro에서 개발 코드를 받으며 `preview` APK와 `production` AAB는 코드를 내장합니다. EAS 환경 변수는 로컬 Metro에 자동 전달되지 않으므로 로컬 환경 설정도 필요합니다.
+
+## iOS 시작 충돌 수정 적용 및 확인
+
+`package.json`의 `expo.autolinking.ios.buildFromSource: [".*"]`는 iOS 모듈의 사전 컴파일 사용을 해제합니다. 첨부 Mac 프로젝트에서 확인된 소스 방식 React Native와 사전 컴파일 Expo 모듈의 혼합을 피하기 위한 설정이며, JavaScript 업데이트나 Archive 재실행만으로 기존 Pods에 적용되지 않습니다. 첫 iOS 빌드 시간은 늘어날 수 있으며 Android 설정은 바꾸지 않습니다.
+
+Mac 개발자는 수정된 소스를 실제 빌드 작업 폴더에 반영한 후 다음 순서로 진행합니다. 이 안내 자체는 빌드·업로드 실행 승인이 아닙니다.
+
+1. 기존 `ios` 프로젝트에서 `pod install`을 실행합니다. Bundler 관리 프로젝트이면 `bundle exec pod install`을 사용합니다.
+2. `LedPop.xcworkspace`에서 사용하지 않은 iOS 빌드 번호로 새 Release Archive를 만듭니다.
+3. 아래 읽기 전용 검사를 새 Archive와 내보낸 IPA에서 추출한 `.app`에 각각 실행합니다.
+4. iPhone/iPad에 새 빌드를 설치해 앱 시작을 확인합니다. 프레임워크 존재 검사 통과만으로 충돌 해결이나 스토어 준비 완료를 판단하지 않습니다.
+
+```sh
+python3 scripts/verify-ios-react-frameworks.py "/path/to/LedPop.xcarchive" --expected-bundle-id com.sunnyinnolab.ledpop
+```
+
+실제 Mac 프로젝트·충돌 앱의 Bundle ID는 `com.sunnyinnolab.ledpop`, 저장소 `app.json`은 `com.minkyokim.sideledbannerapp`으로 다릅니다. 기존 스토어 식별자와 서명을 보존하고, 차이를 정리하기 전 `prebuild --clean`으로 Mac 프로젝트를 덮어쓰지 않습니다. 검사 범위·한계와 첨부 파일 분석은 [iOS 충돌 기록](docs/SIGNING_POLICY.md#ios-launch-crash--2026-09-22)에 있습니다. 현재는 설정 수정과 정적 검토만 완료했으며 새 빌드·실기기 검증은 미완료입니다.
 
 ## 프로젝트 구조
 
