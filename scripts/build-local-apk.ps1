@@ -32,7 +32,8 @@ if($IncludeBundle){
  $pythonVersionExit=$LASTEXITCODE
  if($pythonVersionExit -ne 0){throw 'Store verification requires Python 3.11 or newer'}
 }
-$buildTools='C:/Users/ssong/AppData/Local/Android/Sdk/build-tools/36.1.0'
+$androidSdkRoot=if($env:ANDROID_HOME){$env:ANDROID_HOME}else{Join-Path $env:LOCALAPPDATA 'Android/Sdk'}
+$buildTools=Join-Path $androidSdkRoot 'build-tools/36.1.0'
 foreach($tool in @('apksigner.bat','aapt.exe','zipalign.exe')){
  if(-not (Test-Path -LiteralPath (Join-Path $buildTools $tool))){throw ('Artifact verification tool missing: '+$tool)}
 }
@@ -63,7 +64,7 @@ $env:LEDPOP_KEY_PASSWORD=$key.keyPassword
 $env:LEDPOP_KEY_ALIAS=$key.keyAlias
 $env:LEDPOP_KEYSTORE=$key.keystorePath
 $env:JAVA_HOME='C:/Program Files/Android/Android Studio/jbr'
-$env:ANDROID_HOME='C:/Users/ssong/AppData/Local/Android/Sdk'
+$env:ANDROID_HOME=$androidSdkRoot
 $env:CI='1'
 try {
  $previousAdProfile=$env:LEDPOP_AD_PROFILE
@@ -217,7 +218,7 @@ android {
   $gradlePath=Join-Path $resolved 'android/app/build.gradle'
   if([IO.File]::ReadAllText($gradlePath) -cne $gradle){[IO.File]::WriteAllText($gradlePath,$gradle)}
   $propertiesPath=Join-Path $resolved 'android/local.properties'
-  $sdkProperty='sdk.dir=C:/Users/ssong/AppData/Local/Android/Sdk'+[Environment]::NewLine
+  $sdkProperty='sdk.dir='+($androidSdkRoot -replace '\\','/')+[Environment]::NewLine
   if(-not (Test-Path -LiteralPath $propertiesPath) -or [IO.File]::ReadAllText($propertiesPath) -cne $sdkProperty){[IO.File]::WriteAllText($propertiesPath,$sdkProperty)}
   & node $prepare native-ready
   $nativeReadyExit=$LASTEXITCODE

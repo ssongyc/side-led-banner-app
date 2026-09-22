@@ -180,7 +180,7 @@ const envNames = [...new Set([
 const environmentHash = hash(JSON.stringify(envNames.map(n => [n, hash(
   n === '.env.example' ? fingerprintContent(n, contents.get(n)) : fs.readFileSync(path.join(target, n)),
 )])));
-const sdkRoot = 'C:/Users/ssong/AppData/Local/Android/Sdk';
+const sdkRoot = process.env.ANDROID_HOME || path.join(process.env.LOCALAPPDATA, 'Android', 'Sdk');
 const sdkMetadata = ['build-tools', 'platforms', 'ndk', 'cmake'].flatMap(group =>
   fs.readdirSync(path.join(sdkRoot, group), { withFileTypes: true })
     .filter(entry => entry.isDirectory())
