@@ -108,11 +108,10 @@ export const TextSection = () => {
       isPixelEffect
         ? resolvePixelFontSizeSliderMinPercent({
             playOption,
-            locale: resolvedAppLocale,
             sliderFloor: FONT_SIZE_MIN,
           })
         : FONT_SIZE_MIN,
-    [isPixelEffect, playOption, resolvedAppLocale],
+    [isPixelEffect, playOption],
   );
 
   useEffect(() => {

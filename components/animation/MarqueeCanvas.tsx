@@ -125,9 +125,9 @@ const OUTLINE_RING_DOT_SKSL = `
       return half4(0.0);
     }
 
-    float d = distance(pos, cellCenter);
-    float aa = max(dotRadius * dotMaskAaScale, dotSize * 0.05);
-    float mask = smoothstep(dotRadius, dotRadius - aa, d);
+    float edge = max(abs(pos.x - cellCenter.x), abs(pos.y - cellCenter.y));
+    float aa = max(dotRadius * dotMaskAaScale, dotSize * 0.025);
+    float mask = 1.0 - smoothstep(dotRadius - aa, dotRadius, edge);
     if (blackRing) {
       return half4(0.0, 0.0, 0.0, mask);
     }

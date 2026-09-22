@@ -11,9 +11,9 @@ export const DOT_MATRIX_FRAME_SKSL = `
   }
 
   float ledDotMask(vec2 pos, vec2 cellCenter) {
-    float d = distance(pos, cellCenter);
-    float aa = dotRadius * 0.12;
-    return 1.0 - smoothstep(dotRadius - aa, dotRadius + 0.001, d);
+    float edge = max(abs(pos.x - cellCenter.x), abs(pos.y - cellCenter.y));
+    float aa = max(dotRadius * 0.08, dotSize * 0.025);
+    return 1.0 - smoothstep(dotRadius - aa, dotRadius, edge);
   }
 
   float strokeAt(vec2 p) {

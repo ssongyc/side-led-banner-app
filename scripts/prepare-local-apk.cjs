@@ -8,8 +8,8 @@ const target = path.join(root, 'artifacts', 'b');
 const statePath = path.join(target, '.source-state.json');
 const planPath = path.join(target, '.source-plan.json');
 const phase = process.argv[2];
-const dependencyHashSchema = 1;
-const nativeHashSchema = 3;
+const dependencyHashSchema = 2;
+const nativeHashSchema = 4;
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 const git = args => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -157,7 +157,13 @@ function fingerprintContent(name, content) {
   if (!Buffer.from(text, 'utf8').equals(content)) return content;
   return Buffer.from(text.replace(/\r\n/g, '\n'), 'utf8');
 }
-function digest(names, fromSource, normalizeNativeConfig = false, normalizeLineEndings = true) {
+function digest(
+  names,
+  fromSource,
+  normalizeNativeConfig = false,
+  normalizeLineEndings = true,
+  normalizeRootPackageVersion = false,
+) {
   return hash(JSON.stringify([...new Set(names)].sort().map(name => {
     const file = safePath(target, name);
     let content = fromSource ? contents.get(name) : fs.existsSync(file) ? fs.readFileSync(file) : undefined;
@@ -165,11 +171,16 @@ function digest(names, fromSource, normalizeNativeConfig = false, normalizeLineE
       const parsed = JSON.parse(content.toString());
       content = Buffer.from(JSON.stringify(normalizeNativeConfig ? androidNativeAppConfig(parsed) : parsed));
     }
+    if (name === 'package.json' && content && normalizeRootPackageVersion) {
+      const packageJson = JSON.parse(content.toString());
+      delete packageJson.version;
+      content = Buffer.from(JSON.stringify(packageJson));
+    }
     if (content && normalizeLineEndings) content = fingerprintContent(name, content);
     return [name, content ? hash(content) : null];
   })));
 }
-const dependencyHash = digest(dependencyNames, true);
+const dependencyHash = digest(dependencyNames, true, false, true, true);
 // Hash the preserved local environment without copying or logging values.
 // .env.example is synchronized below; hash its incoming bytes, including addition/deletion.
 // Actual local environment files are preserved and remain byte-sensitive.
@@ -194,16 +205,21 @@ const toolchainHash = hash(JSON.stringify([
   }),
 ]));
 const adProfile = process.env.LEDPOP_AD_PROFILE ?? 'production';
-const nativeHash = hash(digest(nativeNames, true, true) + environmentHash + toolchainHash + adProfile);
+const nativeHash = hash(digest(nativeNames, true, true, true, true) + environmentHash + toolchainHash + adProfile);
 let previousDependencyHash = null;
 if (state?.dependencyHashSchema === dependencyHashSchema && state?.dependencyHash) {
   previousDependencyHash = state.dependencyHash;
+} else if (state?.dependencyHashSchema === 1 && state.dependencyHash &&
+           digest(dependencyNames, false) === state.dependencyHash) {
+  // Schema 2 ignores only the root package metadata version. Reproduce the
+  // successful schema-1 hash from preserved bytes before translating it.
+  previousDependencyHash = digest(dependencyNames, false, false, true, true);
 } else if (state?.dependencyHash && state.dependencyHashSchema == null &&
            digest(dependencyNames, false, false, false) === state.dependencyHash) {
   // Prove the preserved bytes match the successful legacy stamp before migration.
-  previousDependencyHash = digest(dependencyNames, false);
+  previousDependencyHash = digest(dependencyNames, false, false, true, true);
 } else if (!state && bootstrap) {
-  previousDependencyHash = digest(dependencyNames, false);
+  previousDependencyHash = digest(dependencyNames, false, false, true, true);
 }
 const previousPlan = fs.existsSync(planPath) ? readJson(planPath) : null;
 const recordedProfile = state?.adProfile ??
@@ -211,12 +227,18 @@ const recordedProfile = state?.adProfile ??
 let previousNativeHash = null;
 if (state?.nativeHashSchema === nativeHashSchema && state?.nativeHash) {
   previousNativeHash = state.nativeHash;
+} else if (state?.nativeHashSchema === 3 && state.nativeHash && recordedProfile === adProfile &&
+           fs.existsSync(path.join(target, 'android', 'app', 'build.gradle')) &&
+           hash(digest(nativeNames, false, true) + environmentHash + toolchainHash + adProfile) === state.nativeHash) {
+  // Schema 4 ignores only the root package metadata version. Reproduce the
+  // successful schema-3 hash from preserved bytes before translating it.
+  previousNativeHash = hash(digest(nativeNames, false, true, true, true) + environmentHash + toolchainHash + adProfile);
 } else if (state?.nativeHashSchema === 2 && state.nativeHash && recordedProfile === adProfile &&
            fs.existsSync(path.join(target, 'android', 'app', 'build.gradle')) &&
            hash(digest(nativeNames, false, true, false) + environmentHash + toolchainHash + adProfile) === state.nativeHash) {
   // Migrate only a proven legacy snapshot, including the current environment/toolchain.
   // A failed phase, mismatched snapshot or unknown schema must require preparation.
-  previousNativeHash = hash(digest(nativeNames, false, true) + environmentHash + toolchainHash + adProfile);
+  previousNativeHash = hash(digest(nativeNames, false, true, true, true) + environmentHash + toolchainHash + adProfile);
 }
 const plan = {
   adProfile,

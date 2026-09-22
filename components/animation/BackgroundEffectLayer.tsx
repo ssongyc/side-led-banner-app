@@ -2,6 +2,7 @@ import {
   isSpeechBubblePreset,
   SPEECH_BUBBLE_PRESETS,
 } from "@/constants/speechBubblePresets";
+import { isSignBoardPreset } from "@/constants/signBoardPresets";
 import type {
   BackgroundEffectAnimationResult,
   BackgroundEffectId,
@@ -120,7 +121,9 @@ function renderSpeechBubble({
   suppressPixelManagedBackgrounds,
   blurRadius,
 }: EffectProps): React.ReactNode {
-  if (suppressPixelManagedBackgrounds) {
+  // Keep sign-board artwork in the shared overlay path so it is composited
+  // after both the photo and Pixel background layers.
+  if (suppressPixelManagedBackgrounds && !isSignBoardPreset(effect.id)) {
     return null;
   }
   if (!isSpeechBubblePreset(effect.id)) {

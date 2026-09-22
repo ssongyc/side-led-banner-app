@@ -24,8 +24,6 @@ interface UseMarqueeAnimationParams {
   effectBleedPx?: number;
 }
 
-export type { OneLineJoinMode } from "@/utils/viewMode";
-
 type TextLayoutEvent = {
   nativeEvent: { lines: { width: number }[] };
 };

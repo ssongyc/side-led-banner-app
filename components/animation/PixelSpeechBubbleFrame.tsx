@@ -53,7 +53,7 @@ export function PixelSpeechBubbleFrame({
           source={frameSource}
           uniforms={{
             dotSize: frameDotSize,
-            dotRadius: frameDotSize * 0.46,
+            dotRadius: frameDotSize * 0.40,
             lineThreshold: 0.42,
             dotColor,
           }}

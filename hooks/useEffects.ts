@@ -9,7 +9,6 @@ import {
   pixelGlyphPanelPadCells,
   resolveContentUpscaleFactor,
   resolvePixelBackgroundShaderSizePx,
-  resolvePixelFontCircleGridMode,
   resolvePixelShaderSizePx,
   resolvePixelTextShaderUniforms,
 } from "@/constants/pixelLed";
@@ -42,14 +41,13 @@ export function useEffects(input: EffectsInput = {}) {
   const { playOption } = content;
 
   const isPixelEffect = hasPixelLedEffect(effectSelectedItems);
-  const isPixelCircleGrid = resolvePixelFontCircleGridMode(effectSelectedItems) != null;
   const isPixelTextDots = isPixelEffect;
   const isGlowEffect = effectSelectedItems.includes("Glow");
   const showGradientBackdrop =
     effectSelectedItems.includes("Gradient") &&
     GRADIENT_BACKDROP_IDS.includes(gradientBackgroundPreset as GradientBackdropId);
 
-  const pixelPlay = { playOption, locale: resolvedAppLocale };
+  const pixelPlay = { playOption };
   const pixelShaderSize = isPixelEffect
     ? resolvePixelShaderSizePx({ ...pixelPlay, fontSizePx: input.fontSizePx })
     : 1;
@@ -60,10 +58,10 @@ export function useEffects(input: EffectsInput = {}) {
   const pixelContentUpscaleFactor = isPixelEffect
     ? resolveContentUpscaleFactor({ ...pixelPlay, fontSizePx: input.fontSizePx })
     : 1;
-  const pixelTextShaderUniforms = resolvePixelTextShaderUniforms(pixelShaderSize);
-  const pixelMaskDilateRadius = 1;
+  const pixelTextShaderUniforms = resolvePixelTextShaderUniforms();
+  const pixelMaskDilateRadius = 0;
   const pixelMaskErodeRadius = 0;
-  const pixelGlyphPadCells = isPixelCircleGrid
+  const pixelGlyphPadCells = isPixelEffect
     ? pixelGlyphPanelPadCells(pixelShaderSize)
     : 1;
   const skiaStrokeWidthPx =

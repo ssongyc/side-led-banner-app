@@ -7,7 +7,7 @@ import { REWARD_AD_STATUS_TEXTS, REWARD_AD_BUTTON_TEXTS, type RewardAdLabelKey }
 import { Ionicons } from "@expo/vector-icons";
 import { Canvas, Group, Path, Rect, Skia } from "@shopify/react-native-skia";
 import { Image } from "expo-image";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   AppState,
   BackHandler,
@@ -34,7 +34,6 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { scheduleOnRN } from "react-native-worklets";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const CHECK_ICON = require("../assets/images/Check.png");
@@ -263,19 +262,13 @@ export function RewardAdModal({
       ? appFontFamilyForText("noto_sans_kr", "bold")
       : undefined;
 
-  const [mounted, setMounted] = useState(visible);
   const overlayOpacity = useSharedValue(visible ? 1 : 0);
-  const wasVisibleRef = useRef(visible);
   const pendingAfterCloseRef = useRef<(() => void) | null>(null);
-
   const frameRef = useRef<number | null>(null);
-  const handleFullyClosed = useCallback(() => {
-    setMounted(false);
-  }, []);
 
-  // Schedule only after React has committed removal of the overlay.
+  // `visible=false` already committed a null render. Only then may an ad open.
   useEffect(() => {
-    if (mounted || !pendingAfterCloseRef.current) return;
+    if (visible || !pendingAfterCloseRef.current) return;
     frameRef.current = requestAnimationFrame(() => {
       frameRef.current = null;
       const after = pendingAfterCloseRef.current;
@@ -286,7 +279,7 @@ export function RewardAdModal({
       if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
       frameRef.current = null;
     };
-  }, [mounted]);
+  }, [visible]);
 
   useEffect(() => {
     const cancelPending = () => {
@@ -307,28 +300,23 @@ export function RewardAdModal({
 
   useEffect(() => {
     if (visible) {
-      setMounted(true);
       overlayOpacity.value = withTiming(1, { duration: 180 });
-    } else if (wasVisibleRef.current) {
-      overlayOpacity.value = withTiming(0, { duration: 180 }, (finished) => {
-        if (finished) {
-          scheduleOnRN(handleFullyClosed);
-        }
-      });
+    } else {
+      // Do not retain a fading card after close. Reset only for the next open.
+      overlayOpacity.value = 0;
     }
-    wasVisibleRef.current = visible;
-  }, [visible, overlayOpacity, handleFullyClosed]);
+  }, [visible, overlayOpacity]);
 
   //mount 시, 현재 screen의 뒤로가기 이벤트 리스너 등록
   useEffect(() => {
-    if (!mounted) return;
+    if (!visible) return;
     //true로 마지막에 등록된 handler 호출
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
       handleCancel();
       return true;
     });
     return () => sub.remove();
-  }, [mounted, handleCancel]);
+  }, [visible, handleCancel]);
 
   const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
 
@@ -340,7 +328,7 @@ export function RewardAdModal({
     onClose();
   };
 
-  if (!mounted) return null;
+  if (!visible) return null;
 
   return (
     <Animated.View

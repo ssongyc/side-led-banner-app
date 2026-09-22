@@ -33,7 +33,7 @@ const DEFAULT_MAX_TEXT_HEIGHT_RATIO = {
  * 말풍선 원본 아트보드(px) 기준 텍스트 박스 layout.
  * landscape 전체화면: top·height = viewportHeight × 비율
  */
-export const SPEECH_BG_TEXT_LAYOUT = {
+const SPEECH_BG_TEXT_LAYOUT = {
   nameBg: SIGN_BOARD_TEXT_LAYOUT,
   locationBg: SIGN_BOARD_TEXT_LAYOUT,
   todayBg: SIGN_BOARD_TEXT_LAYOUT,

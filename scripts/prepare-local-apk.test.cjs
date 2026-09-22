@@ -14,7 +14,7 @@ const sha = b => crypto.createHash('sha256').update(b).digest('hex');
 function fixture() {
   const source = {
     'app.json': JSON.stringify({expo:{version:'1.0.0',android:{versionCode:1},ios:{x:1},icon:'./assets/icon.png'}}, null, 2)+'\n',
-    'package.json':'{\n  "dependencies": {"example":"1.0.0"}\n}\n',
+    'package.json':'{\n  "version": "1.0.0",\n  "dependencies": {"example":"1.0.0"}\n}\n',
     'package-lock.json':'{\n  "lockfileVersion":3\n}\n',
     '.npmrc':'audit=false\n',
     'app.config.js':'module.exports = {};\n',
@@ -76,7 +76,21 @@ function fixture() {
     old.nativeHash=sha(digest(native,true)+environment+toolchain+'production');
     put(path.join(target,'.source-state.json'),JSON.stringify(old));
   };
-  return {names,put,get,run,ready,legacy,state,plan,remove:name=>{names.splice(names.indexOf(name),1);files.delete(key(path.join(root,name)));},change:(name,text)=>put(path.join(root,name),text),target:p=>path.join(target,p)};
+  const priorSchema=()=>{
+    const dependency=['package.json','package-lock.json','.npmrc','patches/demo.patch'];
+    const native=[...dependency,'app.json','advertising.config.json','app.config.js','plugins/demo.js','modules/demo/Main.kt','assets/icon.png'];
+    const digest=(list,nativeConfig)=>sha(JSON.stringify([...new Set(list)].sort().map(n=>{
+      let b=get(path.join(target,n));
+      if(n==='app.json') {const app=JSON.parse(b);if(nativeConfig){delete app.expo.version;delete app.expo.android.versionCode;delete app.expo.ios;delete app.expo.web;}b=Buffer.from(JSON.stringify(app));}
+      return [n,sha(b)];
+    })));
+    const previous=state();previous.dependencyHashSchema=1;previous.dependencyHash=digest(dependency,false);previous.nativeHashSchema=3;
+    const environment=sha(JSON.stringify([]));
+    const toolchain=sha(JSON.stringify(['v22.0.0',[jdk,sha('fixture-jdk')]]));
+    previous.nativeHash=sha(digest(native,true)+environment+toolchain+'production');
+    put(path.join(target,'.source-state.json'),JSON.stringify(previous));
+  };
+  return {names,put,get,run,ready,legacy,priorSchema,state,plan,remove:name=>{names.splice(names.indexOf(name),1);files.delete(key(path.join(root,name)));},change:(name,text)=>put(path.join(root,name),text),target:p=>path.join(target,p)};
 }
 function flags(plan,install,native){assert.equal(plan.installRequired,install);assert.equal(plan.nativeRequired,native);}
 test('fresh preparation requires both phases; a successful unchanged fixture reuses both',()=>{const f=fixture();flags(f.run(),true,true);f.ready();flags(f.run(),false,false);});
@@ -87,7 +101,7 @@ for(const legacy of [false,true]) test(`LF/CRLF reuse and byte-exact provenance 
   const inventory=JSON.parse(f.get(f.target('source-inputs.json')));
   assert.equal(inventory.files['package.json'],sha(f.get(path.join(root,'package.json'))));
   assert.deepEqual(f.get(f.target('package.json')),f.get(path.join(root,'package.json')));
-  assert.equal(f.state().dependencyHashSchema,1);assert.equal(f.state().nativeHashSchema,3);
+  assert.equal(f.state().dependencyHashSchema,2);assert.equal(f.state().nativeHashSchema,4);
   flags(f.run(),false,false);
 });
 for(const [name,value,install,native] of [
@@ -108,6 +122,8 @@ test('toolchain drift invalidates legacy native migration',()=>{const f=fixture(
 test('unknown schemas cannot be reused',()=>{const f=fixture();f.ready();const s=f.state();s.dependencyHashSchema=999;s.nativeHashSchema=999;f.put(f.target('.source-state.json'),JSON.stringify(s));flags(f.run(),true,true);});
 test('ad profile changes require native preparation',()=>{const f=fixture();f.ready();flags(f.run('prepare',{LEDPOP_AD_PROFILE:'test'}),false,true);});
 test('Android version-only changes preserve native reuse',()=>{const f=fixture();f.ready();const app=JSON.parse(f.get(path.join(root,'app.json')));app.expo.version='1.0.1';app.expo.android.versionCode=2;f.change('app.json',JSON.stringify(app));flags(f.run(),false,false);assert.equal(f.plan().versionCode,2);});
+test('root package metadata version-only changes preserve dependency and native reuse',()=>{const f=fixture();f.ready();const pkg=JSON.parse(f.get(path.join(root,'package.json')));pkg.version='1.0.1';f.change('package.json',JSON.stringify(pkg));flags(f.run(),false,false);});
+test('schema 1 and 3 migrate after a root package version-only change',()=>{const f=fixture();f.ready();f.priorSchema();const pkg=JSON.parse(f.get(path.join(root,'package.json')));pkg.version='1.0.1';f.change('package.json',JSON.stringify(pkg));flags(f.run(),false,false);assert.equal(f.state().dependencyHashSchema,2);assert.equal(f.state().nativeHashSchema,4);});
 test('invalid UTF-8 source is not decoded and normalized',()=>{const f=fixture();f.change('plugins/demo.js',Buffer.from([255,13,10]));f.ready();f.change('plugins/demo.js',Buffer.from([255,10]));flags(f.run(),false,true);});
 
 test('CRLF legacy snapshot migrates to LF source without rebuilding',()=>{
