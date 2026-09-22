@@ -16,7 +16,7 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-export interface UseMarqueeAnimationParams {
+interface UseMarqueeAnimationParams {
   isActive?: boolean;
   /** Style B(lineClear)*/
   viewportWidthPx?: number;

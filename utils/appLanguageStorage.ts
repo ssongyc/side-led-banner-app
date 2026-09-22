@@ -5,7 +5,7 @@ import {
 } from "@/constants/language";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export const APP_LANGUAGE_STORAGE_KEY = "@led_banner_app_language_v1";
+const APP_LANGUAGE_STORAGE_KEY = "@led_banner_app_language_v1";
 
 function isAppLocaleKey(value: string): value is AppLocaleKey {
   return (APP_LOCALE_KEYS as readonly string[]).includes(value);

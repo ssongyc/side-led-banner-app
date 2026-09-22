@@ -1,13 +1,13 @@
 import type { AppLocaleKey } from "@/constants/language";
 
 /** 1줄도트기준px용 */
-export const PIXEL_LED_DOT_SIZE_PX = 6;
+const PIXEL_LED_DOT_SIZE_PX = 6;
 /** 다줄도트기준px용 */
-export const PIXEL_LED_DOT_SIZE_PX_MULTILINE = 6;
+const PIXEL_LED_DOT_SIZE_PX_MULTILINE = 6;
 /** 슬라이더100%기준px용 */
-export const PIXEL_LED_REF_FONT_PX = 100;
+const PIXEL_LED_REF_FONT_PX = 100;
 
-export type PixelFontCircleGrid = "galmuri11";
+type PixelFontCircleGrid = "galmuri11";
 
 function resolveReferencePixelLedDotPx(
   playOption: "one" | "multi",
@@ -110,7 +110,7 @@ export function resolvePixelBackgroundShaderSizePx(params: {
   return resolveReferencePixelLedDotPx(params.playOption);
 }
 
-export type PixelTextShaderUniforms = {
+type PixelTextShaderUniforms = {
   textThreshold: number;
   panelAlphaThreshold: number;
   dotRadiusScale: number;

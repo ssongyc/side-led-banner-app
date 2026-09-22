@@ -1,7 +1,7 @@
 import type { AppLocaleKey } from "@/constants/language";
 import type { PremiumNotice } from "@/utils/ApiClient";
 
-export type PremiumLabelKey = PremiumNotice | "loading" | "purchasing" | "restoring" | "owned" | "retry";
+type PremiumLabelKey = PremiumNotice | "loading" | "purchasing" | "restoring" | "owned" | "retry";
 const labels: Record<PremiumLabelKey, Record<AppLocaleKey, string>> = {
   "loading": {
     "ko": "스토어 확인 중…",

@@ -38,19 +38,19 @@ export type FontId =
   | "tsanger_shuyuan"
   | "arimo";
 
-export interface RemoteFontMarker {
+interface RemoteFontMarker {
   remote: RemoteFontId;
   weight: "regular" | "bold";
 }
 
 export type FontAssetSource = number | RemoteFontMarker;
 
-export interface FontFaceSet {
+interface FontFaceSet {
   regular: FontAssetSource;
   bold: FontAssetSource;
 }
 
-export interface FontDropdownItem {
+interface FontDropdownItem {
   label: string;
   value: FontId;
 }
@@ -139,14 +139,14 @@ const fusionPixelZhHant = singleFace(
 );
 
 /** Galmuri픽셀폰트ID용 (ko/en/ja/fr/es) */
-export const GALMURI11_FONT_ID = "galmuri11" as const satisfies FontId;
+const GALMURI11_FONT_ID = "galmuri11" as const satisfies FontId;
 
 /** zhSC 픽셀폰트ID용 — Galmuri11과 동일한 12px 그리드(upm 1200) */
-export const FUSION_PIXEL_ZH_HANS_FONT_ID =
+const FUSION_PIXEL_ZH_HANS_FONT_ID =
   "fusion_pixel_zh_hans" as const satisfies FontId;
 
 /** zhTC 픽셀폰트ID용 — Galmuri11과 동일한 12px 그리드(upm 1200) */
-export const FUSION_PIXEL_ZH_HANT_FONT_ID =
+const FUSION_PIXEL_ZH_HANT_FONT_ID =
   "fusion_pixel_zh_hant" as const satisfies FontId;
 
 /** 폰트에셋맵용 */
@@ -187,7 +187,7 @@ export const APP_FONT_FACE_SETS: Record<FontId, FontFaceSet> = {
   arimo,
 };
 
-export const APP_FONT_ITEMS_BY_LOCALE: Record<AppLocaleKey, FontDropdownItem[]> =
+const APP_FONT_ITEMS_BY_LOCALE: Record<AppLocaleKey, FontDropdownItem[]> =
   {
     en: [
       { label: "Montserrat", value: "montserrat" },
@@ -282,7 +282,7 @@ export function normalizeFontId(
 }
 
 /** 픽셀전용폰트용 */
-export const FONTS_HIDDEN_FROM_PICKER = new Set<FontId>([
+const FONTS_HIDDEN_FROM_PICKER = new Set<FontId>([
   "galmuri11",
   "fusion_pixel_zh_hans",
   "fusion_pixel_zh_hant",
@@ -474,8 +474,8 @@ export function getFontAssetIds(ids: FontId[]): number[] {
   return assets;
 }
 
-export const APP_THEME_FONT_FAMILY = "AppTheme";
-export const APP_THEME_FONT_FAMILY_BOLD = "AppTheme-Bold";
+const APP_THEME_FONT_FAMILY = "AppTheme";
+const APP_THEME_FONT_FAMILY_BOLD = "AppTheme-Bold";
 
 export const APP_THEME_FONT_ASSETS: Record<string, number> = {
   [APP_THEME_FONT_FAMILY]: require("../assets/fonts/Tektur/static/Tektur-Regular.ttf"),

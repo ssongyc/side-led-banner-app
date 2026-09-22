@@ -86,7 +86,7 @@ function lineLayoutsToGlyphs(
   return out;
 }
 
-export interface UsePreviewPanelCanvasParams {
+interface UsePreviewPanelCanvasParams {
   displayText: string;
   translateX: SharedValue<number>;
   onTextLayout: (e: TextLayoutEvent) => void;

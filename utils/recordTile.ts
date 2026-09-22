@@ -19,7 +19,7 @@ import {
 
 const DROP_SHADOW_RGBA = Skia.Color("rgba(0, 0, 0, 0.5)");
 
-export type MarqueeTileLayerMode = "full" | "glowOnly" | "textOnly";
+type MarqueeTileLayerMode = "full" | "glowOnly" | "textOnly";
 
 function drawTextBlobs(
   canvas: ReturnType<ReturnType<typeof Skia.PictureRecorder>["beginRecording"]>,
@@ -31,7 +31,7 @@ function drawTextBlobs(
   }
 }
 
-export type RecordMarqueeTileParams = {
+type RecordMarqueeTileParams = {
   blob: SkTextBlob;
   /** ja 혼합 폰트 등 — `blob` 대신 전부 그림 */
   textBlobs?: SkTextBlob[];

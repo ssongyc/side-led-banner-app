@@ -1,6 +1,6 @@
 const MIN_FONT_FILE_BYTES = 1024;
 
-export function hasSupportedFontSignature(bytes: Uint8Array): boolean {
+function hasSupportedFontSignature(bytes: Uint8Array): boolean {
   if (bytes.length < 4) return false;
   const signature = String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]);
   return (

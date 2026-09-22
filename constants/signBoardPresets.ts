@@ -32,7 +32,7 @@ export const SIGN_BOARD_PRESETS = {
   },
 } as const;
 
-export type SignBoardPresetId = keyof typeof SIGN_BOARD_PRESETS;
+type SignBoardPresetId = keyof typeof SIGN_BOARD_PRESETS;
 export function isSignBoardPreset(id: string): id is SignBoardPresetId {
   return Object.prototype.hasOwnProperty.call(SIGN_BOARD_PRESETS, id);
 }

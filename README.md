@@ -29,7 +29,7 @@
 
 **compile-ok**: bd567b0 + 광고 모듈 버전 설정 수정. 실제 AdMob production 프로필과 기존 서명으로 빌드했습니다. 최종 재개 Gradle 13m 46s이며 앞선 네이티브 컴파일 시간은 별도입니다.
 
-- [APK](artifacts/releases/LEDPOP-1.0.6-24-bd567b0/app-release.apk), [AAB](artifacts/releases/LEDPOP-1.0.6-24-bd567b0/app-release.aab), [검증·해시·제한 보고서](docs/ANDROID_RELEASE_1.0.6_24.md).
+- APK/AAB는 당시 로컬 `artifacts/releases/LEDPOP-1.0.6-24-bd567b0/`에 생성됐지만 현재 작업 폴더에는 보존되어 있지 않습니다. [검증·해시·제한 보고서](docs/ANDROID_RELEASE_1.0.6_24.md)는 유지합니다.
 - SDK 36, Billing 9.1.0, 4개 ABI/16KB 정렬, 기존 인증서, AAB 동일 빌드 R8 매핑 검증 통과. 실제 광고 설정·네이티브 모듈과 아이콘 13개 포함, 웹 진단·Pro 화면 제외를 확인했습니다.
 - 별도 스플래시 수정은 보존·제외했습니다. 새 APK 실기기 QA·광고 노출·Play 제출·versionCode 중복·Play 매핑 등록은 미검증입니다. 빌드 중 필요한 추가 수정과 검증 문서는 후속 소스 전달에 포함합니다.
 
@@ -37,7 +37,7 @@
 
 **compile-ok**: 확정 앱 소스 e58e9aa, 최종 Gradle 12m 40s (120 executed / 1047 up-to-date). 기존 인증서, SDK 36, Billing 9.1.0, 4개 ABI, 16KB 정렬 및 AAB 동일 빌드 R8 8.13.23 매핑 검증을 통과했습니다.
 
-- [APK](artifacts/releases/LEDPOP-1.0.6-23-e58e9aa/app-release.apk), [AAB](artifacts/releases/LEDPOP-1.0.6-23-e58e9aa/app-release.aab), [검증·해시·제한 보고서](docs/ANDROID_RELEASE_1.0.6_23.md).
+- APK/AAB는 당시 로컬 `artifacts/releases/LEDPOP-1.0.6-23-e58e9aa/`에 생성됐지만 현재 작업 폴더에는 보존되어 있지 않습니다. [검증·해시·제한 보고서](docs/ANDROID_RELEASE_1.0.6_23.md)는 유지합니다.
 - 별도 RootLayout 스플래시 수정은 사용자 선택에 따라 보존하되 빌드에서 제외했습니다. 성능 후속 수정과 Pro 화면 제외는 포함됩니다.
 - 새 최적화 APK 실기기 QA·Play 업로드/검수·versionCode 중복 확인·Play 매핑 등록은 미실행입니다. 외부 Google Play 광고 종료 창의 내비게이션 바 노출은 미해결입니다.
 
@@ -66,7 +66,7 @@ SM-M336K(Android 16)에서 미리보기·전체 화면 성능 및 주요 기능 
 ## 이전 내부 APK — edaf82b 기준 (2026-09-08)
 
 - **compile-ok**: BUILD SUCCESSFUL in **7m 5s**, 1188 tasks 중 83 executed / 1105 up-to-date. 이전 전체 빌드 40m 57s 대비 약 83% 단축. Gradle 구간 비교이며 준비·검증 시간은 별도입니다.
-- [APK 다운로드](artifacts/LedPop-V1.0.6-edaf82b.apk): 286783382 bytes, SHA-256 `126bbddd5bbb4a91b8022ba1f654241e1a391557bee700f703306e4fa3696aff`.
+- APK는 당시 로컬 `artifacts/LedPop-V1.0.6-edaf82b.apk`에 생성됐지만 현재 작업 폴더에는 보존되어 있지 않습니다. 기록 크기 286783382 bytes, SHA-256 `126bbddd5bbb4a91b8022ba1f654241e1a391557bee700f703306e4fa3696aff`.
 - 앱 소스 main edaf82b22d0d97a01e879eec9dc027d043f811c6. 빌드 준비 스크립트의 SDK 메타데이터 경로만 로컬에서 수정했습니다. 존재하지 않는 SDK 루트 packages.xml 대신 설치 패키지별 source.properties를 읽습니다. 해당 수정은 이후 675f492에 커밋했으며 앱 기능 변경은 없습니다.
 - 의존성 설치·네이티브 재생성 없이 고정 artifacts/b 재사용. 내부 버전 1.0.6 / versionCode 22, package com.minkyokim.sideledbannerapp, minSdk 24 / compileSdk 36 / targetSdk 36, ARM64·ARMv7·x86·x86_64 확인.
 - 기존 인증서 SHA-256 730173560958735BF237CA84BA4F35BBE76A6734986929EB65F6CED63D3FD893와 APK v2 서명 일치, zipalign -P 16 통과. debuggable·CAMERA·RECORD_AUDIO 없음. ZIP 정렬 검증은 모든 기기의 실행 검증을 의미하지 않습니다.
@@ -79,7 +79,7 @@ SM-M336K(Android 16)에서 미리보기·전체 화면 성능 및 주요 기능 
 ## 이전 생성 APK — 85a61d6 기준
 
 - compile-ok: C:/dev/Led Banner/artifacts/b에서 BUILD SUCCESSFUL in 40m 57s, 1188 actionable tasks 모두 실행. 전체 2015줄 로그를 보존하고 오류 및 경고를 검토했습니다.
-- APK: [LedPop-V1.0.6-Expo57-85a61d6.apk](artifacts/LedPop-V1.0.6-Expo57-85a61d6.apk), 286,760,890 bytes. SHA-256: 7FC942663CB4F9D75B446730DED073CEB04C460337490935FC7CDB5D95829D65.
+- APK는 당시 로컬 `artifacts/LedPop-V1.0.6-Expo57-85a61d6.apk`에 생성됐지만 현재 작업 폴더에는 보존되어 있지 않습니다. 기록 크기 286,760,890 bytes, SHA-256: 7FC942663CB4F9D75B446730DED073CEB04C460337490935FC7CDB5D95829D65.
 - 앱 소스: main 85a61d61428ed01114c97e0839f3e5f243d86818. 내부 설치용 versionName 1.0.6 / versionCode 22 유지. 이번 빌드 경로 수정은 빌드 래퍼에만 적용했고 실행한 래퍼를 artifacts/apk-85a61d6-build-wrapper.ps1로 보존했습니다.
 - 실제 APK 검증: 기존 인증서 SHA-256 730173560958735BF237CA84BA4F35BBE76A6734986929EB65F6CED63D3FD893와 v2 서명 일치, package com.minkyokim.sideledbannerapp, minSdk 24, compileSdk/targetSdk 36/36, ARM64/ARMv7/x86/x86_64, ZIP 16KB 정렬 통과. debuggable·CAMERA·RECORD_AUDIO 선언 없음.
 - 실제 Metro 소스맵에서 Pro 화면 및 설정 진입점 제외, showArrows=false와 undo/redo 아이콘 변경 포함을 확인했습니다. 생성된 Hermes 번들과 APK 내 번들 해시도 일치합니다. 소스맵 및 기계 판독 결과는 빌드 폴더와 artifacts/apk-85a61d6-bundle-checks.json에 보존합니다.
@@ -132,9 +132,10 @@ Upgrade to Pro 설정 항목과 `/premium` 라우트는 제외했습니다. 구�
 사용자가 APK 빌드를 요청하면 메인 작업 폴더에서 다음 래퍼를 실행합니다. 이 명령은 준비 후 실제 컴파일까지 수행합니다.
 
 ```powershell
-& '.\scripts\build-local-apk.ps1'
+pwsh -NoProfile -File .\scripts\build-local-apk.ps1
 ```
 
+- PowerShell 7 이상만 지원합니다. 래퍼는 Windows PowerShell 5.1에서 빌드 준비 전에 중단합니다. 네이티브 도구의 stderr 경고는 로그로 보존하고 각 호출 직후 캡처한 종료 코드로 성공·실패를 판정합니다.
 - Windows 메모리와 실행 중인 Gradle/Flutter/Expo·EAS CLI 빌드를 먼저 확인합니다. 여유 물리 메모리가 4GiB 미만이거나 다른 빌드가 감지되거나 조회할 수 없으면 중단합니다. 프로세스를 종료하거나 자동 대기·재시도하지 않습니다. 이 점검은 Gradle 실행 직전에도 반복합니다. 4GiB는 보수적인 시작 기준이며 빌드 중 메모리 여유를 보장하지 않습니다. 기존 서명 인증서를 확인하고 같은 프로젝트의 동시 빌드를 막는 잠금을 확보합니다.
 - 이전 APK·로그·소스 기록을 `artifacts/apk-runs/<실행 ID>/`에 보존합니다.
 - `prepare-local-apk.cjs`가 Git 관리 파일과 Git에서 제외하지 않은 새 파일을 수집하고 추가·수정·삭제를 동기화합니다. 내용이 같은 파일은 다시 쓰지 않습니다. 삭제는 이전 소스 목록에 포함된 파일에만 적용합니다. 환경 파일·서명 키·생성 출력은 동기화 대상이 아닙니다.
@@ -359,7 +360,7 @@ side-led-banner-app/
 
 ## 스토어 버전과 제출 상태
 
-Play Console의 현재 출시 버전과 최대 versionCode는 확인하지 못했습니다. 로컬에서는 1.1.0 (28) APK/AAB까지 생성하고 정적 검증했으며, 현재 1.1.1 (29) 소스는 아직 빌드하지 않았습니다. 파일 생성은 업로드·심사 제출·승인을 의미하지 않습니다. 향후 제출 시 Play Console의 실제 최대 versionCode와 동일 빌드 매핑 등록 여부를 별도로 확인해야 합니다.
+Play Console의 현재 출시 버전과 최대 versionCode는 확인하지 못했습니다. 현재 소스 설정은 1.1.2 (29)이며, 최근 기록된 로컬 APK/AAB는 빌드 시 versionCode를 30으로 지정해 생성·정적 검증했습니다. 파일 생성은 업로드·심사 제출·승인을 의미하지 않습니다. 향후 제출 시 Play Console의 실제 최대 versionCode와 동일 빌드 매핑 등록 여부를 별도로 확인해야 합니다.
 
 TypeScript 검증은 node_modules와 생성 산출물 artifacts를 제외합니다. 과거 빌드 복사본을 현재 소스로 중복 검사하지 않도록 범위를 고정했습니다.
 
@@ -459,9 +460,9 @@ APK 전달 파일명은 실제 versionName 기준 `<AppName>V<점 없는 버전>
 
 ## 출시 검증 통합 및 R8 조사 — 2026-09-12
 
-IncludeBundle 출시 빌드는 새 단일 검증 스크립트로 기존 서명·매니페스트·광고·SDK/Billing·ABI·정렬·동일 빌드 매핑 검사를 수행하도록 연결했습니다. 반복 SDK 호출과 압축 파일 분석을 통합하며 Python 3.11 이상이 필요합니다. MeasureBuild에서는 R8 재실행 입력 사유를 추가 기록합니다. 최근 R8 실행에는 버전 변경이 포함됐으며, 불필요한 R8 실행으로 확정하지 않았습니다. 이번 변경은 빌드·린트·테스트 미실행 상태이고 추가 단축 효과는 미측정입니다. [상세 변경과 다음 확인 항목](docs/ANDROID_BUILD_OPTIMIZATION.md)을 참고하세요.
+IncludeBundle 출시 빌드는 단일 검증 스크립트로 기존 서명·매니페스트·광고·SDK/Billing·ABI·정렬·동일 빌드 매핑 검사를 수행합니다. APK/AAB 압축 파일은 각각 한 번 열어 재사용하며, 서로 독립적인 외부 서명·메타데이터·정렬 검사는 최대 2개만 병렬 실행합니다. 검증 항목, 실패 처리, 개별 출력과 소요 시간 기록은 유지하며 Python 3.11 이상이 필요합니다. MeasureBuild에서는 R8 재실행 입력 사유를 추가 기록합니다. 최근 R8 실행에는 버전 변경이 포함됐으며, 불필요한 R8 실행으로 확정하지 않았습니다. 검증 병렬화는 소스 검토만 완료했고 실제 시간 단축은 다음 승인된 빌드에서 측정해야 합니다. [상세 변경과 다음 확인 항목](docs/ANDROID_BUILD_OPTIMIZATION.md)을 참고하세요.
 
-출시 빌드 비교용 선택 옵션 `-ConfigurationCache`, `-ReuseDaemon`, `-GradleWorkers 1|2`를 추가했습니다. 기본값은 기존 단일 worker와 비재사용 Daemon이며 Configuration Cache는 꺼져 있습니다. 적용 검증 순서는 5 → 3 → 4이며, 호환성·메모리·속도 비교는 아직 실행하지 않았습니다. [비교 절차](docs/ANDROID_BUILD_OPTIMIZATION.md)를 참고하세요.
+출시 빌드의 안전 기본값은 Configuration Cache 끔, 비재사용 Daemon, Gradle worker 1개입니다. Configuration Cache는 생성된 Expo/React Native Gradle 설정이 구성 단계에서 Node 프로세스를 실행하여 엄격 모드 검증에 실패했으므로 출시 빌드에 사용하지 않습니다. 일반 APK/AAB 생성에서는 `-MeasureBuild`를 생략하고, 네이티브 입력이 그대로인 JS/UI 변경에만 `-ResumeNative`를 사용합니다. AAB를 한 번 빌드한 뒤 동일 AAB에서 universal APK를 만드는 기존 방식과 모든 검증을 유지합니다. [현재 권장 절차](docs/ANDROID_BUILD_OPTIMIZATION.md)를 참고하세요.
 
 ## 버전 변경 — V1.1.1
 
@@ -531,7 +532,7 @@ The latest Android release attempt stopped before compilation at the memory gate
 
 ## V1.1.2(30) local production artifacts — 2026-09-20
 
-The resumed release build completed with production AdMob configuration. [APK](artifacts/apk-runs/20260920-214301-06a96479/apk-deliveries/20260920-221325-a469783981654127bce1bb849220f2a9/LedPopV112.apk) and [AAB](artifacts/apk-runs/20260920-214301-06a96479/aab-deliveries/20260920-221250-7ad974c510f646b596d28ec6c90fdc1e/LedPopV112.aab) passed local signature/version/SDK/ads/ABI/alignment/mapping checks. Build source: 64db761 plus the then-uncommitted Expo Router import correction in bannerAd.tsx, included in this final source delivery. VersionCode 30 is a build override; app.json remains 29. Device QA, live ad serving and all-track Play code eligibility remain outstanding. See [timing, hashes, warnings and verification limits](docs/ANDROID_BUILD_OPTIMIZATION.md#successful-local-v11230-export--2026-09-20).
+The resumed release build completed with production AdMob configuration. The APK and AAB were written under local `artifacts/apk-runs/20260920-214301-06a96479/` but are not retained in the current workspace; the recorded local signature/version/SDK/ads/ABI/alignment/mapping checks passed. Build source: 64db761 plus the then-uncommitted Expo Router import correction in bannerAd.tsx, included in this final source delivery. VersionCode 30 is a build override; app.json remains 29. Device QA, live ad serving and all-track Play code eligibility remain outstanding. See [timing, hashes, warnings and verification limits](docs/ANDROID_BUILD_OPTIMIZATION.md#successful-local-v11230-export--2026-09-20).
 
 ## Next Android build preparation
 
@@ -580,3 +581,5 @@ Git 관리 소스의 참조를 확인하여 `utils/fontPreload.ts` 내부에서�
 ## 미사용 API·README 정리 — 2026-09-22
 
 외부 참조가 없는 SettingsFooter와 입력창 내부 치수 상수 CONTENTS_INPUT_LINE_HEIGHT·CONTENTS_INPUT_VIEWPORT_MARGIN의 export를 제거했습니다. 구현과 실행 동작은 유지합니다. 삭제할 미사용 실행 파일은 확인하지 못했으며 플랫폼별 구현·QA 도구·명시적으로 보관한 Premium 화면·기존 산출물은 유지했습니다. 최신 산출물과 QA 기준을 9월 22일로 갱신했습니다. 이번 정리에서는 빌드·린트·테스트·커밋·푸시를 실행하지 않았습니다.
+
+후속 정적 참조 조사에서 외부 소비자가 없는 내부 타입·상수·보조 함수 45개의 불필요한 export를 제거했습니다. 구현과 실행 동작은 유지합니다. 앱 라우트 기준으로 도달하지 않는 실행 소스는 발견되지 않았으며, 의도적으로 비활성 보관 중인 Premium 화면과 그 API, QA 하네스가 사용하는 `getAdTrace`, 플랫폼별 구현과 원본 자산은 유지했습니다. 하단의 오래된 1.1.1 미빌드 설명은 현재 소스 1.1.2 (29)와 최근 로컬 산출물 1.1.2 (30) 기록에 맞췄습니다.

@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export const PRESET_SLOTS_STORAGE_KEY = "@led_banner_preset_slots_v1";
+const PRESET_SLOTS_STORAGE_KEY = "@led_banner_preset_slots_v1";
 
 export async function readPresetSlotsJson(): Promise<string | null> {
   return AsyncStorage.getItem(PRESET_SLOTS_STORAGE_KEY);

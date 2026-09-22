@@ -13,7 +13,7 @@ type SpeechBubbleId = NonNullable<
   ReturnType<typeof getSizingPolicy>["speechBubbleId"]
 >;
 
-export type SpeechBubbleInput = {
+type SpeechBubbleInput = {
   speechBubbleId: SpeechBubbleId | null;
   effectId: string;
   isPortrait: boolean;

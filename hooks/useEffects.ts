@@ -21,7 +21,7 @@ import {
 import { computeEffectSpace } from "@/utils/recordTile";
 import { useMemo } from "react";
 
-export type EffectsInput = {
+type EffectsInput = {
   fontSizePx?: number;
 };
 

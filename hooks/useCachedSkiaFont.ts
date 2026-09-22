@@ -12,7 +12,7 @@ import { Image } from "react-native";
  * 동시에 쓸 때마다 TTF를 매번 새로 디코딩합니다. 여기서는 asset(require id) 기준으로
  * 앱 전역에 한 번만 디코딩해서 공유합니다.
  */
-export type FontAssetRef = number | string;
+type FontAssetRef = number | string;
 
 const typefaceCache = new Map<FontAssetRef, SkTypeface | null>();
 const pendingTypefaceLoads = new Map<FontAssetRef, Promise<SkTypeface | null>>();

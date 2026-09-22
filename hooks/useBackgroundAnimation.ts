@@ -12,7 +12,7 @@ import {
 import { useSettingsAppearance } from "@/contexts/settingsContext";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-export type BackgroundEffectPreset =
+type BackgroundEffectPreset =
   | "none"
   | "effect1"
   | "heartBgA"

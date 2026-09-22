@@ -25,7 +25,7 @@ type TextMetricsBase = {
   speechMaxHeight: number;
 };
 
-export type TextMetricsInput =
+type TextMetricsInput =
   | (TextMetricsBase & { mode: "preview"; previewHeight: number })
   | (TextMetricsBase & {
       mode: "fullscreen";

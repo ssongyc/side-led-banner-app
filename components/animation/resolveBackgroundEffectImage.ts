@@ -11,7 +11,7 @@ const HEART_BG_PAD_PORTRAIT_SOURCE = require("@/assets/images/Heart_BG_V_12.9.pn
 
 export type BackgroundEffectImageMode = "preview" | "fullscreen";
 
-export type Effect1ImageRect = {
+type Effect1ImageRect = {
   x: number;
   y: number;
   width: number;

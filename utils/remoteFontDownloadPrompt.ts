@@ -9,7 +9,7 @@ import {
   isRemoteFontSetDownloaded,
 } from "@/utils/remoteFontLoader";
 
-export interface FontDownloadPromptState {
+interface FontDownloadPromptState {
   visible: boolean;
   progress: number;
   fontId: FontId | null;

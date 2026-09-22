@@ -73,7 +73,7 @@ import React, {
 //Banner content, appearance, background, motion 설정을 담는 context
 // UI State
 export type TabType = "TEXT" | "BACKGROUND" | "EFFECT";
-export interface UIState {
+interface UIState {
   isPlaying: boolean;
   activeTab: TabType;
   /** 선택된 프리셋 버튼 (0~4) */

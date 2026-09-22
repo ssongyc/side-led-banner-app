@@ -27,7 +27,7 @@ export const SETTINGS_SHEET_LOCALE_ORDER: readonly AppLocaleKey[] = [
   "es",
 ];
 
-export type SheetLocaleKey = AppLocaleKey;
+type SheetLocaleKey = AppLocaleKey;
 
 /** 실제 값 추출 시작하는 인덱스 */
 const COL_B_INDEX = 1;
@@ -119,7 +119,7 @@ function parsePublishedSheetCsv(
   return { sheetVersion, headerLabelsB1F, rows };
 }
 
-export type UseGoogleSheetsResult = {
+type UseGoogleSheetsResult = {
   data: GoogleSheetParseResult | null;
   loading: boolean;
   error: Error | null;

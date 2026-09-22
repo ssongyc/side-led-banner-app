@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 import * as amplitude from "@amplitude/analytics-react-native";
 import { File } from "expo-file-system";
 
-export interface BinaryRequestOptions {
+interface BinaryRequestOptions {
   signal?: AbortSignal;
   onProgress?: (fraction: number) => void;
 }
@@ -92,7 +92,7 @@ export async function fetchText(url: string): Promise<string> {
 
 export type PremiumNotice = "unavailable" | "error" | "cancelled" | "pending" |
   "purchased" | "restored" | "nothingToRestore" | "verificationFailed";
-export type PremiumSnapshot = {
+type PremiumSnapshot = {
   entitlement: "unknown" | "free" | "owned";
   operation: "idle" | "loading" | "purchasing" | "restoring";
   product: Product | null;

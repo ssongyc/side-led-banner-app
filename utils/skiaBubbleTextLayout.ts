@@ -9,15 +9,15 @@ export const BUBBLE_SAFE = {
 
 export const BUBBLE_MAX_ROWS = 3;
 
-export type BubbleGlyph = { x: number; y: number; text: string };
+type BubbleGlyph = { x: number; y: number; text: string };
 
-export type BubbleRowLayout = {
+type BubbleRowLayout = {
   text: string;
   width: number;
   glyphs: { x: number; text: string }[];
 };
 
-export type BubbleLayoutOpts = {
+type BubbleLayoutOpts = {
   frameWidth: number;
   frameHeight: number;
   safeWRatio?: number;

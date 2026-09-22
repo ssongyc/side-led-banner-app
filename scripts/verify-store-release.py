@@ -1,5 +1,6 @@
 """One-pass local store artifact checks. Never builds, installs, signs or uploads."""
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
 import os
@@ -61,33 +62,50 @@ def verify(args, out, report):
     env = dict(os.environ, JAVA_HOME=str(args.java_home))
     bt = args.sdk / "build-tools" / "36.1.0"
     java = args.java_home / "bin"
-    def run(name, command):
+    def run_external(item):
+        name, command = item
         started = time.monotonic()
         proc = subprocess.run([str(x) for x in command], env=env,
                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        text = proc.stdout.decode("utf-8", errors="replace")
-        (out / name).write_text(text, encoding="utf-8")
-        report["toolSeconds"][name] = time.monotonic() - started
-        check(name, proc.returncode == 0)
-        return text
+        return name, proc.returncode, proc.stdout.decode("utf-8", errors="replace"), time.monotonic() - started
     cert = "730173560958735bf237ca84ba4f35bbe76a6734986929eb65f6ced63d3fd893"
-    sig = run("apk-signature.txt", [bt / "apksigner.bat", "verify", "--verbose", "--print-certs", apk_path])
+    tool_commands = [
+        ("aab-signature.txt", [java / "jarsigner.exe", "-J-Duser.language=en",
+                               "-J-Duser.country=US", "-verify", "-verbose", "-certs", aab_path]),
+        ("aab-certificate.txt", [java / "keytool.exe", "-printcert", "-jarfile", aab_path]),
+        ("apk-signature.txt", [bt / "apksigner.bat", "verify", "--verbose", "--print-certs", apk_path]),
+        ("bundletool-validate.txt", [java / "java.exe", "-jar", args.bundletool, "validate",
+                                     "--bundle=" + str(aab_path)]),
+        ("apk-badging.txt", [bt / "aapt.exe", "dump", "badging", apk_path]),
+        ("apk-manifest.txt", [bt / "aapt.exe", "dump", "xmltree", apk_path, "AndroidManifest.xml"]),
+        ("apk-alignment.txt", [bt / "zipalign.exe", "-c", "-P", "16", "4", apk_path]),
+        ("aab-manifest.xml", [java / "java.exe", "-jar", args.bundletool, "dump", "manifest",
+                              "--bundle=" + str(aab_path), "--module=base"]),
+        ("aab-config.json", [java / "java.exe", "-jar", args.bundletool, "dump", "config",
+                             "--bundle=" + str(aab_path)]),
+    ]
+    report["externalToolWorkers"] = 2
+    with ThreadPoolExecutor(max_workers=2, thread_name_prefix="release-check") as executor:
+        completed = list(executor.map(run_external, tool_commands))
+    tool_outputs = {}
+    for name, returncode, output_text, elapsed in completed:
+        (out / name).write_text(output_text, encoding="utf-8")
+        report["toolSeconds"][name] = elapsed
+        tool_outputs[name] = output_text
+        check(name, returncode == 0)
+
+    sig = tool_outputs["apk-signature.txt"]
     signers = re.findall(r"Signer #\d+ certificate SHA-256 digest: ([0-9a-f]+)", sig.lower(), re.I)
     check("apkSigner", signers == [cert])
-    badging = run("apk-badging.txt", [bt / "aapt.exe", "dump", "badging", apk_path])
-    manifest = run("apk-manifest.txt", [bt / "aapt.exe", "dump", "xmltree", apk_path, "AndroidManifest.xml"])
-    run("apk-alignment.txt", [bt / "zipalign.exe", "-c", "-P", "16", "4", apk_path])
-    jar_signature = run("aab-signature.txt", [java / "jarsigner.exe", "-J-Duser.language=en",
-                        "-J-Duser.country=US", "-verify", "-verbose", "-certs", aab_path])
+    badging = tool_outputs["apk-badging.txt"]
+    manifest = tool_outputs["apk-manifest.txt"]
+    jar_signature = tool_outputs["aab-signature.txt"]
     check("aabSignedEntries", "jar verified." in jar_signature
           and "unsigned entries" not in jar_signature.lower())
-    certificate = run("aab-certificate.txt", [java / "keytool.exe", "-printcert", "-jarfile", aab_path])
+    certificate = tool_outputs["aab-certificate.txt"]
     check("aabSigner", cert in certificate.replace(":", "").lower())
-    run("bundletool-validate.txt", [java / "java.exe", "-jar", args.bundletool, "validate", "--bundle=" + str(aab_path)])
-    xml = run("aab-manifest.xml", [java / "java.exe", "-jar", args.bundletool, "dump", "manifest",
-                                 "--bundle=" + str(aab_path), "--module=base"])
-    config_text = run("aab-config.json", [java / "java.exe", "-jar", args.bundletool, "dump", "config",
-                                        "--bundle=" + str(aab_path)])
+    xml = tool_outputs["aab-manifest.xml"]
+    config_text = tool_outputs["aab-config.json"]
     check("bundle16K", "PAGE_ALIGNMENT_16K" in config_text)
     a = "{http://schemas.android.com/apk/res/android}"
     tree = ET.fromstring(xml)

@@ -40,7 +40,7 @@ function resolveOutlineStrokeColor(backgroundColor: string, textColor: string): 
     : "#ffffff";
 }
 
-export type UseTilePictureParams = {
+type UseTilePictureParams = {
   blob: import("@shopify/react-native-skia").SkTextBlob | null;
   textBlobs?: import("@shopify/react-native-skia").SkTextBlob[];
   textWidthPx: number;

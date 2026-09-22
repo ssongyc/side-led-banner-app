@@ -2,7 +2,7 @@
 export const GRADIENT_BACKDROP_IDS = ["wave", "flow", "pulse"] as const;
 export type GradientBackdropId = (typeof GRADIENT_BACKDROP_IDS)[number];
 
-export type GradientBackgroundPresetMeta = {
+type GradientBackgroundPresetMeta = {
   id: GradientBackdropId;
   label: string;
 };

@@ -46,6 +46,15 @@ Run the isolated regression checks with `node --test scripts/prepare-local-apk.t
 
 A bundletool universal APK is suitable for local installation and QA. Google Play review still uses the AAB and generates device-specific APK splits. If Play App Signing is enabled, Play-delivered APKs are signed by the Play app-signing key rather than the local upload key.
 
+## Current routine release path — 2026-09-22
+
+- Invoke the wrapper with PowerShell 7 or newer: `pwsh -NoProfile -File scripts/build-local-apk.ps1`. It rejects Windows PowerShell 5.1 before preparation, preserves native stderr as diagnostic output and captures each native command's exit code immediately so benign warnings cannot replace the actual success/failure signal.
+- Keep the fixed `artifacts/b` build root, Gradle build cache, generated task history and existing native outputs. Do not clean, reinstall dependencies or regenerate native output unless the wrapper's recorded inputs require it.
+- For a JS/UI-only change whose dependency, Expo/native, toolchain and ad-profile inputs are unchanged, use `-IncludeBundle -AdProfile production -ResumeNative`. Omit `-MeasureBuild` from routine delivery; it is reserved for an explicitly authorized comparison that needs Gradle `--profile --info` output.
+- Keep Configuration Cache disabled. Its strict trial failed because the generated Expo/React Native Android configuration starts Node processes during Gradle configuration. Keep one Gradle worker and non-reused daemon as the release defaults until a separate, same-input measurement demonstrates a stable improvement within the resource gate.
+- Build the AAB once and derive the universal QA APK from that exact AAB. Production AdMob, signing identity, four ABIs, R8 mapping, SDK/Billing, 16 KiB, source provenance and artifact checks remain mandatory.
+- The unified verifier now runs its nine independent external signature, metadata, alignment and bundletool commands with at most two workers. It still records every command output/duration and performs the same checks; APK/AAB archive comparisons remain single-open, deterministic checks. This source-only change has not been timed on a release artifact, so the next authorized build must compare `artifact verification` duration without assuming a speedup.
+
 ## Measured production result — 1.0.9(27)
 
 - The wrapper completed in 760.69 seconds. Gradle reported `BUILD SUCCESSFUL in 11m 49s` with 1,195 actionable tasks: 90 executed and 1,105 up-to-date.
@@ -93,24 +102,18 @@ No build, lint or test was performed for this change.
 
 References: https://docs.gradle.org/current/userguide/incremental_build.html and https://docs.gradle.org/current/userguide/continuous_builds.html
 
-## Optional comparison sequence: 5 → 3 → 4
+## Completed build-option evaluation
 
-The wrapper now accepts `-ConfigurationCache`, `-ReuseDaemon`, and `-GradleWorkers 1|2`. Defaults remain configuration cache off, a single-use daemon, and one Gradle worker. Configuration-cache problems fail the run (`--configuration-cache-problems=fail`); the wrapper never retries with different settings or suppresses incompatibility. Existing signing, production ads, R8, ABI coverage and artifact verification gates remain. App CMake compile/link pools remain one; this does not assert a global limit for every dependency's native build.
+The wrapper retains `-ConfigurationCache`, `-ReuseDaemon`, and `-GradleWorkers 1|2` for controlled diagnostics, but the production defaults remain Configuration Cache off, a single-use daemon and one Gradle worker.
 
-For the next explicitly authorized comparison, keep source revision, version, environment and release settings identical and change one option at a time:
+- Strict Configuration Cache was tested and rejected: generated `android/app/build.gradle` starts six Node processes during configuration, Gradle reported `Configuration cache problems found in this build`, and the cache entry was discarded. Do not enable it for release delivery or silently retry after this failure.
+- Daemon reuse is limited to an explicitly authorized consecutive comparison with matching JDK/JVM inputs. It is not a default because an isolated release receives little benefit and a retained daemon consumes host memory needed by the resource gate.
+- Two Gradle workers were not adopted. Keep one worker and the existing CMake pools until a same-source measurement records both lower time and stable peak memory/page-file pressure.
+- `build-options.json`, the Gradle log/profile and stage timings preserve the selected options and evidence. Performance experiments remain separate from release delivery and change one variable at a time.
 
-1. **5 — Configuration Cache:** use `-IncludeBundle -AdProfile production -ResumeNative -MeasureBuild -ConfigurationCache` twice. Inspect the compatibility report and confirm reuse on the second run. Failure means incompatibility, not permission to continue with warnings. Keep configuration-cache files local: Gradle can serialize sensitive signing configuration; do not publish/cache-upload them.
-2. **3 — Daemon:** after step 5 passes, add `-ReuseDaemon` and compare consecutive warm runs. Reuse requires matching JDK/JVM settings. To explicitly stop daemons after the batch, use the fixed build's `android/gradlew.bat --stop` with the same JAVA_HOME and Gradle user home. This stops all matching Gradle-version daemons in that user home, including other projects; do not do it automatically.
-3. **4 — workers:** with the other settings held constant, compare `-GradleWorkers 1` and `-GradleWorkers 2`. Measure peak RAM, committed memory and page-file pressure during each run; an idle snapshot or a system-wide historical page-file peak is not build-specific evidence. Adopt two only if time and memory stability improve. Do not raise CMake concurrency in this comparison.
-
-`build-options.json` records selected flags before Gradle, including failed trials; successful `build-result.json` also records them. Use each run's Gradle log/profile and verification time to compare equivalent intervals. These options have been added but not compiled or tested; no additional APK/AAB was generated for these options.
-
-Baseline from run `20260912-002428-05bfeae8`: Gradle 5m0.25s, startup 19.318s, configuration 1m14.83s, 73 executed / 1122 up-to-date, and R8 UP-TO-DATE. Export interval 332.85s and separate unified verification 31.44s. These measurements precede the optional flags and do not prove their benefit.
+Historical baseline run `20260912-002428-05bfeae8` recorded Gradle 5m0.25s, startup 19.318s, configuration 1m14.83s, 73 executed / 1,122 up-to-date, R8 UP-TO-DATE, export interval 332.85s and separate unified verification 31.44s. These measurements preceded the option trials and do not prove a benefit. The wrapper also preserves successful keytool JKS notices written to stderr without treating them as failure; a nonzero exit code or mismatched certificate still stops the build. That correction was exercised by the same baseline run.
 
 References: [Configuration Cache](https://docs.gradle.org/current/userguide/configuration_cache.html), [Gradle Daemon](https://docs.gradle.org/current/userguide/gradle_daemon.html).
-
-The release wrapper also preserves successful keytool JKS notices on stderr without treating them as a failure; a nonzero exit code or mismatched certificate still stops the build. This correction was exercised by run 20260912-002428-05bfeae8. Version 1.1.0(28) and the optional comparison flags have not been built.
-
 
 ## Android preflight audit — 2026-09-16
 

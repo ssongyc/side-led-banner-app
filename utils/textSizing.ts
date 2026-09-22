@@ -24,7 +24,7 @@ const PREVIEW_VERTICAL_TEXT_PADDING = {
   todayBg: 0,
 } as const;
 /** Speech BG 없을 때: 뷰포트 세로 대비 텍스트 영역 비율 */
-export const DEFAULT_MAX_TEXT_HEIGHT_RATIO = {
+const DEFAULT_MAX_TEXT_HEIGHT_RATIO = {
   portrait: 0.5,
   landscape: 1,
 } as const;

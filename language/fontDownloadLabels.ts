@@ -1,6 +1,6 @@
 import type { AppLocaleKey } from "@/constants/language";
 
-export type FontDownloadLabelKey =
+type FontDownloadLabelKey =
   | "fontDownloadTitle"
   | "fontDownloadFailed"
   | "fontDownloadFailedMessage"
