@@ -10,6 +10,7 @@ import type {
   useSettingsUI,
 } from "@/contexts/settingsContext";
 import type { EffectSectionLabelKey } from "@/language/effectSectionLabels";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
@@ -254,14 +255,16 @@ export function TextEffects({
             {effectSectionLabel("effectPixelationHeading")}
           </Text>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityState={{ selected: pixelColorMix }}
             style={[
               {
                 alignSelf: "flex-start",
                 borderRadius: 20,
-                padding: 2,
-                borderWidth: pixelColorMix ? 2 : 1,
-                borderColor: pixelColorMix ? "#FFFFFF" : "#DDDDDD",
-                opacity: pixelColorMix ? 1 : 0.7,
+                padding: pixelColorMix ? 1 : 3,
+                borderWidth: pixelColorMix ? 3 : 1,
+                borderColor: pixelColorMix ? "#FF6E00" : "#BDBDBD",
+                opacity: pixelColorMix ? 1 : 0.72,
               },
             ]}
             onPress={() =>
@@ -302,6 +305,26 @@ export function TextEffects({
                 {effectSectionLabel("effectMix")}
               </Text>
             </LinearGradient>
+            {pixelColorMix ? (
+              <View
+                pointerEvents="none"
+                style={{
+                  position: "absolute",
+                  top: -8,
+                  right: -8,
+                  width: 24,
+                  height: 24,
+                  borderRadius: 12,
+                  borderWidth: 2,
+                  borderColor: "#FFFFFF",
+                  backgroundColor: "#FF6E00",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+              </View>
+            ) : null}
           </TouchableOpacity>
         </View>
       ) : null}

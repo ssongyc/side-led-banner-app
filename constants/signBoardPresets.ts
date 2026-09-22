@@ -10,23 +10,23 @@ const platformLayout = {
 
 export const SIGN_BOARD_PRESETS = {
   nameBg: {
-    previewSource: require("@/assets/images/Name_BG_1_A.png"),
-    fullscreenLandscapeSource: require("@/assets/images/Name_BG_1_A.png"),
-    fullscreenPortraitSource: require("@/assets/images/Name_BG_1_B.png"),
+    previewSource: require("@/assets/images/Name_BG_1_A_Frame.png"),
+    fullscreenLandscapeSource: require("@/assets/images/Name_BG_1_A_Frame.png"),
+    fullscreenPortraitSource: require("@/assets/images/Name_BG_1_B_Frame.png"),
     ios: platformLayout,
     android: platformLayout,
   },
   locationBg: {
-    previewSource: require("@/assets/images/Location_BG_1_A.png"),
-    fullscreenLandscapeSource: require("@/assets/images/Location_BG_1_A.png"),
-    fullscreenPortraitSource: require("@/assets/images/Location_BG_1_B.png"),
+    previewSource: require("@/assets/images/Location_BG_1_A_Frame.png"),
+    fullscreenLandscapeSource: require("@/assets/images/Location_BG_1_A_Frame.png"),
+    fullscreenPortraitSource: require("@/assets/images/Location_BG_1_B_Frame.png"),
     ios: platformLayout,
     android: platformLayout,
   },
   todayBg: {
-    previewSource: require("@/assets/images/Today_BG_1_A.png"),
-    fullscreenLandscapeSource: require("@/assets/images/Today_BG_1_A.png"),
-    fullscreenPortraitSource: require("@/assets/images/Today_BG_1_B.png"),
+    previewSource: require("@/assets/images/Today_BG_1_A_Frame.png"),
+    fullscreenLandscapeSource: require("@/assets/images/Today_BG_1_A_Frame.png"),
+    fullscreenPortraitSource: require("@/assets/images/Today_BG_1_B_Frame.png"),
     ios: platformLayout,
     android: platformLayout,
   },

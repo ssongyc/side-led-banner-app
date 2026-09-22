@@ -123,9 +123,18 @@ export function BackgroundEffects({ config, updateConfig, effectSectionLabel, is
               preset: "speechBg2",
               src: require("@/assets/images/Speech_BG_2_B.png"),
             },
-            { preset: "nameBg", src: require("@/assets/images/Name_BG_1_B.png") },
-            { preset: "locationBg", src: require("@/assets/images/Location_BG_1_B.png") },
-            { preset: "todayBg", src: require("@/assets/images/Today_BG_1_B.png") },
+            {
+              preset: "nameBg",
+              src: require("@/assets/images/Name_BG_1_B_Frame.png"),
+            },
+            {
+              preset: "locationBg",
+              src: require("@/assets/images/Location_BG_1_B_Frame.png"),
+            },
+            {
+              preset: "todayBg",
+              src: require("@/assets/images/Today_BG_1_B_Frame.png"),
+            },
           ] as const
         ).map(({ preset, src }) => {
           const isLocked = !isProActive && PRO_LOCKED_BG_EFFECTS.has(preset);
