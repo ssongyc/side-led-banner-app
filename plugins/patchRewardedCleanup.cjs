@@ -125,10 +125,20 @@ edit(iosBase + 'RNGoogleMobileAdsRewardedModule.mm', 'RCT_EXPORT_METHOD(invalida
 }
 
 RCT_EXPORT_METHOD(invalidate) { [_ad invalidate]; }`);
-edit(iosBase + 'RNGoogleMobileAdsFullScreenAd.mm', '          data = @{@"type" : adReward.type, @"amount" : adReward.amount};', `          BOOL googleRewardOrder = [ad isKindOfClass:[GADRewardedAd class]] &&
+const iosRewardOriginal =
+  '          data = @{@"type" : adReward.type, @"amount" : adReward.amount};';
+const iosRewardPrevious = `          BOOL googleRewardOrder = [ad isKindOfClass:[GADRewardedAd class]] &&
               [[(GADRewardedAd *)ad responseInfo].adNetworkClassName isEqualToString:@"GADMAdapterGoogleAdMobAds"];
           data = @{@"type" : adReward.type, @"amount" : adReward.amount,
-                   @"googleRewardOrderGuaranteed" : @(googleRewardOrder)};`);
+                   @"googleRewardOrderGuaranteed" : @(googleRewardOrder)};`;
+const iosRewardCurrent = `          GADAdNetworkResponseInfo *loadedNetwork =
+              [(GADRewardedAd *)ad responseInfo].loadedAdNetworkResponseInfo;
+          BOOL googleRewardOrder = [ad isKindOfClass:[GADRewardedAd class]] &&
+              [loadedNetwork.adNetworkClassName isEqualToString:GADGoogleAdNetworkClassName];
+          data = @{@"type" : adReward.type, @"amount" : adReward.amount,
+                   @"googleRewardOrderGuaranteed" : @(googleRewardOrder)};`;
+upgrade(iosBase + 'RNGoogleMobileAdsFullScreenAd.mm', iosRewardPrevious, iosRewardCurrent);
+edit(iosBase + 'RNGoogleMobileAdsFullScreenAd.mm', iosRewardOriginal, iosRewardCurrent);
 // All original or already-applied anchors must match before the first write.
 for (const [file, text] of edits) fs.writeFileSync(path.join(root, file), text);
 return edits.size;

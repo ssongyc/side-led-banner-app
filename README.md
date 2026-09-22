@@ -14,7 +14,7 @@
 - 최근 기록된 로컬 APK/AAB는 **1.1.2 (30)**, clean main `89a54ffdb3c7291fe5833895b78295ab6f8290b7`, 실행 ID `20260922-202155-81159740`입니다. 30은 빌드 시 명시한 override입니다. 기존 서명·production AdMob으로 AAB를 한 번 빌드하고 동일 AAB에서 universal APK를 생성했습니다. 전체 래퍼 시간은 298.42초(약 4분 58초), Gradle은 3분 57초이며 73 executed / 1086 up-to-date입니다. 의존성 설치와 네이티브 생성은 생략하고 기존 네이티브 출력과 캐시를 재사용했습니다. 정적 검사 421개가 모두 통과했습니다. [실행 기록](artifacts/apk-runs/20260922-202155-81159740/build-result.json)과 [단계별 시간](artifacts/apk-runs/20260922-202155-81159740/stage-timings.json)을 참고하세요. 표지판 투명 프레임, Pixelation Mix 선택 표시와 Play 사진 여백 채움이 포함됩니다. 이 산출물의 실기기 QA와 Play 업로드는 미실행입니다.
 - `5cf3182`에는 방향별 배너 재사용, 광고 진단·문구 정리, 스크롤의 미지원 JS 속성 제거, 검증 하네스 갱신, Android 캐시·작업 이력 재사용 개선이 포함되었습니다. 당시 타입 검사와 상태 검증 **26개가 통과**했습니다. 최신 Android APK/AAB의 생성·로컬 검증 범위는 위 실행 기록을 따릅니다. 이전 설치 APK에서는 Android 실기기의 세 탭 스크롤·화면 복귀·테스트 광고 보상 흐름을 확인했으며 최신 산출물의 재검증을 뜻하지 않습니다. iOS 빌드·실기기 동작은 미검증이며, 이번 증분 시간은 캐시 복원 변경만의 효과를 따로 측정한 결과가 아닙니다.
 - V1.1.2에는 iOS Play 종료의 상태 표시줄 선복원·네이티브 안전 영역·페이드 제거와 어두운 상태 표시줄, Amplitude 초기화·사용자 식별 후 새 앱 실행당 한 번 기록하는 `App Opened`가 반영되어 있습니다. [UI 기록](docs/UI_INTERACTION_1.0.9_27.md)과 [현재 광고 동작·검증 제한](docs/ADVERTISING.md)을 참고하세요.
-- V1.1.3 TestFlight 준비에서는 production iOS의 임의 HTTP 허용을 차단하고, 사용하지 않는 카메라·마이크·ATT 선언과 ATT 패키지를 제거했습니다. Expo SDK 57 호환 패치 버전으로 동기화했으며 `expo install --check`와 production config introspection은 통과했습니다. 실제 EAS 빌드·CocoaPods·서명·IPA·TestFlight 처리는 미검증입니다. [iOS 감사 기록](docs/SIGNING_POLICY.md#ios-testflight-source-audit--2026-09-22)을 참고하세요.
+- V1.1.3 TestFlight 준비에서는 production iOS의 임의 HTTP 허용을 차단하고, 사용하지 않는 카메라·마이크·ATT 선언과 ATT 패키지를 제거했습니다. Expo SDK 57 호환 패치 버전으로 동기화했으며 `expo install --check`와 production config introspection은 통과했습니다. 사용자가 제공한 Xcode 오류 화면에서는 rewarded 패치가 설치된 SDK에 없는 `GADResponseInfo.adNetworkClassName`을 참조해 실패했고, 현재 공식 경로인 `loadedAdNetworkResponseInfo.adNetworkClassName`과 Google 제공 상수를 사용하도록 패치 원본을 수정했습니다. 수정 후 실제 Xcode/EAS 빌드·CocoaPods·서명·IPA·TestFlight 처리는 미검증입니다. [iOS 감사 기록](docs/SIGNING_POLICY.md#ios-testflight-source-audit--2026-09-22)을 참고하세요.
 - Galaxy SM-M336K(Android 16)의 당시 설치 APK에서 Test Ad 재생·닫기, 보상 후 잠금 해제·재시작 유지와 이전 보상의 2시간 초과 후 재잠금을 확인했습니다. 정확한 만료 경계 순간은 측정하지 않았습니다. 화면·성능·로그 및 검증 한계는 [9월 22일 QA 기록](docs/QA_20260910.md#2026-09-22--최신-v112-30-설치-apk-최종-qa)에 정리했습니다. 접근성 수정은 소스에만 반영됐으며 새 APK의 TalkBack 검증이 필요합니다. iOS, 구매·복원, 광고 조기 종료, production 공급률·수익 및 Play 처리·버전 코드 사용 가능 여부는 미검증입니다. 날짜별 단락과 커밋·푸시 미실행 표기는 각 작업 당시의 역사적 기록입니다.
 
 ## 과거 소스 변경 이력 — 2026-09-09~10
@@ -605,11 +605,12 @@ Galaxy SM-M336K에서 Background 탭 위에 남은 Effects 축소 화면과 `× 
 ## Android 사진 선택 전환 정리 — 2026-09-22
 
 Android에서 사진 라이브러리 선택을 완료한 뒤 시스템 자르기 화면이 열리기 전 앱의 Background 화면이 잠깐 다시 노출되던 전환을 제거했습니다. 권한 확인 후 전체 화면 검은 커버를 먼저 표시하고, 커버가 실제로 열린 시점에 시스템 사진 선택기를 호출하며 선택·취소·오류가 끝나면 커버를 즉시 해제합니다. iOS의 기존 사진 선택 흐름은 유지합니다. 이 소스 변경은 새 Android APK에서 실행 검증하지 않았습니다.
+
 ## Play 사진 여백 채움 및 참조 정리 — 2026-09-22
 
 사용자 사진 배경은 편집 미리보기에서 `contain`으로 표시합니다. Play 전체 화면에서는 같은 사진의 `cover` 보조층으로 화면 비율 차이에서 생기는 여백을 채우고, 그 위에 `contain` 원본을 표시해 사진 전체와 원래 종횡비를 보존합니다. 일반 모드의 보조층은 확대부가 거슬리지 않도록 흐리게 표시하며, Pixel 모드는 보조층과 원본을 함께 기존 픽셀 셰이더로 처리합니다. 프레임·텍스트·효과의 합성 순서는 유지합니다. 이 후속 변경은 정적 검토만 수행했으며 컴파일·린트·테스트·APK 빌드는 실행하지 않았습니다.
 
-일반 모드의 보조층 Blur는 최소 24이며 원본의 사용자 Blur 설정은 유지합니다. Pixel 보조층에는 별도 Blur를 추가하지 않고 기존 픽셀 처리를 적용합니다. 세로·가로 Play에 적용되며 편집 미리보기는 기존 contain을 유지합니다. 원본 화질 향상이나 추가 확대 방지는 contain 원본 레이어에 대한 설명이며, 보조층은 화면을 채우기 위해 확대·잘림이 발생합니다. 기존 APK/AAB에는 이 변경이 포함되지 않았고 실제 기기의 화면·성능은 아직 검증하지 않았습니다.
+일반 모드의 보조층 Blur는 최소 24이며 원본의 사용자 Blur 설정은 유지합니다. Pixel 보조층에는 별도 Blur를 추가하지 않고 기존 픽셀 처리를 적용합니다. 세로·가로 Play에 적용되며 편집 미리보기는 기존 contain을 유지합니다. 원본 화질 향상이나 추가 확대 방지는 contain 원본 레이어에 대한 설명이며, 보조층은 화면을 채우기 위해 확대·잘림이 발생합니다. 구현 당시의 기존 APK/AAB에는 이 변경이 포함되지 않았습니다. 이후 실행 `20260922-202155-81159740`의 V1.1.2 (30) 산출물에는 포함됐으며, 해당 변경의 실제 기기 화면·성능은 아직 검증하지 않았습니다.
 
 후속 참조 확인에서 사진 채움 상수, fillViewport 속성, PixelBackgroundImage 및 두 화면의 배경 렌더링 경로는 모두 사용 중입니다. 이번 범위에서 삭제할 미사용 파일·API는 확인되지 않았습니다. README의 최신 빌드 기준과 AdMob 의존성 고정 버전 표기를 실제 기록·package.json에 맞췄습니다. 빌드·린트·테스트·커밋·푸시는 실행하지 않았습니다.
 
@@ -618,3 +619,9 @@ Android에서 사진 라이브러리 선택을 완료한 뒤 시스템 자르기
 현재 앱 코드, Expo 설정과 설치 패키지의 dependency/peer 관계를 대조해 직접 참조가 없는 `@react-navigation/bottom-tabs`, `@react-navigation/elements`, `@react-navigation/native`, 중복 직접 선언된 `expo-symbols`, 기능과 코드 참조가 없는 `expo-web-browser` 및 해당 config plugin을 제거했습니다. Expo Router가 자체 의존하는 `expo-symbols`는 간접 의존성으로 유지됩니다. 자동 테마에 필요한 `expo-system-ui`, 시작 화면에서 사용하는 `lottie-react-native`와 `assets/splash.json`, 플랫폼별 구현·보관된 Premium 화면·QA 도구·원본 자산·기존 빌드 증거는 유지합니다.
 
 README의 최신 로컬 산출물 기준을 실제 마지막 성공 실행 `20260922-202155-81159740`으로 수정했습니다. 이 산출물은 사진 여백 채움까지 포함하지만 현재 소스 버전 V1.1.3 (31)과 이번 의존성 정리는 포함하지 않는 V1.1.2 (30) 과거 산출물입니다. 이번 정리에서는 빌드·린트·테스트·커밋·푸시를 실행하지 않았습니다.
+
+### iOS 광고 패치 적용 안내
+
+수정된 소스가 Mac 작업 폴더에 전달된 뒤, 프로젝트 루트에서 `node plugins/patchRewardedCleanup.cjs`를 실행하면 기존 설치본에도 수정이 적용됩니다. 일반 의존성 설치에서는 package.json의 postinstall이 같은 패치를 호출합니다. 수정 전 소스에서 명령만 다시 실행하면 해결되지 않습니다. 패치는 새 설치본·이전 패치 설치본·이미 수정된 설치본을 구분하며, SDK 버전이나 예상 코드가 다르면 오류로 중단합니다.
+
+`iosRewardPrevious`는 실행할 구형 API가 아니라 기존 설치본을 갱신하는 문자열 기준이므로 유지합니다. 최근 패치와 광고 API 참조 확인에서 추가로 삭제할 미사용 파일·API는 확인되지 않았습니다. 이번 정리에서는 빌드·린트·테스트를 실행하지 않았으며, iOS 재빌드와 보상 동작은 미검증입니다.
