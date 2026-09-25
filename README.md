@@ -644,3 +644,13 @@ README의 최신 로컬 산출물 기준을 실제 마지막 성공 실행 `2026
 수정된 소스가 Mac 작업 폴더에 전달된 뒤, 프로젝트 루트에서 `node plugins/patchRewardedCleanup.cjs`를 실행하면 기존 설치본에도 수정이 적용됩니다. 일반 의존성 설치에서는 package.json의 postinstall이 같은 패치를 호출합니다. 수정 전 소스에서 명령만 다시 실행하면 해결되지 않습니다. 패치는 새 설치본·이전 패치 설치본·이미 수정된 설치본을 구분하며, SDK 버전이나 예상 코드가 다르면 오류로 중단합니다.
 
 `iosRewardPrevious`는 실행할 구형 API가 아니라 기존 설치본을 갱신하는 문자열 기준이므로 유지합니다. 최근 패치와 광고 API 참조 확인에서 추가로 삭제할 미사용 파일·API는 확인되지 않았습니다. 이번 정리에서는 빌드·린트·테스트를 실행하지 않았으며, iOS 재빌드와 보상 동작은 미검증입니다.
+
+## Shared policy application — 2026-09-25
+
+Use the [shared policy entrypoint](https://github.com/ssongyc/development-policies/blob/main/AGENTS.md) and its applicable references as the authoritative detailed rules; preserve this project's documented approved exceptions. The workstation's applied copy is C:/Users/ssong/.codex. These links establish the working instructions, not proof that every screen or runtime path has passed verification.
+
+The existing Expo splash options now pass through a native-retention plugin, preventing first-content auto-hide before JS readiness.
+
+The [release and signing policy](https://github.com/ssongyc/development-policies/blob/main/skills/mobile-signing-bootstrap/references/signing-policy.md#testflight-cloud-delivery-and-existing-credentials) governs any later authorized native delivery: use the established cloud macOS route and existing valid credentials. TestFlight contact/feedback email is contact@sunnyinnolab.com; this is not an instruction to replace Apple login or signing identities. Preserve the approved non-exempt-encryption answer and verify the exact archive/console status during delivery. No credentials or console settings were changed here.
+
+The [shared workflow](https://github.com/ssongyc/development-policies/blob/main/policies/workflow.md) governs scoped execution, Google Sheets update authorization and Release asset sharing. The shared App Versions sheet remains retired. Android rebuilds keep current version/code under the existing version rule. No build, lint, tests, package installation, store upload, commit or push was performed in this policy application. Full runtime, responsive-layout, ad, purchase and release-artifact compliance remain unverified; existing dated evidence retains its original scope.

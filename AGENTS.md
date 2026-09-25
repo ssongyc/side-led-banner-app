@@ -1,6 +1,6 @@
 # AGENTS.md instructions for C:\dev\Led Banner
 
-These AGENTS.md instructions replace all previously provided AGENTS.md instructions.
+These project instructions supplement the shared development policies. Preserve explicit project exceptions within their documented scope.
 
 I am a solo mobile app/game and Microsoft Windows app developer.
 
@@ -23,7 +23,7 @@ I am a solo mobile app/game and Microsoft Windows app developer.
 
 ## Fallback Policy
 
-- Never implement fallback behavior.
+- Preserve only explicitly approved shared-policy exceptions, such as unsupported device language to supported English; do not add silent functional fallback.
 - If there is a problem, state the problem as-is.
 - If something does not work, state that it does not work.
 - If something cannot be measured, state that it cannot be measured.
@@ -71,3 +71,7 @@ I am a solo mobile app/game and Microsoft Windows app developer.
 - Keep all four existing Android ABIs. ARM64-only builds require a separate explicit request and device compatibility confirmation. Retain signing, API level and artifact verification requirements.
 - Keep the current worker limit until host memory and measured timings justify adjustment. No speedup estimate is a measured result; report total time and UP-TO-DATE/FROM-CACHE/executed counts after the next authorized build.
 - This standing workflow does not authorize compiling, testing, committing, pushing or uploading without a user request.
+
+## Shared policy entrypoint
+
+Follow [development-policies](https://github.com/ssongyc/development-policies/blob/main/AGENTS.md) and only the applicable detailed references for this task. Preserve approved app-specific behavior. Historical task records are not proof of current runtime compliance.
