@@ -218,9 +218,17 @@ def verify(args, out, report):
                     "io.invertase.googlemobileads.ReactNativeGoogleMobileAdsBannerAdViewManager"]:
             match = re.search(r"^"+re.escape(cls)+r" -> ([^:]+):$", mapping, re.M)
             check("adClass:"+cls, match and ("L"+match[1].replace(".", "/")+";").encode() in dex)
-        icon_hashes = {hashlib.sha256(apk.read(n)).hexdigest() for n in apk.namelist() if n.lower().endswith(".webp")}
-        icons = list((root / "assets/images/Sunny's_Icon").glob("*.webp"))
-        check("sunnyIcons", len(icons) == 13 and all(sha(f) in icon_hashes for f in icons))
+        # Use this build's immutable inventory, not a historical catalog size.
+        expected_icons = {
+            name: digest.lower() for name, digest in inventory["files"].items()
+            if name.startswith("assets/images/Sunny's_Icon/") and name.lower().endswith(".webp")
+        }
+        check("sunnyIconInventory", bool(expected_icons))
+        report["sunnyIcons"] = expected_icons
+        for label, archive in [("apk", apk), ("aab", aab)]:
+            icon_hashes = {hashlib.sha256(archive.read(n)).hexdigest()
+                           for n in archive.namelist() if n.lower().endswith(".webp")}
+            check(label + "SunnyIcons", all(digest in icon_hashes for digest in expected_icons.values()))
     report["retained"] = {}
     for relative in [
         "android/app/build/intermediates/sourcemaps/react/release/index.android.bundle.packager.map",

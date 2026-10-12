@@ -193,3 +193,17 @@ For the Mac developer, after transferring the updated package.json into the exac
 3. Open LedPop.xcworkspace and create a new Release Archive with an unused build number. Run the targeted framework checker on the new archive and exported app, then confirm cold launch on iPhone/iPad before upload. If CocoaPods or Archive fails, retain that actual output rather than adding an automatic fallback or deleting all caches.
 
 The attached native files were inspected directly in the ZIP and were not imported into source or modified. This follow-up supersedes the earlier pending-input diagnosis: the source configuration correction is now implemented, but pod resolution, archive contents and crash resolution remain unverified on Mac/device. No dependency installation, native regeneration, build, lint, tests, upload, commit or push was run.
+
+
+## 2026-10-12 — Android retry after memory recovery
+
+The user freed RAM and the existing 4 GiB preflight passed with about 6 GiB available. An initial preparation run completed dependency/native preparation but stopped when process command lines could not be fully inspected. A fresh read succeeded; the next invocation reused that preparation without changing the gate. Run `20261012-085201-058b0c72` compiled version **1.1.3 (31)** with the existing signer and production ads: `compile-ok`, Gradle **1h 15m 27s**, 1,159 tasks (802 executed, 123 from cache, 234 up-to-date). This was substantial four-ABI native recompilation, not evidence of a fast warm build. Full compile output (1,950 lines) was reviewed; upstream SDK deprecations, SDK XML/manifest merge and Gradle 10 warnings remain.
+
+The first artifact verification failed because `verify-store-release.py` hard-coded 13 Sunny icons while this exact build inventory contains 14. The verifier now requires a nonempty icon inventory and verifies every recorded icon hash in **both APK and AAB**. It does not waive missing/mismatched icons. The unchanged signed artifacts passed independent re-verification `release-verification/71983970cccd47a8b2ed982884b8e53a/verification.json`, including signer, version/SDK, production ads/Billing, four ABIs, ZIP/64-bit ELF 16 KiB alignment, embedded mapping and bundled source. R8 optimization/shrinking/obfuscation: 84.07% / 84.52% / 84.46%. Same-build maps/symbols were retained.
+
+Final files under `artifacts/apk-runs/20261012-085201-058b0c72/`:
+
+- `apk-deliveries/20261012-100804-eccb355f2d9e471c91c9ebf2a3218bbf/LedPopV113.apk`
+- `aab-deliveries/20261012-100737-ee590215ce154429ac84344314b7a9b2/LedPopV113.aab`
+
+The original failed wrapper timing/report is retained; `artifact-recheck-result.json` links the successful independent verification and verifier hash. No second compilation was needed. Device QA and Play upload are unperformed. JavaScript ESLint remains separate and failed on retry (14 errors, 11 warnings). Existing catalog/source changes are preserved; this retry does not certify runtime behavior or clear the remaining lint findings.
