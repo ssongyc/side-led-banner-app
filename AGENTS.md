@@ -75,3 +75,11 @@ I am a solo mobile app/game and Microsoft Windows app developer.
 ## Shared policy entrypoint
 
 Follow [development-policies](https://github.com/ssongyc/development-policies/blob/main/AGENTS.md) and only the applicable detailed references for this task. Preserve approved app-specific behavior. Historical task records are not proof of current runtime compliance.
+
+## Shared policy application (2026-10-12)
+
+Follow the [current shared policy entrypoint](https://github.com/ssongyc/development-policies/blob/main/AGENTS.md) and its applicable topic references. Preserve documented project exceptions; do not copy another app's signing, ABI set, memory limits or deferred feature decisions.
+
+- New user-facing notices, warnings and explanations require explicit approval of wording, placement and trigger before adding UI or translation resources. See [message approval](https://github.com/ssongyc/development-policies/blob/main/policies/workflow.md#user-facing-message-approval).
+- Apply [release preparation and restart](https://github.com/ssongyc/development-policies/blob/main/policies/mobile-release-review.md#preparation-and-restart-contract) and [Android profiles/cache ownership](https://github.com/ssongyc/development-policies/blob/main/skills/mobile-app-production/references/android-release-performance.md) to actual owned entrypoints when release work is in scope. Policy references alone are not implementation or runtime verification.
+- Shared modules apply host-independent rules; signing, ads, purchases, analytics and store declarations are verified at the integrating host where applicable. Preserve existing supported languages and approved UI text.
