@@ -15,6 +15,8 @@ export function usePlaybackActive(visible: boolean) {
     const subscription = AppState.addEventListener("change", (state) => {
       setIsForeground(state === "active");
     });
+    // Close the gap between initial snapshot and the external AppState subscription.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsForeground(AppState.currentState === "active");
     return () => subscription.remove();
   }, []);

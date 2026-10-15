@@ -5,9 +5,6 @@ import {
   PRESET_AUTOSAVE_DEBOUNCE_MS, normalizePreviewTextMaxLines, nonProSanitize,
   presetFromConfig, configFromPreset, blankPresetSnapshot, normalizePresetSlot,
 } from "./settings/presetModel";
-// Preserve existing consumer imports while keeping pure settings rules independent.
-export { type BannerConfig, type PresetSnapshot, PRESET_SLOT_COUNT,
-  PREVIEW_TEXT_MAX_LINES, normalizePreviewTextMaxLines } from "./settings/presetModel";
 import {
   fontBelongsToLocale,
   getDefaultForLocale,
@@ -49,6 +46,10 @@ import React, {
   useRef,
   useState,
 } from "react";
+
+// Preserve existing consumer imports while keeping pure settings rules independent.
+export { type BannerConfig, type PresetSnapshot, PRESET_SLOT_COUNT,
+  PREVIEW_TEXT_MAX_LINES, normalizePreviewTextMaxLines } from "./settings/presetModel";
 
 /**
  * SettingsContext 사용 매뉴얼
@@ -340,19 +341,12 @@ export function SettingsProvider({ children, onStartupStateChange }: {
     activePresetRef.current = ui.activePreset;
   }, [ui.activePreset]);
 
-  useEffect(() => {
-    const max = Math.floor(
-      getRelLineSpacing({
-        requestedLineSpacingPx: 40,
-        fontSizePercent: config.appearance.fontSize,
-      }),
-    );
-    setUI((prev) =>
-      prev.lineSpacingSliderMax === max
-        ? prev
-        : { ...prev, lineSpacingSliderMax: max },
-    );
-  }, [config.appearance.fontSize]);
+  const lineSpacingMax = Math.floor(getRelLineSpacing({
+    requestedLineSpacingPx: 40, fontSizePercent: config.appearance.fontSize,
+  }));
+  if (ui.lineSpacingSliderMax !== lineSpacingMax) {
+    setUI({ ...ui, lineSpacingSliderMax: lineSpacingMax });
+  }
 
   const isProActiveRef = useRef(false);
 
@@ -477,58 +471,6 @@ export function SettingsProvider({ children, onStartupStateChange }: {
     });
   }, []);
 
-  //Preset 불러올 시 pro mode에 따른  적용
-  const isProActive = isPremium || (ui.proMode !== null && Date.now() < ui.proMode);
-  const prevIsProActiveRef = useRef(isProActive);
-  useEffect(() => {
-    const prev = prevIsProActiveRef.current;
-    // A failed ownership query must not erase the last Pro configuration.
-    if (entitlement !== "unknown" || isProActive) prevIsProActiveRef.current = isProActive;
-    isProActiveRef.current = isProActive;
-    if (prev && !isProActive && entitlement === "free") {
-      setConfig((current) => nonProSanitize(current));
-      if (activePresetRef.current >= 1) {
-        loadPreset(0);
-      }
-    }
-  }, [isProActive, entitlement]);
-
-  const activatePro = useCallback(() => {
-    setUI((prev) => ({ ...prev, proMode: Date.now() + 2 * 60 * 60 * 1000 }));
-  }, []);
-
-  const openRewardAdModal = useCallback(() => {
-    if (isPremium) return;
-    setUI((prev) => ({ ...prev, rewardAdVisible: true }));
-  }, [isPremium]);
-
-  useEffect(() => {
-    if (isPremium) updateUI({ rewardAdVisible: false });
-  }, [isPremium, updateUI]);
-
-  useEffect(() => {
-    if (ui.proMode === null) return;
-    const remaining = ui.proMode - Date.now();
-    if (remaining <= 0) {
-      setUI((prev) => ({ ...prev, proMode: null }));
-      return;
-    }
-    const id = setTimeout(() => {
-      setUI((prev) => ({ ...prev, proMode: null }));
-    }, remaining);
-    return () => clearTimeout(id);
-  }, [ui.proMode]);
-
-  const handleTextChange = useCallback(
-    (text: string) => {
-      const next = normalizePreviewTextMaxLines(text);
-      if (next === null) return;
-      if (next === configRef.current.content.previewText) return;
-      updateConfig("content", { previewText: next });
-    },
-    [updateConfig],
-  );
-
   const loadPreset = useCallback((slot: number) => {
     if (slot < 0 || slot >= PRESET_SLOT_COUNT) return;
 
@@ -555,129 +497,86 @@ export function SettingsProvider({ children, onStartupStateChange }: {
     setUI((u) => ({ ...u, activePreset: slot }));
   }, []);
 
+  //Preset 불러올 시 pro mode에 따른  적용
+  const [proClock, setProClock] = useState(() => Date.now());
+  const isProActive = isPremium || (ui.proMode !== null && proClock < ui.proMode);
+  const prevIsProActiveRef = useRef(isProActive);
   useEffect(() => {
-    const normalizedFont = normalizeFontId(config.appearance.font);
-    const isPixelActive = hasPixelLedEffect(
-      config.appearance.effectSelectedItems,
-    );
-    const pixelFontOk =
-      isPixelActive &&
-      normalizedFont === getPixelFontIdForLocale(resolvedAppLocale);
-    if (
-      normalizedFont &&
-      (!isFontHiddenFromPicker(normalizedFont) || pixelFontOk)
-    ) {
-      if (config.appearance.font !== normalizedFont) {
-        setConfig((prev) => ({
-          ...prev,
-          appearance: { ...prev.appearance, font: normalizedFont },
-        }));
+    const prev = prevIsProActiveRef.current;
+    // A failed ownership query must not erase the last Pro configuration.
+    if (entitlement !== "unknown" || isProActive) prevIsProActiveRef.current = isProActive;
+    isProActiveRef.current = isProActive;
+    if (prev && !isProActive && entitlement === "free") {
+      setConfig((current) => nonProSanitize(current));
+      if (activePresetRef.current >= 1) {
+        loadPreset(0);
       }
+    }
+  }, [isProActive, entitlement, loadPreset]);
+
+  const activatePro = useCallback(() => {
+    setUI((prev) => ({ ...prev, proMode: Date.now() + 2 * 60 * 60 * 1000 }));
+  }, []);
+
+  const openRewardAdModal = useCallback(() => {
+    if (isPremium) return;
+    setUI((prev) => ({ ...prev, rewardAdVisible: true }));
+  }, [isPremium]);
+
+  if (isPremium && ui.rewardAdVisible) setUI({ ...ui, rewardAdVisible: false });
+
+  useEffect(() => {
+    if (ui.proMode === null) return;
+    const now = Date.now();
+    // Synchronize a persisted entitlement deadline with the external clock.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setProClock(now);
+    const remaining = ui.proMode - now;
+    if (remaining <= 0) {
+      setUI((prev) => ({ ...prev, proMode: null }));
       return;
     }
+    const id = setTimeout(() => {
+      setUI((prev) => ({ ...prev, proMode: null }));
+    }, remaining);
+    return () => clearTimeout(id);
+  }, [ui.proMode]);
 
-    setConfig((prev) => ({
-      ...prev,
-      appearance: {
-        ...prev.appearance,
-        font: getDefaultForLocale(resolvedAppLocale),
-      },
-    }));
-  }, [
-    config.appearance.font,
-    config.appearance.effectSelectedItems,
-    resolvedAppLocale,
-  ]);
+  const handleTextChange = useCallback(
+    (text: string) => {
+      const next = normalizePreviewTextMaxLines(text);
+      if (next === null) return;
+      if (next === configRef.current.content.previewText) return;
+      updateConfig("content", { previewText: next });
+    },
+    [updateConfig],
+  );
 
-  /** locale별 마지막으로 선택한 폰트 저장 */
-  useEffect(() => {
-    if (!fontBelongsToLocale(config.appearance.font, resolvedAppLocale)) return;
-    if (
-      config.appearance.fontByLocale[resolvedAppLocale] ===
-      config.appearance.font
-    )
-      return;
-    setConfig((prev) => ({
-      ...prev,
-      appearance: {
-        ...prev.appearance,
-        fontByLocale: {
-          ...prev.appearance.fontByLocale,
-          [resolvedAppLocale]: prev.appearance.font,
-        },
-      },
-    }));
-  }, [
-    config.appearance.font,
-    config.appearance.fontByLocale,
-    resolvedAppLocale,
-  ]);
 
-  /** 앱 언어가 바뀌면, 현재 폰트가 그 언어 폰트가 아닐 시 해당 언어에서 마지막으로 쓰던 폰트(없으면 기본값)로 전환 */
-  useEffect(() => {
-    const isPixelActive = hasPixelLedEffect(
-      config.appearance.effectSelectedItems,
-    );
-    if (isPixelActive) return;
-    if (fontBelongsToLocale(config.appearance.font, resolvedAppLocale)) return;
-    const nextFont =
-      config.appearance.fontByLocale[resolvedAppLocale] ??
-      getDefaultForLocale(resolvedAppLocale);
-    if (nextFont === config.appearance.font) return;
-    setConfig((prev) => ({
-      ...prev,
-      appearance: { ...prev.appearance, font: nextFont },
-    }));
-  }, [
-    resolvedAppLocale,
-    config.appearance.effectSelectedItems,
-    config.appearance.font,
-    config.appearance.fontByLocale,
-  ]);
-
-  /** 픽셀폰트용 */
-  useEffect(() => {
-    const isPixelActive = hasPixelLedEffect(
-      config.appearance.effectSelectedItems,
-    );
-    const pixelFontId = getPixelFontIdForLocale(resolvedAppLocale);
-    if (!isPixelActive || config.appearance.font === pixelFontId) {
-      return;
-    }
-    setConfig((prev) => ({
-      ...prev,
-      appearance: {
-        ...prev.appearance,
-        font: pixelFontId,
-      },
-    }));
-  }, [
-    config.appearance.effectSelectedItems,
-    config.appearance.font,
-    resolvedAppLocale,
-  ]);
-
-  useEffect(() => {
-    if (supportsBold(config.appearance.font)) return;
-
-    setConfig((prev) => {
-      const needsFontWeight = prev.appearance.fontWeight === "bold";
-      const needsEffectItems =
-        prev.appearance.effectSelectedItems.includes("Bold");
-      if (!needsFontWeight && !needsEffectItems) return prev;
-
-      return {
-        ...prev,
-        appearance: {
-          ...prev.appearance,
-          fontWeight: "normal",
-          effectSelectedItems: prev.appearance.effectSelectedItems.filter(
-            (e) => e !== "Bold",
-          ),
-        },
-      };
-    });
-  }, [config.appearance.font]);
+  // Approved font/locale/bold synchronization: update only when the resolved values differ.
+  const appearance = config.appearance;
+  const pixelActive = hasPixelLedEffect(appearance.effectSelectedItems);
+  const pixelFont = getPixelFontIdForLocale(resolvedAppLocale);
+  let nextFont = normalizeFontId(appearance.font);
+  if (!nextFont || (isFontHiddenFromPicker(nextFont) && !(pixelActive && nextFont === pixelFont))) {
+    nextFont = getDefaultForLocale(resolvedAppLocale);
+  }
+  if (pixelActive) nextFont = pixelFont;
+  else if (!fontBelongsToLocale(nextFont, resolvedAppLocale)) {
+    const remembered = normalizeFontId(appearance.fontByLocale[resolvedAppLocale] ?? "");
+    nextFont = remembered && fontBelongsToLocale(remembered, resolvedAppLocale) && !isFontHiddenFromPicker(remembered)
+      ? remembered : getDefaultForLocale(resolvedAppLocale);
+  }
+  const removeBold = !supportsBold(nextFont) &&
+    (appearance.fontWeight === "bold" || appearance.effectSelectedItems.includes("Bold"));
+  const rememberFont = fontBelongsToLocale(nextFont, resolvedAppLocale) &&
+    appearance.fontByLocale[resolvedAppLocale] !== nextFont;
+  if (appearance.font !== nextFont || removeBold || rememberFont) {
+    setConfig({ ...config, appearance: { ...appearance, font: nextFont,
+      ...(removeBold ? { fontWeight: "normal", effectSelectedItems: appearance.effectSelectedItems.filter(e => e !== "Bold") } : {}),
+      ...(rememberFont ? { fontByLocale: { ...appearance.fontByLocale, [resolvedAppLocale]: nextFont } } : {}),
+    } });
+  }
 
   // font select state
   const fontItems = useMemo(

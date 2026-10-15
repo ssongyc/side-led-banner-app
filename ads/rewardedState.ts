@@ -1,3 +1,4 @@
+import { isAdConsentAllowed, registerConsentLifecycle } from './adConsent';
 import { disposeRewardedAd, createNativeRewardedAd, rewardedAdEvents, beginRewardedPresentation, endRewardedPresentation, showRewardedAd, type RewardedAdHandle } from "./AdClient";
 import { getAdConfiguration } from "@/ads/adConfiguration";
 import { initializeMobileAds, getMobileAdsState, retryMobileAdsInitialization, isMobileAdsLoadDelayed, subscribeMobileAdsState } from "@/ads/initializeMobileAds";
@@ -23,7 +24,7 @@ type RewardedSlot = {
   requestId: number;
   requestedAt: number | null;
   statusTimer: ReturnType<typeof setTimeout> | null;
-  unsubs: Array<() => void>;
+  unsubs: (() => void)[];
 };
 
 const createEmptySlot = (): RewardedSlot => ({
@@ -48,7 +49,7 @@ let slots: Record<SlotName, RewardedSlot> = {
 
 let requestSequence = 0;
 let openedCurrentAd = false;
-type RewardAttempt = { started: boolean; granted: boolean; grant: Array<() => void> };
+type RewardAttempt = { started: boolean; granted: boolean; grant: (() => void)[] };
 const rewardAttempts = new WeakMap<RewardedAdHandle, RewardAttempt>();
 let nextLoadRequestedForCurrentShow = false;
 let immersiveFlow = 0;
@@ -226,6 +227,7 @@ function createRewardedAd(slotName: SlotName): RewardedAdHandle {
 }
 
 function requestSlotLoad(slotName: SlotName) {
+  if (!isAdConsentAllowed()) return;
   if (getPremiumSnapshot().entitlement !== "free") return;
   const slot = slots[slotName];
   // Keep preparation/retry ownership while absent; no issued attempt is refunded.
@@ -340,6 +342,15 @@ function loadNextSlotOnce() {
   requestSlotLoad("next");
 }
 
+registerConsentLifecycle(() => !isRewardedAdShowing(), () => {
+  for (const name of ['current', 'next'] as const) {
+    const attempt = slots[name].attempt;
+    disposeSlot(name);
+    slots[name].attempt = attempt;
+    slots[name].state = 'failed'; slots[name].failure = 'unavailable';
+  }
+  notifySubscribers();
+});
 export function isRewardedAdShowing() {
   return slots.current.state === "showing";
 }
@@ -437,6 +448,7 @@ export function subscribeRewardedState(onState: () => void, onReward: () => void
 }
 export { getLoadedState as isRewardedReady };
 export function showRewarded() {
+  if (!isAdConsentAllowed()) return;
     if (getPremiumSnapshot().entitlement !== "free") return;
     const configError = getRewardedAdConfigurationError();
     if (configError) {

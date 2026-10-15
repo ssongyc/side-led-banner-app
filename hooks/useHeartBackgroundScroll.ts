@@ -20,7 +20,7 @@ export function useHeartBackgroundScroll(isActive: boolean) {
   }, false);
 
   useEffect(() => {
-    if (!enabled || speed === 0) translateX.value = 0;
+    if (!enabled || speed === 0) translateX.set(0);
     setActive(running);
     return () => setActive(false);
   }, [enabled, speed, running, setActive, translateX]);

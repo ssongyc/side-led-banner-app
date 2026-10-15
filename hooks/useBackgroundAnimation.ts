@@ -77,9 +77,10 @@ export function useBackgroundAnimation(isActive = true) {
   const isHeartEnabled = preset === "heartBgA";
   const isSpeechBubble = isSpeechBubblePreset(preset);
 
+  // The assignment makes this guard false on the next render.
+  if (!isEnabled && frameIndex !== 0) setFrameIndex(0);
   useEffect(() => {
     if (!isEnabled) {
-      setFrameIndex(0);
       remainingMs.current = FRAME_DURATION_MS;
       return;
     }

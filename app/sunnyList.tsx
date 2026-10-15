@@ -27,6 +27,13 @@ type SunnyAppEntry = {
 /** Sunny앱 목록 */
 const SUNNY_APPS: SunnyAppEntry[] = [
   {
+    id: "subway_master",
+    name: "Subway Master",
+    appStoreUrl: "https://subwaymaster.onelink.me/UbwX/nvm85ss4",
+    playStoreUrl: "https://subwaymaster.onelink.me/UbwX/nvm85ss4",
+    thumbnail: require("@/assets/images/Sunny's_Icon/Subway-Master-Icon.webp"),
+  },
+  {
     id: "sky_peacemaker",
     name: "Sky Peacemaker",
     appStoreUrl:

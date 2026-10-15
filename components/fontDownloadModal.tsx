@@ -47,9 +47,9 @@ export function FontDownloadModal() {
 
   const handleFullyClosed = useCallback(() => setMounted(false), []);
 
+  if (visible && !mounted) setMounted(true);
   useEffect(() => {
     if (visible) {
-      setMounted(true);
       overlayOpacity.value = withTiming(1, { duration: 180 });
     } else if (wasVisibleRef.current) {
       overlayOpacity.value = withTiming(0, { duration: 180 }, (finished) => {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { AppState } from "react-native";
 import { createRewardedAd } from "@/ads/AdClient.web";
 import { WEB_AD_DIAGNOSTICS, useWebAdState, isWebAdReady, selectWebAdState, getWebAdState } from "@/ads/webAdDiagnostics.web";
@@ -10,7 +10,7 @@ export function loadRewardedAd(_options?: { restartFailed?: boolean }) { /* A di
 export function useRewardedAd(onRewardEarned: () => void) {
   const state = useWebAdState();
   const reward = useRef(onRewardEarned);
-  reward.current = onRewardEarned;
+  useLayoutEffect(() => { reward.current = onRewardEarned; }, [onRewardEarned]);
   const client = useRef<ReturnType<typeof createRewardedAd> | null>(null);
   useEffect(() => {
     if (!WEB_AD_DIAGNOSTICS) return;

@@ -34,27 +34,27 @@ export function useBlinkOpacityStyle(isActive = true) {
   useEffect(() => {
     cancelAnimation(phase);
     if (!active) {
-      phase.value = 0;
+      phase.set(0);
       return;
     }
     if (!isActive) return;
 
     const duration = blinkHalfCycleMs(blinkSpeed) * 2;
     const progress = phase.value / 2;
-    phase.value = withTiming(
+    phase.set(withTiming(
       2,
       { duration: duration * (1 - progress), easing: Easing.linear },
       (finished) => {
         "worklet";
         if (!finished) return;
-        phase.value = 0;
-        phase.value = withRepeat(
+        phase.set(0);
+        phase.set(withRepeat(
           withTiming(2, { duration, easing: Easing.linear }),
           -1,
           false,
-        );
+        ));
       },
-    );
+    ));
     return () => cancelAnimation(phase);
   }, [active, blinkSpeed, isActive, phase]);
 

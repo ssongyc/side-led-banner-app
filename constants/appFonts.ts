@@ -1,5 +1,5 @@
 import { APP_LOCALE_KEYS, type AppLocaleKey } from "@/constants/language";
-import { REMOTE_FONT_FACE_SETS, type RemoteFontId } from "@/constants/remoteFonts";
+import { type RemoteFontId } from "@/constants/remoteFonts";
 
 /** settings폰트키용 */
 export type FontId =

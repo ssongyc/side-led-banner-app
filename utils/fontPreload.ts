@@ -87,9 +87,9 @@ export function ensureLocaleFontsLoaded(locale: AppLocaleKey): Promise<void> {
 
 
 /** Optional cache warming: the root runs one bounded unit per idle opportunity. */
-export async function createDeferredFontPreloadTasks(device: AppLocaleKey): Promise<Array<() => Promise<unknown>>> {
+export async function createDeferredFontPreloadTasks(device: AppLocaleKey): Promise<(() => Promise<unknown>)[]> {
   const priorityIds = await collectPriorityFontIds(device);
-  const tasks: Array<() => Promise<unknown>> = [];
+  const tasks: (() => Promise<unknown>)[] = [];
   const addTextFonts = (assets: Record<string, number>) => {
     const entries = Object.entries(assets);
     for (let index = 0; index < entries.length; index += 2) {

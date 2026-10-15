@@ -7,7 +7,7 @@ import {
   normalizeOneLineJoinMode,
   resolveMarqueeJoinSpacerPx,
 } from "@/utils/viewMode";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   cancelAnimation,
   Easing,
@@ -114,7 +114,7 @@ export function useMarqueeAnimation({
   ]);
 
   const textWidthRef = useRef(textWidth);
-  textWidthRef.current = textWidth;
+  useLayoutEffect(() => { textWidthRef.current = textWidth; }, [textWidth]);
 
   const onTextLayout = useCallback((e: TextLayoutEvent) => {
     const widths = e.nativeEvent.lines.map((l) => l.width);

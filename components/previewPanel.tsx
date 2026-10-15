@@ -37,7 +37,7 @@ import { getSizingPolicy } from "@/utils/textSizing";
 import { Canvas } from "@shopify/react-native-skia";
 import { Image } from "expo-image";
 import { LinearGradient as LinearGradientExpo } from "expo-linear-gradient";
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   InputAccessoryView,
   Keyboard,
@@ -271,6 +271,8 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
     onUndoRedoStateChange?.(history.canUndo, history.canRedo);
   }, [history.canUndo, history.canRedo, onUndoRedoStateChange]);
 
+  const [forcedSnapshot, setForcedSnapshot] = useState<TextSnapshot | undefined>(undefined);
+
   const handleUndo = useCallback(() => {
     const snapshot = history.undo();
     if (!snapshot) return;
@@ -300,11 +302,10 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
   const setPreviewText = (text: string) =>
     updateConfig("content", { previewText: text });
   const inputSelectionRef = useRef({ start: 0, end: 0 });
-  const [forcedSnapshot, setForcedSnapshot] = useState<TextSnapshot | undefined>(undefined);
 
   // onPreviewTextChange 내에서 항상 최신 displayInputText를 참조
   const displayInputTextRef = useRef(displayInputText);
-  displayInputTextRef.current = displayInputText;
+  useLayoutEffect(() => { displayInputTextRef.current = displayInputText; }, [displayInputText]);
 
   const lineCount = previewText.replace(/\r\n?/g, "\n").split("\n").length;
   const atMaxLines = lineCount >= PREVIEW_TEXT_MAX_LINES;

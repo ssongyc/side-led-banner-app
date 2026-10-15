@@ -1,3 +1,4 @@
+import { ensureAdConsent } from './adConsent';
 import { useSyncExternalStore } from "react";
 import { AppState } from "react-native";
 import { initializeAdSdk } from "./AdClient";
@@ -35,7 +36,8 @@ export const subscribeMobileAdsState = (fn: () => void) => { listeners.add(fn); 
 export const useMobileAdsState = () => useSyncExternalStore(subscribeMobileAdsState, () => state, () => state);
 export const useMobileAdsLoadDelayed = () => useSyncExternalStore(subscribeMobileAdsState, isMobileAdsLoadDelayed, isMobileAdsLoadDelayed);
 export const getMobileAdsState = () => state;
-export function initializeMobileAds(): Promise<void> {
+export async function initializeMobileAds(): Promise<void> {
+  await ensureAdConsent();
   if (state === "ready") return Promise.resolve();
   if (state === "failed" || state === "configuration") return Promise.reject(lastError);
   if (pending) return pending;

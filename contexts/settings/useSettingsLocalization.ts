@@ -42,12 +42,7 @@ export function useSettingsLocalization(appLanguage: AppLanguagePreference) {
   /** 기기 로케일을 AppLocaleKey (ko, en, ja, zhTC, zhSC)로 변환 */
   const deviceAppLocale = useMemo(
     () => deviceLocaleToAppLocale(primaryLocale ?? { languageCode: "en" }),
-    [
-      primaryLocale?.languageTag,
-      primaryLocale?.languageCode,
-      primaryLocale?.languageScriptCode,
-      primaryLocale?.regionCode,
-    ],
+    [primaryLocale],
   );
 
   const resolvedAppLocale: AppLocaleKey =

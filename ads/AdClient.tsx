@@ -1,7 +1,8 @@
+import { ConsentBannerAd as BannerAd } from './adConsent';
 import { requireNativeModule } from "expo-modules-core";
 import React from "react";
 import { Platform, TurboModuleRegistry, type TurboModule } from "react-native";
-import mobileAds, { BannerAd, BannerAdSize, RewardedAd, AdEventType, RewardedAdEventType, type BannerAdProps } from "react-native-google-mobile-ads";
+import mobileAds, { BannerAdSize, RewardedAd, AdEventType, RewardedAdEventType, type BannerAdProps } from "react-native-google-mobile-ads";
 
 export type RewardedAdHandle = ReturnType<typeof RewardedAd.createForAdRequest>;
 export const rewardedAdEvents = {

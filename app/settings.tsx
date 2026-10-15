@@ -1,3 +1,4 @@
+import { AdPrivacyOptions } from '@/ads/adConsent';
 import { usePremium } from "@/contexts/premiumContext";
 import BannerAdComponent from "@/components/admob/bannerAd";
 import type { AppLocaleKey } from "@/constants/language";
@@ -263,6 +264,7 @@ export default function SettingsScreen() {
           </Text>
         </View>
         {compactHeight && footer}
+        <AdPrivacyOptions language={resolvedAppLocale} />
       </ScrollView>
 
       {!compactHeight && footer}

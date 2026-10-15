@@ -24,11 +24,12 @@ import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
+  Stack,
+  usePathname,
 } from "expo-router";
 import { loadAsync } from "expo-font";
 import { useKeepAwake } from 'expo-keep-awake';
 import { useLocales } from "expo-localization";
-import { Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -78,9 +79,12 @@ export default function RootLayout() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [fontsFailed, setFontsFailed] = useState(false);
   const [preparationAttempt, setPreparationAttempt] = useState(0);
+  const [fontInput, setFontInput] = useState({ assets: eagerFontAssets, attempt: preparationAttempt });
+  if (fontInput.assets !== eagerFontAssets || fontInput.attempt !== preparationAttempt) {
+    setFontInput({ assets: eagerFontAssets, attempt: preparationAttempt }); setFontsFailed(false);
+  }
   useEffect(() => {
     let cancelled = false;
-    setFontsFailed(false);
     void loadAsync(eagerFontAssets).then(() => {
       if (!cancelled) setFontsLoaded(true);
     }).catch(error => {
@@ -203,7 +207,7 @@ export default function RootLayout() {
     let inFlight = false;
     let foreground = Platform.OS === "web" || AppState.currentState === "active";
     let idleTask: ReturnType<typeof requestIdleCallback> | undefined;
-    const queue: Array<() => Promise<unknown>> = [async () => {
+    const queue: (() => Promise<unknown>)[] = [async () => {
       const tasks = await createDeferredFontPreloadTasks(deviceAppLocale);
       if (!cancelled) queue.push(...tasks);
     }];

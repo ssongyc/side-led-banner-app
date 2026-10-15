@@ -1,3 +1,4 @@
+import { layoutSkiaLine, type SkiaLineLayout } from "@/utils/skiaLineLayout";
 import type { SkFont, SkTextBlob } from "@shopify/react-native-skia";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { LayoutChangeEvent } from "react-native";
@@ -34,7 +35,6 @@ type TextLayoutEvent = {
   nativeEvent: { lines: { width: number }[] };
 };
 
-import { layoutSkiaLine, type SkiaLineLayout } from "@/utils/skiaLineLayout";
 
 /** CJK문자 판별하는 용  */
 function isCJKChar(ch: string): boolean {
@@ -254,9 +254,12 @@ export function usePreviewPanelCanvas({
   });
 
   // 말풍선 ON/OFF 시 onLayout이 다른 View로 옮겨져 재측정이 안 될 수 있음 → stale 높이로 위쪽 붙음
-  useEffect(() => {
+  const hasBubbleLayout = speechBubbleLayout != null;
+  const [previousBubbleLayout, setPreviousBubbleLayout] = useState(hasBubbleLayout);
+  if (previousBubbleLayout !== hasBubbleLayout) {
+    setPreviousBubbleLayout(hasBubbleLayout);
     setSkiaCanvasLayout({ width: 0, height: 0 });
-  }, [speechBubbleLayout != null]);
+  }
 
   const hasCanvasLayout =
     skiaCanvasLayout.width > 0 && skiaCanvasLayout.height > 0;

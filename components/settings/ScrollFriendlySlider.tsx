@@ -1,5 +1,5 @@
 import { Slider } from "@miblanchard/react-native-slider";
-import { useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { PanResponder, View, type ViewStyle } from "react-native";
 
 type Props = {
@@ -15,7 +15,7 @@ type Props = {
 // Keep the existing slider artwork; arbitrate gestures before it can claim touches.
 export function ScrollFriendlySlider(props: Props) {
   const latest = useRef(props);
-  latest.current = props;
+  useLayoutEffect(() => { latest.current = props; }, [props]);
   const width = useRef(0);
   const touch = useRef({ x: 0, pageX: 0, pageY: 0, moved: false, vertical: false,
     active: false, offset: 0, value: props.value[0] });
@@ -41,6 +41,8 @@ export function ScrollFriendlySlider(props: Props) {
       latest.current.onSlidingComplete([touch.current.value]);
       setDragValue(null);
     };
+    // PanResponder.create registers handlers; it never invokes these ref-reading event callbacks during render.
+    // eslint-disable-next-line react-hooks/refs
     return { update, finish, responder: PanResponder.create({
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_event, gesture) => {

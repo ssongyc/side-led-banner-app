@@ -385,7 +385,7 @@ TypeScript 검증은 node_modules와 생성 산출물 artifacts를 제외합니�
 
 ## Sunny 목록 아이콘 최적화
 
-앱 아이콘 13개를 무손실 WebP로 연결했습니다. 해상도와 디코딩 픽셀을 유지하며 참조 파일 합계는 32.3% 감소했습니다. [변경 내용과 검증 범위](docs/SUNNY_ICON_OPTIMIZATION.md)를 참고하세요.
+기존 앱 아이콘 13개를 무손실 WebP로 연결했으며, 당시 참조 파일 합계는 32.3% 감소했습니다. 2026-09-28 Settings React의 목록과 비교해 Subway Master를 첫 항목으로 추가하여 현재 14개입니다. 신규 항목은 원본과 해상도·RGBA 픽셀이 동일한 51,180-byte WebP와 Settings React의 OneLink를 사용합니다. 기존 항목과 LED POP 자체를 제외하는 구성은 유지합니다. [변경 내용과 검증 범위](docs/SUNNY_ICON_OPTIMIZATION.md)를 참고하세요.
 
 
 ## 광고 모듈 분리 (소스 변경)
@@ -672,3 +672,26 @@ APK+AAB production 광고 빌드를 기존 래퍼로 시도했으나 메모리 �
 ### 2026-10-12 메모리 확보 후 Android 재검증
 
 위 메모리 차단 이후 재시도에서 **1.1.3(31) APK·AAB 생성과 독립 산출물 검증을 완료**했습니다. 기존 서명과 production 광고를 유지했으며 Gradle 컴파일은 1시간 15분 27초 소요됐습니다. 오래된 Sunny 아이콘 13개 고정 검사를 실제 빌드 입력 전체의 APK/AAB 해시 검증으로 보완해 같은 파일을 재빌드 없이 검증했습니다. 최종 파일은 `artifacts/apk-runs/20261012-085201-058b0c72/` 아래에 있으며 [서명 문서의 재시도 기록](docs/SIGNING_POLICY.md#2026-10-12--android-retry-after-memory-recovery)에 경로와 검증 범위를 남겼습니다. ESLint는 오류 14개·경고 11개로 여전히 실패했고, 실기기 QA·스토어 업로드는 수행하지 않았습니다.
+
+
+## UMP 적용 기록 — 2026-10-14
+
+기존 UMP 제외 방침을 대체하여 Android/iOS 광고 요청 전에 공식 UMP 동의 상태를 확인하도록 소스를 보완했습니다. 필요한 경우 설정의 승인된 광고 개인정보 설정 항목에서 공식 개인정보 선택창을 엽니다. 동의 처리와 광고 로드 실패 횟수는 구분하며, 동의 변경 중 광고 요청·표시 및 늦은 콜백 처리를 차단합니다. 상세 기준은 [공유 광고 정책의 Consent implementation scope](https://github.com/ssongyc/development-policies/blob/main/skills/mobile-app-production/references/rewarded-ads.md#consent-implementation-scope)를 따릅니다.
+
+이번 기록은 소스 변경 단계입니다. 빌드·린트·테스트·실기기 확인·콘솔 변경·커밋·푸시는 수행하지 않았습니다. AdMob 메시지 게시 여부와 지역별 동의창, 개인정보 선택 변경 후 광고 상태는 별도 검증이 필요합니다. 이전 검증 결과는 이 수정본의 실행 검증을 의미하지 않습니다.
+
+
+### UMP 후속 정리·린트 — 2026-10-14
+
+`npm run lint`: 오류 14개·경고 11개. 새 UMP 파일 2개는 별도 ESLint 재검사 통과.
+
+이 결과는 앞선 UMP 소스 적용 당시의 린트 미실행 기록을 갱신합니다. 필요한 웹 구현과 지원 플랫폼 API는 보존했습니다. 빌드·테스트·실기기 QA·커밋·푸시는 이번에도 수행하지 않았습니다.
+
+
+### 남은 린트 지적 보완 — 2026-10-14
+
+실제 소스 전체 `eslint .` 및 UMP 파일 별도 ESLint: 오류 0·경고 0. 배너의 요청 너비·외부 시계 상태, 이벤트 ref와 Hook 의존성, 폰트·언어·굵기 설정의 조건부 갱신, 웹 hydration 및 애니메이션 API를 정리했습니다. README에 명시된 생성 빌드 미러 artifacts/b와 과거 보관본 artifacts/local-builds/20260908-expo57만 제외하고 Node 스크립트 전역을 명시했습니다.
+
+이 기록은 앞선 실패 이력 이후의 재검사 결과입니다. 기존 작업을 보존했으며 빌드·자동 테스트·실기기 QA·콘솔 변경·커밋·푸시는 실행하지 않았습니다. 정적 검사 통과는 광고·선택 UI·설정 전환의 실기기 검증 완료를 뜻하지 않습니다. 로그는 사용자 Temp의 `lint-repair-*`, `lint-*-final.*`, `lint-*-complete.*`에 보존했습니다.
+
+UMP SDK는 지연 로드하여 네이티브 등록 실패를 동의 요청의 오류 경계 안에서 보고합니다. `no-require-imports`는 이 경계에 한해서만 사유를 주석으로 남겼습니다. 외부 시계/구독 초기 상태 동기화에 필요한 좁은 Hook 예외 역시 해당 코드에 이유를 명시했으며 규칙 전체를 끄지 않았습니다.

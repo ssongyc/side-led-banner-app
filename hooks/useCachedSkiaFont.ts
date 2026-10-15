@@ -90,15 +90,7 @@ export function useCachedSkiaFont(
   }));
 
   useEffect(() => {
-    if (asset == null) {
-      setLoaded({ asset, typeface: null });
-      return;
-    }
-    const cached = typefaceCache.get(asset);
-    if (cached !== undefined) {
-      setLoaded({ asset, typeface: cached });
-      return;
-    }
+    if (asset == null || typefaceCache.has(asset)) return;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
 
@@ -128,7 +120,8 @@ export function useCachedSkiaFont(
   }, [asset]);
 
   // A font from the previous selection must never count as the requested font being ready.
-  const typeface = loaded.asset === asset ? loaded.typeface : null;
+  const cached = asset != null ? typefaceCache.get(asset) : null;
+  const typeface = cached !== undefined ? cached : loaded.asset === asset ? loaded.typeface : null;
   return useMemo(() => (typeface ? Skia.Font(typeface, size) : null), [typeface, size]);
 }
 
@@ -155,7 +148,7 @@ export function useResolvedFontAssetRef(
     return () => {
       cancelled = true;
     };
-  }, [marker?.remote, marker?.weight, markerKey]);
+  }, [marker, markerKey]);
 
   if (source == null) return null;
   return typeof source === "number" ? source : resolved && resolved.key === markerKey ? resolved.uri : null;

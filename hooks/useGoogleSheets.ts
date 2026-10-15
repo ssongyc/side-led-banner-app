@@ -159,6 +159,8 @@ export function useGoogleSheets(
   }, [csvUrl, localeOrder]);
 
   useEffect(() => {
+    // Start the external request and its loading state together.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
 

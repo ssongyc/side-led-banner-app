@@ -7,7 +7,7 @@ import {
   sliderLockStyles as lockStyles,
 } from "@/constants/styles";
 import { ScrollFriendlySlider } from "@/components/settings/ScrollFriendlySlider";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Image, TouchableOpacity, View } from "react-native";
 
 const LOCK_ICON = require("@/assets/images/icon_lock_type2.png");
@@ -32,16 +32,17 @@ export const SliderComponent = ({
   onLockedPress?: () => void;
 }) => {
   const [isSliding, setIsSliding] = useState(false);
-  const dragStartValue = useRef(value);
+  const [dragStartValue, setDragStartValue] = useState(value);
 
-  const controlledValue = isSliding ? dragStartValue.current : value;
   // A new array at release also snaps a sub-step drag back to its stored value.
-  const sliderValue = useMemo(() => [controlledValue], [controlledValue, isSliding]);
+  const sliderValue = useMemo(() => [isSliding ? dragStartValue : value], [dragStartValue, isSliding, value]);
 
   const lastEmittedValue = useRef(value);
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
-  if (!isSliding) lastEmittedValue.current = value;
+  useLayoutEffect(() => {
+    onChangeRef.current = onChange;
+    if (!isSliding) lastEmittedValue.current = value;
+  }, [onChange, isSliding, value]);
 
   // Keep thumb motion continuous without rebuilding the preview for the same step.
   const handleValueChange = useCallback(
@@ -60,7 +61,7 @@ export const SliderComponent = ({
   );
 
   const handleSlidingStart = useCallback(() => {
-    dragStartValue.current = value;
+    setDragStartValue(value);
     setIsSliding(true);
   }, [value]);
 

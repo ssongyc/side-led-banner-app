@@ -55,7 +55,7 @@ export function GradientBackdrop({
   // A different preset starts its own cycle; hiding the same preset retains its phase.
   useEffect(() => {
     cancelAnimation(phase);
-    phase.value = 0;
+    phase.set(0);
   }, [phase, preset]);
 
   useEffect(() => {
@@ -63,16 +63,16 @@ export function GradientBackdrop({
     if (!running) return;
     const cycle = Math.PI * 2;
     const progress = Math.min(1, Math.max(0, phase.value / cycle));
-    phase.value = withTiming(cycle,
+    phase.set(withTiming(cycle,
       { duration: duration * (1 - progress), easing: Easing.linear },
       finished => {
         "worklet";
         if (!finished) return;
-        phase.value = 0;
-        phase.value = withRepeat(
+        phase.set(0);
+        phase.set(withRepeat(
           withTiming(cycle, { duration, easing: Easing.linear }), -1, false,
-        );
-      });
+        ));
+      }));
     return () => cancelAnimation(phase);
   }, [phase, duration, preset, running]);
 
