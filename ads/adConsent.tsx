@@ -6,6 +6,7 @@ type State = { allowed: boolean; required: boolean; busy: boolean; revision: num
 let state: State = { allowed: false, required: false, busy: false, revision: 0 };
 const listeners = new Set<() => void>();
 let startup: Promise<void> | undefined;
+let qaConsentReset = false;
 let privacy: Promise<void> | undefined;
 const privacyGuards = new Set<() => boolean>();
 const invalidators = new Set<() => void>();
@@ -44,7 +45,22 @@ export async function ensureAdConsent(): Promise<void> {
     publish({ busy: true });
     try {
       await foreground();
-      await nativeSdk().AdsConsent.requestInfoUpdate();
+      const qaDevice = process.env.EXPO_PUBLIC_UMP_EEA_TEST_DEVICE;
+      const sdk = nativeSdk();
+      if (qaDevice) {
+        if (!/^[A-Fa-f0-9]{32}$/.test(qaDevice)) throw new Error('Invalid UMP QA device identifier.');
+        // Reset once per process; an approved manual recovery must not reset again.
+        if (!qaConsentReset) {
+          qaConsentReset = true;
+          sdk.AdsConsent.reset();
+        }
+        await sdk.AdsConsent.requestInfoUpdate({
+          debugGeography: sdk.AdsConsentDebugGeography.EEA,
+          testDeviceIdentifiers: [qaDevice],
+        });
+      } else {
+        await sdk.AdsConsent.requestInfoUpdate();
+      }
       await foreground();
       await nativeSdk().AdsConsent.loadAndShowConsentFormIfRequired();
     } catch (error) {

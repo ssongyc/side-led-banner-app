@@ -1,0 +1,8 @@
+// QA/normal JS bundles must not share a cached task result.
+gradle.projectsEvaluated {
+    allprojects {
+        tasks.matching { it.name.startsWith('createBundle') && it.name.endsWith('JsAndAssets') }.configureEach {
+            inputs.property('umpQaDevice', System.getenv('EXPO_PUBLIC_UMP_EEA_TEST_DEVICE') ?: '')
+        }
+    }
+}

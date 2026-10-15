@@ -2,6 +2,7 @@ param(
  [string]$BuildRoot=(Join-Path $PSScriptRoot '../artifacts/b'),
  [switch]$ResumeNative,
  [switch]$IncludeBundle,
+ [ValidatePattern('^$|^[A-Fa-f0-9]{32}$')][string]$UmpEeaTestDevice = '',
  [ValidateSet("production", "test")][string]$AdProfile="production",
  [Nullable[int]]$VersionCode,
  [string]$BundletoolJar=(Join-Path $PSScriptRoot '../artifacts/bundletool-all-1.18.3.jar'),
@@ -19,10 +20,13 @@ $ErrorActionPreference='Stop'
 $PSNativeCommandUseErrorActionPreference=$false
 . (Join-Path $PSScriptRoot 'android-build-observability.ps1')
 $timingState=New-AndroidBuildTiming
+if($UmpEeaTestDevice -and $IncludeBundle){throw 'Forced UMP is restricted to an APK-only QA build'}
+$previousUmpDevice=$env:EXPO_PUBLIC_UMP_EEA_TEST_DEVICE
 $timingStatus='failed'
 $record=$null
 Start-AndroidBuildStage $timingState 'preflight'
 try {
+$env:EXPO_PUBLIC_UMP_EEA_TEST_DEVICE=$UmpEeaTestDevice
 if($IncludeBundle -and $AdProfile -ne 'production'){throw 'Store AAB requires production ads'}
 $verificationScript=Join-Path $PSScriptRoot 'verify-store-release.py'
 if($IncludeBundle){
@@ -230,7 +234,7 @@ android {
   $tasks=if($IncludeBundle){@(':app:bundleRelease')}else{@(':app:assembleRelease')}
   $daemonArgument=if($ReuseDaemon){'--daemon'}else{'--no-daemon'}
   $cacheArgument=if($ConfigurationCache){'--configuration-cache'}else{'--no-configuration-cache'}
-  $gradleArguments=@('-p','android')+$tasks+@('--build-cache',$daemonArgument,$cacheArgument,('--max-workers='+$GradleWorkers),'-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=1024m','--stacktrace')
+  $gradleArguments=@('--init-script',(Join-Path $PSScriptRoot 'ump-build-input.gradle'),'-p','android')+$tasks+@('--build-cache',$daemonArgument,$cacheArgument,('--max-workers='+$GradleWorkers),'-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=1024m','--stacktrace')
   # Release bundles never use Metro. Keep host-IP changes out of resValues/R8 inputs.
   $gradleArguments+=@('-PreactNativeDevServerIp=127.0.0.1','-PreactNativeDevServerPort=8081')
   if($ConfigurationCache){$gradleArguments+='--configuration-cache-problems=fail'}
@@ -358,6 +362,7 @@ android {
 
  $timingStatus='completed'
 } finally {
+ $env:EXPO_PUBLIC_UMP_EEA_TEST_DEVICE=$previousUmpDevice
  $timingReport=Get-AndroidBuildTimingReport $timingState $timingStatus
  if($record -and (Test-Path -LiteralPath $record)){
   $timingReport | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $record 'stage-timings.json')

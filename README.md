@@ -695,3 +695,10 @@ APK+AAB production 광고 빌드를 기존 래퍼로 시도했으나 메모리 �
 이 기록은 앞선 실패 이력 이후의 재검사 결과입니다. 기존 작업을 보존했으며 빌드·자동 테스트·실기기 QA·콘솔 변경·커밋·푸시는 실행하지 않았습니다. 정적 검사 통과는 광고·선택 UI·설정 전환의 실기기 검증 완료를 뜻하지 않습니다. 로그는 사용자 Temp의 `lint-repair-*`, `lint-*-final.*`, `lint-*-complete.*`에 보존했습니다.
 
 UMP SDK는 지연 로드하여 네이티브 등록 실패를 동의 요청의 오류 경계 안에서 보고합니다. `no-require-imports`는 이 경계에 한해서만 사유를 주석으로 남겼습니다. 외부 시계/구독 초기 상태 동기화에 필요한 좁은 Hook 예외 역시 해당 코드에 이유를 명시했으며 규칙 전체를 끄지 않았습니다.
+
+## UMP QA build separation — 2026-10-15
+
+- Android QA: `scripts/build-local-apk.ps1 -UmpEeaTestDevice <UMP_HASH>`. Use the actual SDK-issued 32-character test-device hash; do not substitute the advertising ID. The approved QA flow resets consent once per fresh process and requests the official EEA test form. Foreground resumes, ad retries and manual consent recovery do not repeatedly reset it. A published AdMob message and reachable Google services are still required; no fake consent or replacement dialog is used.
+- Normal Android artifacts: `scripts/build-local-apk.ps1 -IncludeBundle`. Existing signing and version numbers are retained. A local rebuild does not establish eligibility to reuse that code for a new Play upload.
+- Normal iOS IPA only: `eas build --platform ios --profile ipa-only --non-interactive`. Reuse existing signing, leave forced UMP settings off, and do not run submission/auto-submit. This is not an installable QA-device provisioning change.
+- Source and build-entrypoint update; new artifact results and runtime verification are recorded separately. Do not treat the existence of this section as a successful build or device check. See the [shared QA rule](https://github.com/ssongyc/development-policies/blob/main/skills/mobile-app-production/references/rewarded-ads.md#forced-ump-form-during-qa).
