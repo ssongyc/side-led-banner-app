@@ -702,3 +702,5 @@ UMP SDK는 지연 로드하여 네이티브 등록 실패를 동의 요청의 �
 - Normal Android artifacts: `scripts/build-local-apk.ps1 -IncludeBundle`. Existing signing and version numbers are retained. A local rebuild does not establish eligibility to reuse that code for a new Play upload.
 - Normal iOS IPA only: `eas build --platform ios --profile ipa-only --non-interactive`. Reuse existing signing, leave forced UMP settings off, and do not run submission/auto-submit. This is not an installable QA-device provisioning change.
 - Source and build-entrypoint update; new artifact results and runtime verification are recorded separately. Do not treat the existence of this section as a successful build or device check. See the [shared QA rule](https://github.com/ssongyc/development-policies/blob/main/skills/mobile-app-production/references/rewarded-ads.md#forced-ump-form-during-qa).
+
+For this IPA-only run, credentialsSource is local and uses the approved existing certificate/profile through a temporary ignored adapter; production credential configuration is unchanged. No new certificate or TestFlight submission is requested.
