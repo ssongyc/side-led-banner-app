@@ -47,7 +47,7 @@ export async function ensureAdConsent(): Promise<void> {
       await foreground();
       const qaDevice = process.env.EXPO_PUBLIC_UMP_EEA_TEST_DEVICE;
       const sdk = nativeSdk();
-      if (qaDevice) {
+      if (qaDevice && qaDevice !== 'disabled') {
         if (!/^[A-Fa-f0-9]{32}$/.test(qaDevice)) throw new Error('Invalid UMP QA device identifier.');
         // Reset once per process; an approved manual recovery must not reset again.
         if (!qaConsentReset) {

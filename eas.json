@@ -30,7 +30,7 @@
       "env": {
         "LEDPOP_AD_PROFILE": "production",
         "EXPO_PUBLIC_WEB_AD_DIAGNOSTICS": "0",
-        "EXPO_PUBLIC_UMP_EEA_TEST_DEVICE": ""
+        "EXPO_PUBLIC_UMP_EEA_TEST_DEVICE": "disabled"
       }
     },
     "ipa-only": {
@@ -38,7 +38,7 @@
       "distribution": "store",
       "autoIncrement": false,
       "env": {
-        "EXPO_PUBLIC_UMP_EEA_TEST_DEVICE": ""
+        "EXPO_PUBLIC_UMP_EEA_TEST_DEVICE": "disabled"
       }
     }
   },
