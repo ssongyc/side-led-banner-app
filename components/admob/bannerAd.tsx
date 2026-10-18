@@ -11,7 +11,6 @@ import { recordAdEvent } from "@/ads/adTrace";
 import { initializeMobileAds, retryMobileAdsInitialization, useMobileAdsState, useMobileAdsLoadDelayed } from "@/ads/initializeMobileAds";
 import { getBannerPlacement } from "@/ads/bannerState";
 
-const REQUEST_OPTIONS = { requestNonPersonalizedAdsOnly: true };
 type Props = { style?: StyleProp<ViewStyle>; unavailableLabel: string };
 type Placement = { owner: symbol; label: string };
 const PlacementContext = createContext<{
@@ -220,7 +219,7 @@ function PersistentBanner({ placementId, adaptiveWidth, availableWidth, resizeSe
       onHeight(Math.max(50, event.nativeEvent.layout.height));
     }}>
     {owned && config && requestSize.width > 0 && (state.phase === "loading" || (adsAllowed && !sizeChanged && state.phase === "loaded")) ?
-      <AdaptiveBannerAd key={requestId} unitId={config.banner} width={requestSize.width} requestOptions={REQUEST_OPTIONS}
+      <AdaptiveBannerAd key={requestId} unitId={config.banner} width={requestSize.width}
         onSizeChange={size => traceBanner("size_changed", { ...size, attempt: state.attempt })}
         onAdImpression={() => {
           if (getBannerState().requestId !== requestId) return;

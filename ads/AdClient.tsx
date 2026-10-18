@@ -20,7 +20,7 @@ export const getNativeAdAppId = (): string => {
   return requireNativeModule("LedPopAdImmersive").getAppId();
 };
 export const disposeRewardedAd = (ad: RewardedAdHandle) => ad.dispose();
-export const createNativeRewardedAd = (unitId: string) => RewardedAd.createForAdRequest(unitId, { requestNonPersonalizedAdsOnly: true });
+export const createNativeRewardedAd = (unitId: string) => RewardedAd.createForAdRequest(unitId);
 export async function beginRewardedPresentation(token: number) {
   if (Platform.OS === "android") await requireNativeModule("LedPopAdImmersive").begin(token);
 }

@@ -704,3 +704,7 @@ UMP SDK는 지연 로드하여 네이티브 등록 실패를 동의 요청의 �
 - Source and build-entrypoint update; new artifact results and runtime verification are recorded separately. Do not treat the existence of this section as a successful build or device check. See the [shared QA rule](https://github.com/ssongyc/development-policies/blob/main/skills/mobile-app-production/references/rewarded-ads.md#forced-ump-form-during-qa).
 
 For this IPA-only run, credentialsSource is local and uses the approved existing certificate/profile through a temporary ignored adapter; production credential configuration is unchanged. No new certificate or TestFlight submission is requested.
+
+## 광고 요청 옵션 변경 (2026-10-18)
+
+사용자 승인에 따라 광고 요청의 비개인화 강제 옵션을 제거했습니다. 기존 UMP 동의 확인과 광고 요청 허용 검사는 유지하며, 실제 개인화 여부는 SDK가 동의 신호에 따라 처리합니다. 광고 ID·보상·재시도 동작은 변경하지 않았습니다. 빌드·실기기 광고 로드 검증은 수행하지 않았으며, No fill 해소를 보장하는 결과는 아닙니다.
