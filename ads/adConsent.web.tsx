@@ -1,7 +1,9 @@
 export class ConsentBlockedError extends Error {}
-const state = { allowed: false, required: false, busy: false, revision: 0 };
+const state = { allowed: false, required: false, busy: false, revision: 0, failure: null };
 export const getAdConsent = () => state;
 export const isAdConsentAllowed = () => false;
+export const canRetryAdConsent = () => false;
+export function prepareAdConsentRetry() {}
 export const subscribeAdConsent = (_listener: () => void) => () => {};
 export const useAdConsent = () => state;
 export async function ensureAdConsent(): Promise<void> { throw new ConsentBlockedError('Native advertising is unavailable on web.'); }

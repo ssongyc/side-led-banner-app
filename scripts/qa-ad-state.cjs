@@ -19,7 +19,7 @@ function harness() {
     env, timers, now: () => now,
     advance(ms) { const end = now + ms; for (;;) { const next = [...timers].filter(([,t]) => t.at <= end).sort((a,b) => a[1].at-b[1].at)[0]; if (!next) break; timers.delete(next[0]); now = next[1].at; next[1].fn(); } now = end; },
     load(file, deps = {}) {
-      const code = ts.transpileModule(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+      const code = ts.transpileModule(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React } }).outputText;
       const exports = {};
       vm.runInNewContext(code, { ...env, exports, require(id) { if (!(id in deps)) throw Error('Unmocked boundary: '+id); return deps[id]; } }, { filename: file });
       return exports;
@@ -32,6 +32,7 @@ function rewarded() {
   const h=harness(), ads=[], appListeners=new Set(); let rewards=0, shows=0, premium='free', prepare=async()=>{}, show=async()=>{};
   const app={currentState:'active',addEventListener(_name,fn){appListeners.add(fn);return {remove(){appListeners.delete(fn);}};}};
   const api=h.load('ads/rewardedState.ts',{
+    './adConsent':{isAdConsentAllowed:()=>true,canRetryAdConsent:()=>false,prepareAdConsentRetry(){},subscribeAdConsent:()=>()=>{},registerConsentLifecycle:()=>()=>{},ConsentBlockedError:class extends Error{}},
     './showFailure':h.load('ads/showFailure.ts'),
     './AdClient':{rewardedAdEvents:{loaded:'loaded',opened:'opened',earnedReward:'earned',closed:'closed',error:'error'},
       createNativeRewardedAd(){const handlers=new Map();const ad={loaded:false,googleRewardOrderGuaranteed:true,dispose(){handlers.clear();},load(){ad.loadTime=h.now();},addAdEventListener(name,fn){handlers.set(name,fn);return()=>handlers.delete(name);},emit(name){if(name==='loaded')ad.loaded=true;handlers.get(name)?.();},handlers};ads.push(ad);return ad;},
@@ -105,13 +106,13 @@ test('rewarded: expiry during asynchronous native preparation cancels show',asyn
 });
 test('SDK initialization: shared promise, bounded 6/12 retries, manual recovery',async()=>{
  const h=harness();let calls=0,ready=false;
- const a=h.load('ads/initializeMobileAds.ts',{'react':{useSyncExternalStore(){}},'react-native':{AppState:{currentState:'active',addEventListener(){return {remove(){}};}}},'./AdClient':{initializeAdSdk:async()=>{calls++;if(!ready)throw Error('offline');return [{state:1}];}},'./adConfiguration':{getAdConfiguration:()=>({})},'./adTrace':{recordAdEvent(){}}});
- const first=a.initializeMobileAds(),second=a.initializeMobileAds();assert.equal(first,second);let rejected=false;first.catch(()=>rejected=true);await flush();h.advance(0);await flush();assert.equal(calls,1);h.advance(5999);await flush();assert.equal(calls,1);h.advance(1);await flush();assert.equal(calls,2);h.advance(12000);await flush();assert.equal(calls,3);assert.equal(a.getMobileAdsState(),'failed');assert.equal(rejected,true);
+ const a=h.load('ads/initializeMobileAds.ts',{'./adConsent':{ensureAdConsent:async()=>{}},'react':{useSyncExternalStore(){}},'react-native':{AppState:{currentState:'active',addEventListener(){return {remove(){}};}}},'./AdClient':{initializeAdSdk:async()=>{calls++;if(!ready)throw Error('offline');return [{state:1}];}},'./adConfiguration':{getAdConfiguration:()=>({})},'./adTrace':{recordAdEvent(){}}});
+ const first=a.initializeMobileAds(),second=a.initializeMobileAds();second.catch(()=>{});let rejected=false;first.catch(()=>rejected=true);await flush();h.advance(0);await flush();assert.equal(calls,1);h.advance(5999);await flush();assert.equal(calls,1);h.advance(1);await flush();assert.equal(calls,2);h.advance(12000);await flush();assert.equal(calls,3);assert.equal(a.getMobileAdsState(),'failed');assert.equal(rejected,true);
  await a.initializeMobileAds().catch(()=>{});assert.equal(calls,3);ready=true;a.retryMobileAdsInitialization();const recovery=a.initializeMobileAds();await flush();h.advance(0);await recovery;assert.equal(a.getMobileAdsState(),'ready');assert.equal(calls,4);
 });
 test('SDK initialization: cancel invalidates an unresolved SDK completion',async()=>{
  const h=harness();let resolve;
- const a=h.load('ads/initializeMobileAds.ts',{'react':{useSyncExternalStore(){}},'react-native':{AppState:{currentState:'active',addEventListener(){return {remove(){}};}}},'./AdClient':{initializeAdSdk:()=>new Promise(r=>resolve=r)},'./adConfiguration':{getAdConfiguration:()=>({})},'./adTrace':{recordAdEvent(){}}});
+ const a=h.load('ads/initializeMobileAds.ts',{'./adConsent':{ensureAdConsent:async()=>{}},'react':{useSyncExternalStore(){}},'react-native':{AppState:{currentState:'active',addEventListener(){return {remove(){}};}}},'./AdClient':{initializeAdSdk:()=>new Promise(r=>resolve=r)},'./adConfiguration':{getAdConfiguration:()=>({})},'./adTrace':{recordAdEvent(){}}});
  const pending=a.initializeMobileAds();pending.catch(()=>{});await flush();h.advance(0);await flush();a.suspendMobileAdsInitialization();resolve([{state:1}]);await flush();assert.equal(a.getMobileAdsState(),'idle');assert.equal(h.timers.size,0);
 });
 function web(enabled=true,outcome='success'){
@@ -178,4 +179,32 @@ test('banner: orientation return preserves live request and exhausted recovery b
  h.advance(100000);registry.getBannerPlacement('settings-landscape').requestBanner(l);
  assert.equal(landscape.getBannerState().attempt,6);assert.equal(landscape.getBannerState().extraUsed,true);
  assert.equal(portrait.getBannerState().requestId,request);
+});
+
+function consentHarness() {
+ const h=harness(); let allowed=false,fail=true,requests=0,resets=0,forms=0;
+ const sdk={AdsConsent:{reset(){resets++;allowed=false;},async requestInfoUpdate(){requests++;if(fail)throw Error('offline');},async loadAndShowConsentFormIfRequired(){forms++;allowed=true;},async getConsentInfo(){return {canRequestAds:allowed,privacyOptionsRequirementStatus:'required'};}},AdsConsentPrivacyOptionsRequirementStatus:{REQUIRED:'required'},AdsConsentDebugGeography:{EEA:'eea'}};
+ h.env.process={env:{EXPO_PUBLIC_UMP_EEA_TEST_DEVICE:'0123456789ABCDEF0123456789ABCDEF'}};
+ const api=h.load('ads/adConsent.tsx',{'react':{Component:class{}},'react-native':{AppState:{currentState:'active'},Platform:{OS:'android'}},'react-native-google-mobile-ads':sdk});
+ return {api,requests:()=>requests,resets:()=>resets,forms:()=>forms,online(){fail=false;}};
+}
+test('consent: failure shared until explicit retry; requests deduplicated and QA reset once',async()=>{
+ const h=consentHarness(),a=h.api;
+ await assert.rejects(a.ensureAdConsent(),a.ConsentBlockedError);
+ await assert.rejects(a.ensureAdConsent(),a.ConsentBlockedError);
+ assert.equal(h.requests(),1);assert.equal(a.canRetryAdConsent(),true);
+ h.online();a.prepareAdConsentRetry();await Promise.all([a.ensureAdConsent(),a.ensureAdConsent()]);
+ assert.equal(h.requests(),2);assert.equal(h.resets(),1);assert.equal(h.forms(),1);assert.equal(a.isAdConsentAllowed(),true);
+});
+test('banner: consent cancellation preserves attempts and rejects old callbacks',()=>{
+ const {api:a,token:t}=banner();a.claimBanner(t);a.requestBanner(t);const first=a.getBannerState().requestId;
+ a.invalidateConsent(t);assert.equal(a.getBannerState().phase,'cancelled');assert.equal(a.getBannerState().attempt,1);assert.equal(a.bannerLoaded(t,first),false);
+ a.resumeConsent(t);a.requestBanner(t);assert.equal(a.getBannerState().attempt,2);
+ a.invalidateConsent(t);a.resumeConsent(t);a.requestBanner(t);assert.equal(a.getBannerState().attempt,3);
+ a.invalidateConsent(t);a.resumeConsent(t);a.requestBanner(t);assert.equal(a.getBannerState().phase,'stopped');assert.equal(a.getBannerState().attempt,3);assert.equal(a.getBannerState().extraUsed,false);
+});
+test('banner: privacy preserves genuine deadline and retires loaded inventory',()=>{
+ const {api:a,token:t,advance}=banner();a.claimBanner(t);a.requestBanner(t);a.bannerFailed(t,a.getBannerState().requestId);const due=a.getBannerState().dueAt;
+ a.invalidateConsent(t);a.resumeConsent(t);assert.equal(a.getBannerState().dueAt,due);advance(6000);a.requestBanner(t);a.bannerLoaded(t,a.getBannerState().requestId);
+ a.invalidateConsent(t);assert.equal(a.getBannerState().phase,'idle');a.requestBanner(t);assert.equal(a.getBannerState().attempt,1);
 });

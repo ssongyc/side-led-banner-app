@@ -1,4 +1,4 @@
-import { isAdConsentAllowed, registerConsentLifecycle } from './adConsent';
+import { ConsentBlockedError, canRetryAdConsent, prepareAdConsentRetry, subscribeAdConsent, isAdConsentAllowed, registerConsentLifecycle } from './adConsent';
 import { disposeRewardedAd, createNativeRewardedAd, rewardedAdEvents, beginRewardedPresentation, endRewardedPresentation, showRewardedAd, type RewardedAdHandle } from "./AdClient";
 import { getAdConfiguration } from "@/ads/adConfiguration";
 import { initializeMobileAds, getMobileAdsState, retryMobileAdsInitialization, isMobileAdsLoadDelayed, subscribeMobileAdsState } from "@/ads/initializeMobileAds";
@@ -16,7 +16,7 @@ type RewardedSlot = {
   ad: RewardedAdHandle | null;
   attempt: number;
   loadedAt: number | null;
-  failure: "load" | "unavailable" | "show" | "open-timeout" | "expiry" | "configuration" | "initialization" | null;
+  failure: "load" | "unavailable" | "show" | "open-timeout" | "expiry" | "configuration" | "initialization" | "consent" | null;
   state: SlotState;
   retryTimer: ReturnType<typeof setTimeout> | null;
   retryAt: number | null;
@@ -371,6 +371,7 @@ export function loadRewardedAd(options?: { restartFailed?: boolean }) {
   if (slots.current.state === "failed") {
     if (!options?.restartFailed || !getCanRetryState()) return;
     if (reuseNextForRecovery()) return;
+    prepareAdConsentRetry();
     retryMobileAdsInitialization();
     disposeSlot("current");
   }
@@ -409,33 +410,35 @@ export function loadRewardedAd(options?: { restartFailed?: boolean }) {
   }).catch(error => {
     if (slots.current !== waitingSlot) return;
     waitingSlot.state = "failed";
-    waitingSlot.failure = getMobileAdsState() === "configuration" ? "configuration" : "initialization";
-    recordAdEvent("rewarded", "initialization_failed", {}, error);
+    waitingSlot.failure = error instanceof ConsentBlockedError ? "consent" : getMobileAdsState() === "configuration" ? "configuration" : "initialization";
+    recordAdEvent("rewarded", waitingSlot.failure === "consent" ? "consent_blocked" : "initialization_failed", {}, error);
     notifySubscribers();
   });
 }
 
 function getLoadedState() {
-  return getPremiumSnapshot().entitlement === "free" && slots.current.state === "loaded" &&
+  return isAdConsentAllowed() && getPremiumSnapshot().entitlement === "free" && slots.current.state === "loaded" &&
     slots.current.ad?.loaded === true && slots.current.ad.googleRewardOrderGuaranteed &&
     !isLoadedSlotExpired(slots.current);
 }
 
 function getCanRetryState() {
   const current = slots.current;
-  return AppState.currentState === "active" && getPremiumSnapshot().entitlement === "free" &&
-    (isLoadedSlotExpired(current) || (current.state === "failed" &&
+  if (AppState.currentState !== "active" || getPremiumSnapshot().entitlement !== "free") return false;
+  if (current.state === "failed" && canRetryAdConsent()) return true;
+  if (current.failure === "consent") return false;
+  return isAdConsentAllowed() && (isLoadedSlotExpired(current) || (current.state === "failed" &&
     (current.failure === "unavailable" || current.failure === "expiry" || current.failure === "show" || current.failure === "initialization" || (current.failure === "load" && current.attempt >= 3))));
 }
 
 export function getAdSnapshot() {
   return {
-    failure: slots.current.failure,
+    failure: !isAdConsentAllowed() && slots.current.state === "failed" ? "consent" as const : slots.current.failure,
     delayed: isMobileAdsLoadDelayed() || (slots.current.state === "loading" && slots.current.ad !== null &&
       slots.current.retryAt === null && slots.current.requestedAt !== null && performance.now() - slots.current.requestedAt >= 45000),
     expired: slots.current.failure === "expiry" || isLoadedSlotExpired(slots.current),
     loaded: getLoadedState(),
-    failed: slots.current.state === "failed" || slots.current.failure === "open-timeout" || isLoadedSlotExpired(slots.current),
+    failed: (isAdConsentAllowed() && slots.current.state === "failed" && slots.current.failure !== "consent") || slots.current.failure === "open-timeout" || isLoadedSlotExpired(slots.current),
     showFailed: slots.current.failure === "show" || slots.current.failure === "open-timeout",
     canRetry: getCanRetryState(),
   };
@@ -566,8 +569,19 @@ function reuseNextForRecovery() {
 export function retryRewarded() {
     if (!getCanRetryState()) return;
     if (reuseNextForRecovery()) return;
+    prepareAdConsentRetry();
     retryMobileAdsInitialization();
     disposeSlot("current");
     loadRewardedAd(); // Only load; a new enabled Watch Ad action is required to show.
 }
 
+
+// Resume a zero-request preload after privacy choices allow ads; never show automatically.
+subscribeAdConsent(() => {
+  if (isAdConsentAllowed() && slots.current.failure === "consent") {
+    slots.current.state = "idle";
+    slots.current.failure = null;
+    loadRewardedAd();
+  }
+  notifySubscribers();
+});

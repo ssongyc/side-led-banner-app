@@ -9,6 +9,7 @@ import { AdaptiveBannerAd } from "@/ads/AdClient";
 import { getAdConfiguration } from "@/ads/adConfiguration";
 import { recordAdEvent } from "@/ads/adTrace";
 import { initializeMobileAds, retryMobileAdsInitialization, useMobileAdsState, useMobileAdsLoadDelayed } from "@/ads/initializeMobileAds";
+import { useAdConsent, isAdConsentAllowed, registerConsentLifecycle } from "@/ads/adConsent";
 import { getBannerPlacement } from "@/ads/bannerState";
 
 type Props = { style?: StyleProp<ViewStyle>; unavailableLabel: string };
@@ -83,11 +84,12 @@ function PersistentBanner({ placementId, adaptiveWidth, availableWidth, resizeSe
   visible: boolean; delayedLabel: string; unavailableLabel: string; onHeight: (height: number) => void;
   bottom: number; left: number; right: number;
 }) {
-  const { discardLoadedBanner, initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, releaseBanner, requestBanner, bannerLoaded, bannerFailed } = getBannerPlacement(placementId);
+  const { invalidateConsent, resumeConsent, discardLoadedBanner, initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, releaseBanner, requestBanner, bannerLoaded, bannerFailed } = getBannerPlacement(placementId);
   const sdkState = useMobileAdsState();
   const sdkDelayed = useMobileAdsLoadDelayed();
   const [foreground, setForeground] = useState(AppState.currentState === "active");
-  const eligible = visible && foreground;
+  const consent = useAdConsent();
+  const eligible = visible && foreground && consent.allowed && !consent.busy;
   const canRequest = useRef(false);
   useLayoutEffect(() => {
     canRequest.current = eligible;
@@ -138,15 +140,19 @@ function PersistentBanner({ placementId, adaptiveWidth, availableWidth, resizeSe
     return () => releaseBanner(owner);
   }, [claimBanner, releaseBanner]);
   useEffect(() => {
-    if (eligible) void initializeMobileAds().catch(() => { /* Shared state carries failure. */ });
-  }, [eligible]);
+    if (visible && foreground) void initializeMobileAds().catch(() => { /* Shared state carries failure. */ });
+  }, [visible, foreground, consent.allowed]);
+  useEffect(() => registerConsentLifecycle(() => true, () => invalidateConsent(token.current)), [invalidateConsent]);
+  useEffect(() => {
+    if (owned && consent.allowed && !consent.busy) resumeConsent(token.current);
+  }, [owned, consent.allowed, consent.busy, resumeConsent]);
   useEffect(() => {
     if (owned && sdkState === "failed") initializationFailed(token.current);
   }, [owned, sdkState, state.phase, initializationFailed]);
   useEffect(() => {
     if (!eligible || !owned || !config || sdkState !== "failed" || state.dueAt === null || state.extraUsed) return;
     const timer = setTimeout(() => {
-      if (!canRequest.current || AppState.currentState !== "active" || !beginInitializationRecovery(token.current)) return;
+      if (!canRequest.current || !isAdConsentAllowed() || AppState.currentState !== "active" || !beginInitializationRecovery(token.current)) return;
       retryMobileAdsInitialization();
       traceBanner("initialization_extra_cycle_started", { placementId });
       void initializeMobileAds().catch(() => { /* Shared state reports the genuine result. */ });
@@ -156,12 +162,12 @@ function PersistentBanner({ placementId, adaptiveWidth, availableWidth, resizeSe
   useEffect(() => {
     if (!eligible || !owned || sdkState !== "ready" || !config || width <= 0 || sizeChanged || !resizeSettled) return;
     if (state.phase === "idle") {
-      if (canRequest.current && AppState.currentState === "active") requestBanner(token.current);
+      if (canRequest.current && isAdConsentAllowed() && AppState.currentState === "active") requestBanner(token.current);
       return;
     }
     if (state.dueAt === null) return;
     const id = setTimeout(() => {
-      if (canRequest.current && AppState.currentState === "active") requestBanner(token.current);
+      if (canRequest.current && isAdConsentAllowed() && AppState.currentState === "active") requestBanner(token.current);
     }, Math.max(0, state.dueAt - performance.now()));
     return () => clearTimeout(id);
   }, [eligible, owned, sdkState, config, width, state.phase, state.dueAt, sizeChanged, resizeSettled, requestBanner]);

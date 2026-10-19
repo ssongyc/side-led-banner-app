@@ -4,7 +4,8 @@ const R8_VERSION = "8.13.23";
 
 module.exports = function withAndroidRelease(config) {
   config = withGradleProperties(config, (mod) => {
-    for (const key of ["android.enableMinifyInReleaseBuilds", "android.enableShrinkResourcesInReleaseBuilds"]) {
+    // AGP 8.12/8.13 require explicit opt-in; AGP 9 enables this by default.
+    for (const key of ["android.enableMinifyInReleaseBuilds", "android.enableShrinkResourcesInReleaseBuilds", "android.r8.optimizedResourceShrinking"]) {
       const entry = mod.modResults.find((item) => item.type === "property" && item.key === key);
       if (entry) entry.value = "true";
       else mod.modResults.push({ type: "property", key, value: "true" });

@@ -1,5 +1,5 @@
 // Two fixed orientation placements preserve budgets across routes and width changes.
-type Phase = "idle" | "loading" | "loaded" | "waiting" | "failed" | "stopped";
+type Phase = "idle" | "loading" | "loaded" | "waiting" | "failed" | "stopped" | "cancelled";
 type Snapshot = { phase: Phase; attempt: number; requestId: number; dueAt: number | null; messageUntil: number; extraUsed: boolean };
 function createBannerPlacement() {
   let state: Snapshot = { phase: "idle", attempt: 0, requestId: 0, dueAt: null, messageUntil: 0, extraUsed: false };
@@ -51,6 +51,22 @@ function createBannerPlacement() {
     if (owner !== token || state.phase !== "loaded") return;
     update({ phase: "idle", attempt: 0, extraUsed: false, dueAt: null, messageUntil: 0 });
   }
+  function invalidateConsent(token: symbol) {
+    if (owner !== token) return;
+    if (state.phase === "loading") {
+      // Cancellation is not a load failure and never refunds an issued request.
+      update({ phase: "cancelled", requestId: state.requestId + 1, dueAt: null, messageUntil: 0 });
+    } else if (state.phase === "loaded") {
+      update({ phase: "idle", attempt: 0, requestId: state.requestId + 1,
+        extraUsed: false, dueAt: null, messageUntil: 0 });
+    }
+    // Real failure deadlines and exhausted budgets remain unchanged.
+  }
+  function resumeConsent(token: symbol) {
+    if (owner !== token || state.phase !== "cancelled") return;
+    if (state.attempt % 3 === 0) update({ phase: "stopped" });
+    else update({ phase: "waiting", dueAt: performance.now() });
+  }
   function releaseBanner(token: symbol) {
     if (owner !== token) return;
     owner = null;
@@ -64,7 +80,7 @@ function createBannerPlacement() {
     }
   }
 
-  return { discardLoadedBanner, initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, requestBanner, bannerLoaded, bannerFailed, releaseBanner };
+  return { invalidateConsent, resumeConsent, discardLoadedBanner, initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, requestBanner, bannerLoaded, bannerFailed, releaseBanner };
 }
 
 const placements = new Map<string, ReturnType<typeof createBannerPlacement>>();

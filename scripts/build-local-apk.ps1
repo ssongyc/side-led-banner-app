@@ -178,6 +178,13 @@ try {
   }else{Skip-AndroidBuildStage $timingState 'nativeGeneration'}
   @{ restoredNativeCaches=@($restoredNativeCaches.ToArray()); nativeRegenerated=[bool]($plan.nativeRequired -or $plan.installRequired); installationRequired=[bool]$plan.installRequired } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'cache-reuse.json')
   Start-AndroidBuildStage $timingState 'nativeConfiguration'
+  $releaseProperties=Get-Content android/gradle.properties -Raw
+  foreach($optimizationProperty in @('android.enableMinifyInReleaseBuilds','android.enableShrinkResourcesInReleaseBuilds','android.r8.optimizedResourceShrinking')){
+   $propertyValues=[regex]::Matches($releaseProperties, ('(?m)^\s*'+[regex]::Escape($optimizationProperty)+'\s*=\s*([^\r\n]+)'))
+   if($propertyValues.Count -ne 1 -or $propertyValues[0].Groups[1].Value.Trim() -cne 'true'){
+    throw "Required release optimization property is missing, duplicated or disabled: $optimizationProperty. Regenerate native configuration from the release plugin."
+   }
+  }
   $gradle=Get-Content android/app/build.gradle -Raw
   $pattern='(?s)(release\s*\{.*?signingConfig\s*(?:=\s*)?)signingConfigs\.(?:debug|localVerified)'
   if([regex]::Matches($gradle,$pattern).Count -ne 1){throw 'Unexpected release signing template'}
@@ -308,6 +315,21 @@ android {
    $apk=Join-Path $resolved 'android/app/build/outputs/apk/release/app-release.apk'
   }
   if(-not (Test-Path -LiteralPath $apk)){throw 'Release APK is missing'}
+  if($UmpEeaTestDevice){
+   $qaArchive=[IO.Compression.ZipFile]::OpenRead($apk)
+   try {
+    $bundleEntry=$qaArchive.GetEntry('assets/index.android.bundle')
+    if(-not $bundleEntry){throw 'QA APK JavaScript bundle is missing'}
+    $bundleStream=$bundleEntry.Open()
+    $bundleBytes=[IO.MemoryStream]::new()
+    try {$bundleStream.CopyTo($bundleBytes)} finally {$bundleStream.Dispose()}
+    try {
+     if(-not [Text.Encoding]::ASCII.GetString($bundleBytes.ToArray()).Contains($UmpEeaTestDevice)){
+      throw 'QA APK does not contain the requested UMP test-device identifier; check Metro environment cache inputs'
+     }
+    } finally {$bundleBytes.Dispose()}
+   } finally {$qaArchive.Dispose()}
+  }
   if(-not $IncludeBundle){
    Start-AndroidBuildStage $timingState 'apkBasicVerification'
    & (Join-Path $buildTools 'apksigner.bat') verify --verbose --print-certs $apk > (Join-Path $record 'apk-signature.txt') 2>&1

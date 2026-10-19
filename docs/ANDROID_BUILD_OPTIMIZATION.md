@@ -255,3 +255,28 @@ Dependency schema 2 and native schema 4 now remove only the root `package.json.v
 - AAB: `aab-deliveries/20260922-194317-939d30db88914e228f0c7f9ba03f9412/LedPopV112.aab`, 223,120,887 bytes; SHA-256 `036F32A64DB0C2CD5003DEBA947B083A20CFED5DFFCFC1571421BB78195F5C51`; export `2026-09-22T10:43:17.9426375Z`.
 - APK: `apk-deliveries/20260922-194347-bbfb8558c2e74d29b777196feb0aa034/LedPopV112.apk`, 253,313,686 bytes; SHA-256 `270A74F3016EB6FA1A0D823740C995F62F6A6CBD0D5668886B470A233AAD5DBF`; export `2026-09-22T10:43:47.4508673Z`. Mapping SHA-256: `1405B7F92B5D9BE6B8CDF59000CD6D8AD34841147CB7B33FADA5A9101A603104`.
 - Runtime QA and Play upload were not performed. Play code eligibility across all tracks remains unverified. This documentation delivery runs no additional build, lint or tests; original local records remain under the run directory.
+
+## APK/AAB 용량 분석 — 2026-10-18
+
+기존 산출물 ZIP을 읽기 전용으로 분석했으며 각 SHA-256은 해당 build-result.json과 일치했습니다. 단위는 MiB(1,048,576 bytes), 항목별 수치는 ZIP 내 저장 크기입니다. 총합에는 별도 ZIP·정렬·서명 오버헤드가 포함됩니다.
+
+| 항목 | QA APK 20261016-185016-4d617d41 | Production APK 20261012-085201-058b0c72 | 같은 production AAB |
+| --- | ---: | ---: | ---: |
+| 네이티브 라이브러리 | 127.18 | 127.18 | 47.16 |
+| 글꼴 | 93.13 | 93.13 | 93.60 |
+| DEX | 6.72 | 6.72 | 6.72 |
+| 이미지 | 6.39 | 6.39 | 6.27 |
+| JavaScript | 5.08 | 5.06 | 2.14 |
+| 빌드 메타데이터 | 0.02 | 0.02 | 55.56 |
+| 기타 리소스 | 2.04 | 2.11 | 1.09 |
+| 전체 파일 | 241.50 | 241.61 | 212.81 |
+
+모두 V1.1.3(31)이지만 QA/production 및 소스가 다른 빌드이므로 차이를 최적화 효과로 해석하지 않습니다. 통합 APK는 네 가지 ABI를 포함하며 AAB와 압축 방식이 다릅니다. AAB의 매핑·디버그 심볼은 사용자 다운로드 용량과 구분하고 보존합니다. 실제 Play 다운로드·설치 크기는 측정하지 않았습니다.
+
+현재 원격 글꼴로 선언된 Noto Serif SC/TC와 LXGW WenKai TC의 6개 파일이 분석한 산출물에도 포함되어 있고 AAB 저장 크기 합계는 약 42.29MiB입니다. 생성 리소스 잔존 여부와 당시 소스 입력을 추가 확인해야 하며, 이번 분석만으로 미사용·삭제 가능을 판정하지 않았습니다. 1KiB 이상 파일의 내용 해시 비교에서 각 산출물에 동일 파일 10개 그룹을 발견했습니다. 중복 저장 바이트 상한은 APK 약 0.374MiB, AAB 약 0.366MiB이며 주로 주간/야간 스플래시 이미지입니다. 라이선스·SDK 리소스도 포함하므로 이 수치를 삭제 가능량으로 보지 않습니다.
+
+상세 로컬 증거: `artifacts/size-audit-20261018/inventory.json`, `report.md`. 분석 시 빌드·리소스 삭제·압축 변경·재서명은 하지 않았습니다. 10월 18일 R8 옵션 및 보상 팝업 분리는 이 기존 산출물에 포함되지 않았습니다.
+
+## 테스트 APK 실행 차단 — 2026-10-19
+
+현재 변경분을 포함한 `-AdProfile test -MeasureBuild` APK 생성을 요청받았으나 명령 실행 전 자동 승인 검토 서비스가 `Selected model is at capacity`로 실패했습니다. 빌드 명령은 실행되지 않았으며 새 APK는 생성되지 않았습니다. 이는 코드 컴파일 오류·호스트 메모리 부족·안전성 거부를 의미하지 않습니다. 승인 절차를 우회하지 않았으며, 최신 검증된 QA APK는 여전히 10월 16일 산출물입니다.

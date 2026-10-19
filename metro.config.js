@@ -3,6 +3,14 @@ const { getDefaultConfig } = require('expo/metro-config');
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
+// Expo CI preserves Metro transforms even when Gradle rebundles for a changed
+// public environment value. Separate these QA/production transform caches.
+const { createHash } = require('node:crypto');
+config.cacheVersion = `${config.cacheVersion ?? ''}:ledpop:${createHash('sha256')
+  .update(JSON.stringify({
+    umpDevice: process.env.EXPO_PUBLIC_UMP_EEA_TEST_DEVICE ?? '',
+    adProfile: process.env.LEDPOP_AD_PROFILE ?? 'production',
+  })).digest('hex')}`;
 
 const path = require('path');
 config.resolver.resolveRequest = (context, moduleName, platform) => {
