@@ -87,7 +87,7 @@ export default function Index() {
     }
   }, [isPlaying]);
 
-  const handlePlay = async () => {
+  const handlePlay = () => {
     trackAnalyticsEvent("Play_clicked", {
       play_mode: playOption,
       font: config.appearance.font,
@@ -104,9 +104,13 @@ export default function Index() {
       effects: config.appearance.effectSelectedItems.join(","),
       backgroundEffect: config.appearance.backgroundEffectPreset,
     });
-    await ScreenOrientation.unlockAsync();
     updateUI({ isPlaying: true });
   };
+
+  // The editor must already be covered before native rotation is unlocked.
+  const handlePlayReady = useCallback(() => {
+    void ScreenOrientation.unlockAsync();
+  }, []);
 
   const handleStop = async () => {
     // Restore system chrome while Play still covers the main screen.
@@ -170,7 +174,13 @@ export default function Index() {
   }, []);
 
   return (
-    <MainScreen style={[styles.container, Platform.OS !== "ios" && { paddingTop: insets.top, paddingBottom: isPlaying ? 0 : (initialWindowMetrics?.insets.bottom ?? 0) }]}>
+    <View style={{ flex: 1, backgroundColor: config.background.backgroundColor }}>
+    <MainScreen
+      style={[styles.container, { opacity: isPlaying ? 0 : 1 }, Platform.OS !== "ios" && { paddingTop: insets.top, paddingBottom: isPlaying ? 0 : (initialWindowMetrics?.insets.bottom ?? 0) }]}
+      pointerEvents={isPlaying ? "none" : "auto"}
+      accessibilityElementsHidden={isPlaying}
+      importantForAccessibility={isPlaying ? "no-hide-descendants" : "auto"}
+    >
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View
           style={{ flex: 1 }}
@@ -288,11 +298,6 @@ export default function Index() {
           onWatchAd={showRewardedAd}
         />}
         <FontDownloadModal />
-        {/* fullscreen LED banner modal */}
-        <LedBannerFullScreen
-          visible={isPlaying}
-          onClose={handleStop}
-        />
         {__DEV__ ? (
           <>
             <ProDebugFab />
@@ -330,5 +335,11 @@ export default function Index() {
         />
       )}
     </MainScreen>
+    <LedBannerFullScreen
+      visible={isPlaying}
+      onReady={handlePlayReady}
+      onClose={handleStop}
+    />
+    </View>
   );
 }

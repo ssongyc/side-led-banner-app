@@ -25,8 +25,9 @@ import {
     hideAndroidNavigationBar,
 } from "@/utils/SystemChrome";
 import { Image } from "expo-image";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+    BackHandler,
     Modal,
     Platform,
     Pressable,
@@ -44,11 +45,13 @@ const FULLSCREEN_PHOTO_FILL_BLUR = 24;
 
 interface LedBannerFullScreenProps {
   visible: boolean;
+  onReady: () => void;
   onClose: () => void;
 }
 
 export const LedBannerFullScreen = ({
   visible,
+  onReady,
   onClose,
 }: LedBannerFullScreenProps) => {
   const { appearance } = useSettingsAppearance();
@@ -62,6 +65,25 @@ export const LedBannerFullScreen = ({
   const stageWidth = stageSize.width > 0 ? stageSize.width : windowWidth;
   const stageHeight = stageSize.height > 0 ? stageSize.height : windowHeight;
   const isPortrait = stageHeight >= stageWidth;
+  const readySent = useRef(false);
+  useEffect(() => {
+    if (!visible) readySent.current = false;
+  }, [visible]);
+  const reportReady = useCallback(() => {
+    hideAndroidNavigationBar();
+    if (!visible || readySent.current) return;
+    readySent.current = true;
+    onReady();
+  }, [visible, onReady]);
+
+  useEffect(() => {
+    if (!visible || Platform.OS !== "android") return;
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      onClose();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [visible, onClose]);
 
   const onStageLayout = useCallback(
     (e: { nativeEvent: { layout: { width: number; height: number } } }) => {
@@ -69,14 +91,15 @@ export const LedBannerFullScreen = ({
       setStageSize((prev) =>
         prev.width === width && prev.height === height ? prev : { width, height },
       );
+      if (width > 0 && height > 0 && Platform.OS !== "ios") reportReady();
     },
-    [],
+    [reportReady],
   );
 
   const isAnimationActive = usePlaybackActive(visible);
   useEffect(() => {
     if (!isAnimationActive) return;
-    // Reapply after rotation/resume; the Modal owns a separate Android window.
+    // Reapply after rotation/resume on the active Play window.
     hideAndroidNavigationBar();
   }, [isAnimationActive, windowWidth, windowHeight, stageWidth, stageHeight]);
 
@@ -201,19 +224,8 @@ export const LedBannerFullScreen = ({
     ],
   );
 
-  return (
-    <Modal
-      visible={visible}
-      onShow={hideAndroidNavigationBar}
-      animationType={Platform.OS === "ios" ? "none" : "fade"}
-      presentationStyle="fullScreen"
-      hardwareAccelerated
-      backdropColor={backgroundColor}
-      supportedOrientations={["portrait", "landscape"]}
-      statusBarTranslucent
-      navigationBarTranslucent
-      onRequestClose={onClose}
-    >
+  const content = (
+    <>
       <StatusBar hidden />
       <View
         style={[styles.root, { backgroundColor }]}
@@ -316,6 +328,23 @@ export const LedBannerFullScreen = ({
           accessibilityLabel="Close fullscreen"
         />
       </View>
+    </>
+  );
+
+  // Android shares the Activity's rotation transaction with the editor instead
+  // of resizing a Dialog window independently and exposing the editor beneath it.
+  if (Platform.OS !== "ios") return visible ? content : null;
+  return (
+    <Modal
+      visible={visible}
+      onShow={reportReady}
+      animationType="none"
+      presentationStyle="fullScreen"
+      backdropColor={backgroundColor}
+      supportedOrientations={["portrait", "landscape"]}
+      onRequestClose={onClose}
+    >
+      {content}
     </Modal>
   );
 };
