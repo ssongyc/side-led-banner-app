@@ -32,7 +32,7 @@ import { Dropdown } from "react-native-element-dropdown";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SUNNY_LINKS = {
-  homepage: "https://ssongyc.github.io/sunny-homepage/",
+  homepage: "https://sunnyinnolab.com",
   instagram: "https://www.instagram.com/sunnyinnolab/",
   twitter: "https://x.com/Sunnyinnolab",
   terms:

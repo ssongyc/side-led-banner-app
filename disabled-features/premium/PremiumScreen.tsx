@@ -12,7 +12,7 @@ import { Image, Linking, Platform, ScrollView, Text, TouchableOpacity, View } fr
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SUNNY_LINKS = {
-  homepage: "https://ssongyc.github.io/sunny-homepage/",
+  homepage: "https://sunnyinnolab.com",
   terms:
     "https://marmalade-neptune-dbe.notion.site/Terms-Conditions-c18656ce6c6045e590f652bf8291f28b?pvs=74",
   privacy:
