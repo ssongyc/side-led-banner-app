@@ -1,4 +1,23 @@
 // QA/normal JS bundles must not share a cached task result.
+// CMake hashes long object paths; Ninja bundled with CMake 3.22.1 cannot create
+// unshortened native-module paths under the fixed Windows build directory.
+gradle.beforeProject { project ->
+    if (System.getProperty('os.name').startsWith('Windows')) {
+        project.afterEvaluate {
+            if (project.plugins.hasPlugin('com.android.application') || project.plugins.hasPlugin('com.android.library')) {
+                def cmake = project.extensions.getByName('android').defaultConfig.externalNativeBuild.cmake
+                cmake.arguments.removeAll { it.startsWith('-DCMAKE_OBJECT_PATH_MAX=') }
+                cmake.arguments.add('-DCMAKE_OBJECT_PATH_MAX=240')
+                if (project.plugins.hasPlugin('com.android.application')) {
+                    // Leave room for the hash + Gesture Handler's long object basename.
+                    // This remains inside artifacts/b; module caches are untouched.
+                    project.extensions.getByName('android').externalNativeBuild.cmake.buildStagingDirectory = project.rootProject.file('../.c')
+                }
+            }
+        }
+    }
+}
+
 gradle.projectsEvaluated {
     allprojects {
         tasks.matching { it.name.startsWith('createBundle') && it.name.endsWith('JsAndAssets') }.configureEach {

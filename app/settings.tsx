@@ -264,7 +264,7 @@ export default function SettingsScreen() {
           </Text>
         </View>
         {compactHeight && footer}
-        <AdPrivacyOptions language={resolvedAppLocale} />
+        <AdPrivacyOptions language={resolvedAppLocale} color="#111111" />
       </ScrollView>
 
       {!compactHeight && footer}

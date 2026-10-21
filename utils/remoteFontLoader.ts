@@ -25,7 +25,7 @@ function isUsableFontFile(file: File): boolean {
   let handle: ReturnType<File["open"]> | null = null;
   try {
     handle = file.open(FileMode.ReadOnly);
-    return isPlausibleFontFile(file.size, handle.readBytes(4));
+    return isPlausibleFontFile(file.size, handle.readBytesSync(4));
   } catch {
     return false;
   } finally {

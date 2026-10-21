@@ -266,7 +266,7 @@ android {
   if($r8VersionExit -ne 0 -or $expectedR8 -notmatch '^\d+\.\d+\.\d+$'){throw 'Expected R8 version is invalid'}
   $mapping=Join-Path $resolved 'android/app/build/outputs/mapping/release/mapping.txt'
   if(-not (Test-Path -LiteralPath $mapping) -or (Get-Item -LiteralPath $mapping).Length -eq 0){throw 'Optimized release mapping is missing'}
-  if(-not (Select-String -LiteralPath $mapping -Pattern ('^# compiler_version: '+[regex]::Escape($expectedR8)+'$') -Quiet)){throw 'Mapping compiler version does not match the pinned R8 version'}
+  if(-not (Select-String -LiteralPath $mapping -Pattern ('^# compiler_version: '+[regex]::Escape($expectedR8)+'$') -Quiet)){throw 'Mapping compiler version does not match the expected AGP-bundled R8 version'}
   $optimizationArguments = @{ ConfigurationPath = (Join-Path (Split-Path $mapping -Parent) 'configuration.txt') }
   if ($IncludeBundle) { $optimizationArguments.AabPath = Join-Path $resolved 'android/app/build/outputs/bundle/release/app-release.aab' }
   $optimizationArgs = @('-NoProfile', '-File', (Join-Path $PSScriptRoot 'verify-r8-optimization.ps1'), '-ConfigurationPath', $optimizationArguments.ConfigurationPath)

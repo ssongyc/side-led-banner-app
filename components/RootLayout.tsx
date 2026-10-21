@@ -189,7 +189,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (startupComplete || storageStartup?.failed || fontsFailed) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const updateTimer = (state: string) => {
+    const updateTimer = (state: string | null | undefined) => {
       if (timer !== undefined) clearTimeout(timer);
       if (state === "active") timer = setTimeout(() => setPreparationTimedOut(true), 30000);
     };

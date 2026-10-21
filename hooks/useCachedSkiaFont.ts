@@ -24,7 +24,8 @@ function wait(ms: number): Promise<void> {
 }
 
 async function fetchTypeface(asset: FontAssetRef): Promise<SkTypeface | null> {
-  const uri = typeof asset === "number" ? Image.resolveAssetSource(asset).uri : asset;
+  const uri = typeof asset === "number" ? Image.resolveAssetSource(asset)?.uri : asset;
+  if (!uri) throw new Error("Font asset URI could not be resolved");
   const data = await Skia.Data.fromURI(uri);
   return data ? Skia.Typeface.MakeFreeTypeFaceFromData(data) : null;
 }

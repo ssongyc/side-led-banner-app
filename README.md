@@ -13,11 +13,13 @@
 
 현재 소스 버전은 **1.1.3 (app.json의 Android versionCode 31)**이며 Settings는 Expo 버전을 읽어 **V1.1.3**을 표시합니다. 소스 설정, 로컬 빌드의 버전 코드, 실제 스토어 배포 버전은 별개입니다.
 
-- **최신 production APK/AAB:** 2026-10-12, V1.1.3 (31), 실행 `20261012-085201-058b0c72`. [실행 기록](artifacts/apk-runs/20261012-085201-058b0c72/build-result.json).
-- **최신 테스트 광고 QA APK:** 2026-10-16, V1.1.3 (31), 실행 `20261016-185016-4d617d41`. Android UMP·배너 복구·보상 흐름과 미획득 보상 중단 검증 범위는 [광고 QA 기록](docs/ADVERTISING.md#android-only-qa-follow-up--2026-10-16)을 참고하세요. 테스트 광고 APK는 스토어 제출용이 아닙니다.
-- **후속 소스 변경:** 10월 18일 최적화된 리소스 축소 옵션과 보상 팝업 표시 컴포넌트 분리는 위 APK/AAB에 미포함입니다. iOS와 해당 변경의 새 빌드·실기기 확인은 미검증입니다.
+**2026-10-20 도구 체인 업그레이드:** Expo 58.0.16 / React Native 0.88.0 / AGP 9.2.1, compileSdk 37 / targetSdk 36, AGP 내장 R8 9.2.14를 적용했습니다. Windows CMake 경로 길이 오류와 R8이 Room 생성자를 제거해 발생한 시작 충돌을 수정했습니다. 수정 QA APK는 `compile-ok`이며 Galaxy에서 재시작, 테스트 UMP 거부·동의·개인정보 재변경, 테스트 배너·보상 광고 및 보상 후 잠금 해제를 확인했습니다. 최신 재빌드는 Gradle 6분 50초(72 executed / 1138 up-to-date)였습니다. 구매 화면은 승인된 비활성 상태를 유지하며 결제·복원과 iOS는 미검증입니다. 이 APK는 테스트 광고·EEA QA 설정이 포함되어 스토어 제출용이 아닙니다. [빌드 기록](docs/SIGNING_POLICY.md#combined-exporn-upgrade-assessment--2026-10-20)과 [광고 QA 범위](docs/ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20)를 참고하세요.
 
-2026-10-18: V1.1.2(30)에 대한 Play R8 권고를 검토하고, 생성 원본에 `android.r8.optimizedResourceShrinking=true`와 로컬 빌드 사전검사를 추가했습니다. AGP 9 전환은 현재 Expo 57 / RN 0.86.3과의 호환성 작업이 남아 있습니다. 이번 수정은 빌드·실기기 검증 전이며 기존 APK에는 반영되지 않았습니다. [상세 결과](docs/SIGNING_POLICY.md#optimized-resource-shrinking-follow-up--2026-10-18).
+- **최신 production APK/AAB:** 2026-10-20, V1.1.3 (31), 실행 `20261020-141442-c2518642`, 소스 `81bd3a6`의 Expo 57 빌드입니다. 후속 UMP 설정 항목 색상 수정과 Expo 58 업그레이드는 미포함입니다. [실행 기록](artifacts/apk-runs/20261020-141442-c2518642/build-result.json).
+- **최신 테스트 광고 QA APK:** 2026-10-20, V1.1.3 (31), 실행 `20261020-204946-3c27c770`. Expo 58 업그레이드와 시작 충돌 수정이 포함되며, UMP·테스트 배너·보상·재시작 검증 범위는 [광고 QA 기록](docs/ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20)을 참고하세요. 테스트 광고·강제 EEA 설정이 포함되어 스토어 제출용이 아닙니다.
+- **산출물 구분:** 10월 18일 리소스 축소 옵션·보상 팝업 분리는 위 production 및 QA 산출물에 포함됩니다. 후속 UMP 설정 항목 색상 수정·도구 체인 업그레이드·시작 충돌 수정은 최신 QA APK에만 포함되므로 새 production APK/AAB와 iOS 빌드·실기기 확인은 필요합니다.
+
+2026-10-18 당시에는 V1.1.2(30)에 대한 Play R8 권고를 검토하고, 생성 원본에 `android.r8.optimizedResourceShrinking=true`와 로컬 빌드 사전검사를 추가했습니다. 당시 Expo 57 / RN 0.86.3에서 AGP 9 호환성 작업과 새 빌드·기기 검증은 미완료였습니다. 이후 Expo 58 / RN 0.88 / AGP 9.2.1 적용과 QA 결과는 위 10월 20일 기록을 따릅니다. [상세 결과](docs/SIGNING_POLICY.md#optimized-resource-shrinking-follow-up--2026-10-18).
 
 - 2026-09-22 당시 로컬 APK/AAB는 **1.1.2 (30)**, clean main `89a54ffdb3c7291fe5833895b78295ab6f8290b7`, 실행 ID `20260922-202155-81159740`입니다. 30은 빌드 시 명시한 override입니다. 기존 서명·production AdMob으로 AAB를 한 번 빌드하고 동일 AAB에서 universal APK를 생성했습니다. 전체 래퍼 시간은 298.42초(약 4분 58초), Gradle은 3분 57초이며 73 executed / 1086 up-to-date입니다. 의존성 설치와 네이티브 생성은 생략하고 기존 네이티브 출력과 캐시를 재사용했습니다. 정적 검사 421개가 모두 통과했습니다. [실행 기록](artifacts/apk-runs/20260922-202155-81159740/build-result.json)과 [단계별 시간](artifacts/apk-runs/20260922-202155-81159740/stage-timings.json)을 참고하세요. 표지판 투명 프레임, Pixelation Mix 선택 표시와 Play 사진 여백 채움이 포함됩니다. 이 산출물의 실기기 QA와 Play 업로드는 미실행입니다.
 - `5cf3182`에는 방향별 배너 재사용, 광고 진단·문구 정리, 스크롤의 미지원 JS 속성 제거, 검증 하네스 갱신, Android 캐시·작업 이력 재사용 개선이 포함되었습니다. 당시 타입 검사와 상태 검증 **26개가 통과**했습니다. 이 과거 변경의 산출물 검증은 당시 실행 기록을 따르며, 최신 빌드 기준은 아래 10월 기록과 구분합니다. 이전 설치 APK에서는 Android 실기기의 세 탭 스크롤·화면 복귀·테스트 광고 보상 흐름을 확인했으며 최신 산출물의 재검증을 뜻하지 않습니다. iOS 빌드·실기기 동작은 미검증이며, 이번 증분 시간은 캐시 복원 변경만의 효과를 따로 측정한 결과가 아닙니다.
@@ -171,7 +173,7 @@ pwsh -NoProfile -File .\scripts\build-local-apk.ps1
 
 ## 사전 요구사항
 
-- Node.js `^20.19.4 || ^22.13.0 || ^24.3.0 || >=25.0.0` (React Native 0.86.3 요구사항; 현재 호스트 24.14.1)
+- Node.js `^22.13.0 || ^24.3.0 || ^26.0.0 || >=27.0.0` (현재 Expo 58·React Native 0.88의 engines 교집합; 검증 빌드 호스트 24.14.1)
 - npm (`package-lock.json` 기준으로 의존성 설치)
 - Expo CLI는 프로젝트의 `expo` 패키지를 통해 사용합니다. 별도 전역 설치는 필요하지 않습니다.
 - EAS 원격 빌드 시 EAS CLI와 `led-banner-app` Expo 프로젝트 접근 권한이 필요합니다.
@@ -355,16 +357,17 @@ side-led-banner-app/
 
 | 라이브러리                                                                                      | 버전     | 용도                            |
 | ----------------------------------------------------------------------------------------------- | -------- | ------------------------------- |
-| [Expo](https://expo.dev/)                                                                       | ~57.0.24 | React Native 개발 프레임워크    |
-| [expo-router](https://docs.expo.dev/router/introduction/)                                       | ~57.0.22 | 파일 기반 라우팅                |
-| [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/)                  | 4.5.1    | 마키 스크롤 애니메이션          |
-| [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/)        | ~2.32.0  | 터치/제스처 처리                |
-| [expo-screen-orientation](https://docs.expo.dev/versions/latest/sdk/screen-orientation/)        | ~57.0.2 | 전체화면 시 가로/세로 전환 제어 |
-| [expo-linear-gradient](https://docs.expo.dev/versions/latest/sdk/linear-gradient/)              | ~57.0.2 | 프리셋 버튼 그라디언트          |
-| [@miblanchard/react-native-slider](https://github.com/miblanchard/react-native-slider)          | ^2.6.0   | 속도/크기/블러 등 슬라이더 UI   |
-| [react-native-element-dropdown](https://github.com/hoaphantn7604/react-native-element-dropdown) | ^2.12.4  | 폰트 선택 드롭다운              |
-| [react-native-svg](https://github.com/software-mansion/react-native-svg)                        | 15.15.4  | SVG 아이콘 (재생/정지 버튼 등)  |
-| [react-native-safe-area-context](https://github.com/th3rdwave/react-native-safe-area-context)   | ~5.7.0   | 노치/Safe Area 대응             |
+| [Expo](https://expo.dev/)                                                                       | ~58.0.16 | React Native 개발 프레임워크    |
+| [React Native](https://reactnative.dev/)                                                        | 0.88.0 | 네이티브 앱 프레임워크 |
+| [expo-router](https://docs.expo.dev/router/introduction/)                                       | ~58.0.24 | 파일 기반 라우팅                |
+| [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/)                  | 4.7.1 | 마키 스크롤 애니메이션          |
+| [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/)        | ~3.3.0 | 터치/제스처 처리                |
+| [expo-screen-orientation](https://docs.expo.dev/versions/latest/sdk/screen-orientation/)        | ~58.0.3 | 전체화면 시 가로/세로 전환 제어 |
+| [expo-linear-gradient](https://docs.expo.dev/versions/latest/sdk/linear-gradient/)              | ~58.0.3 | 프리셋 버튼 그라디언트          |
+| [@miblanchard/react-native-slider](https://github.com/miblanchard/react-native-slider)          | ^2.6.0 | 속도/크기/블러 등 슬라이더 UI   |
+| [react-native-element-dropdown](https://github.com/hoaphantn7604/react-native-element-dropdown) | ^2.12.4 | 폰트 선택 드롭다운              |
+| [react-native-svg](https://github.com/software-mansion/react-native-svg)                        | 15.16.0 | SVG 아이콘 (재생/정지 버튼 등)  |
+| [react-native-safe-area-context](https://github.com/th3rdwave/react-native-safe-area-context)   | ~5.10.1 | 노치/Safe Area 대응             |
 | [react-native-google-mobile-ads](https://docs.page/invertase/react-native-google-mobile-ads)    | 16.5.0 | AdMob 배너/리워드 광고          |
 | [@amplitude/analytics-react-native](https://amplitude.com/docs/sdks/analytics/react-native/react-native-sdk) | ^1.8.0 | 사용 이벤트 분석 |
 
@@ -379,13 +382,14 @@ side-led-banner-app/
 
 ## 최신 소스 변경 메모
 
+- **2026-10-20 정리·문서 점검:** 추적된 앱 소스의 export·참조와 리소스 참조 후보를 조사했습니다. 추가로 삭제할 근거가 확실한 파일·API는 확인되지 않았습니다. 플랫폼별 RootLayout 진입점, 원격 폰트 선언, 비활성 Premium 보관 코드, WebP·투명 프레임의 원본과 충돌 재현 산출물은 유지합니다. 최신 QA 실행·production 구분, 라이브러리 선언 버전과 Node.js 요구사항을 현재 소스에 맞췄습니다. `npm run lint`는 오류·경고 없이 통과했습니다. 이 정리에서는 빌드·별도 테스트·기기 QA·커밋·푸시를 실행하지 않았습니다.
 - Sunny's Games and Apps: `decibella2`를 `decibella` 바로 위에 배치하고 원본 디코딩 픽셀을 유지한 무손실 WebP 아이콘 및 [OneLink](https://decibella2.onelink.me/T5UV/x5q1f7vs)를 사용합니다.
 - 미사용 `language/translatorHandoff.ts`와 호출되지 않는 텍스트 계산 함수 4개를 삭제했습니다. 플랫폼별 파일, 원본 에셋, Pro 보관 화면과 빌드 캐시는 유지합니다.
 - 과거 SDK 전환·보안 검사·기기 테스트·APK/AAB 상세 이력은 [이전 기록](docs/BUILD_HISTORY.md)에 보존합니다. 과거 버전·audit 수치·검증 범위는 당시 결과이며 최신 재검사를 의미하지 않습니다.
 
 ## 스토어 버전과 제출 상태
 
-Play Console의 현재 출시 버전과 최대 versionCode는 확인하지 못했습니다. 현재 소스 설정은 1.1.3 (31)입니다. 최신 확인된 production APK/AAB는 2026-10-12의 1.1.3 (31), 최신 테스트 광고 QA APK는 2026-10-16의 1.1.3 (31)입니다. 동일 버전 번호라도 소스·광고 프로필·빌드가 다르며, 10월 18일 R8 옵션과 보상 팝업 분리는 이 산출물들에 포함되지 않았습니다. 파일 생성은 업로드·심사 제출·승인을 의미하지 않습니다. 향후 제출 시 Play Console의 실제 최대 versionCode와 동일 빌드 매핑 등록 여부를 별도로 확인해야 합니다.
+Play Console의 현재 출시 버전과 최대 versionCode는 확인하지 못했습니다. 현재 소스 설정은 1.1.3 (31)입니다. 최신 확인된 production APK/AAB는 2026-10-20의 1.1.3 (31), 실행 `20261020-141442-c2518642`, 최신 테스트 광고 QA APK는 2026-10-20의 1.1.3 (31), 실행 `20261020-204946-3c27c770`입니다. 같은 버전 번호라도 소스·광고 프로필·빌드가 다르며, 후속 UMP 색상 수정과 Expo 58 업그레이드는 위 production APK/AAB에 포함되지 않았습니다. 최신 QA APK에는 테스트 광고·강제 EEA 설정이 포함되어 제출할 수 없습니다. 파일 생성은 업로드·심사 제출·승인을 의미하지 않습니다. 향후 제출 시 Play Console의 실제 최대 versionCode와 동일 빌드 매핑 등록 여부를 별도로 확인해야 합니다.
 
 TypeScript 검증은 node_modules와 생성 산출물 artifacts를 제외합니다. 과거 빌드 복사본을 현재 소스로 중복 검사하지 않도록 범위를 고정했습니다.
 

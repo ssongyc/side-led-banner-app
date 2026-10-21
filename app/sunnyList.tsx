@@ -2,7 +2,7 @@ import { uiThemeFontStyle } from "@/constants/appFonts";
 import { settingsStyles } from "@/constants/settingsStyles";
 import { styles as base } from "@/constants/styles";
 import { useSettingsLocalizationContext } from "@/contexts/settingsContext";
-import { Image } from "expo-image";
+import { Image, type ImageProps } from "expo-image";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -13,7 +13,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  type ImageSourcePropType,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 type SunnyAppEntry = {
@@ -21,7 +20,7 @@ type SunnyAppEntry = {
   name: string;
   appStoreUrl: string;
   playStoreUrl: string;
-  thumbnail?: ImageSourcePropType;
+  thumbnail?: ImageProps["source"];
 };
 
 /** Sunny앱 목록 */

@@ -4,6 +4,26 @@
 
 The initial review inspected the local release wrapper and retained build logs without running a build. A later user-authorized production build measured the applied changes; its result is recorded below. No lint, test, upload, deployment, or Play Console change was run as part of the documentation update.
 
+## Current QA and store handoff — 2026-10-20
+
+The existing wrapper already separates APK-only QA from one-AAB production export. Source inspection reconfirmed that `-IncludeBundle` invokes only `:app:bundleRelease`, then derives the universal APK from that exact AAB. It rejects test ads and forced EEA configuration in bundle mode. Do not add another assemble task or a second wrapper for these workflows.
+
+Use PowerShell 7 from the repository root for the next explicitly authorized build:
+
+```powershell
+# Optimized QA APK with official test ads; add the approved device hash only for EEA consent QA.
+pwsh -NoProfile -File scripts/build-local-apk.ps1 -AdProfile test
+
+# Store AAB plus universal APK, production ads and normal UMP regional behavior.
+pwsh -NoProfile -File scripts/build-local-apk.ps1 -IncludeBundle -AdProfile production
+```
+
+Let input comparison select dependency installation and native regeneration. `-ResumeNative` is optional and asserts unchanged preparation inputs; it is not appropriate when switching QA/production profiles. Keep the fixed build directory, all four ABIs and validation gates. Routine builds omit `-MeasureBuild`; use existing timing records first when diagnosing delays. Framework upgrades should be completed and verified before the final production export rather than introduced during an otherwise routine release.
+
+Latest upgraded QA run `20261020-204946-3c27c770` is V1.1.3/code31 with `adProfile=test`, forced EEA device settings and `aab=null`. It must not be submitted to Google Play. Its device results and limitations are recorded in [advertising QA](ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20). A new production APK/AAB containing the upgrade and startup correction must complete full artifact checks and production-config smoke QA before a manual Play handoff. Code31 was approved by the user, but reuse eligibility across Play tracks still needs confirmation at submission.
+
+This workflow confirmation changed documentation only; it did not start compilation, tests, upload or console changes. iOS build/upload timing remains unmeasured; keep the source-build crash correction until an explicitly scoped replacement has archive and device evidence.
+
 ## Evidence and causes
 
 The retained 1.0.8 (26) production run at artifacts/apk-runs/20260911-005046-12ab25c8 ran both :app:assembleRelease and :app:bundleRelease. Gradle reported BUILD SUCCESSFUL in 1h 7m 52s and 1203 actionable tasks: 749 executed, 422 from cache, 32 up-to-date. Four-ABI CMake work for React Native, Expo Modules, Skia, Reanimated, Gesture Handler, Screens and the app accounts for much of the executed work.

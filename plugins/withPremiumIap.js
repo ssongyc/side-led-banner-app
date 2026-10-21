@@ -11,13 +11,14 @@ module.exports = function withPremiumIap(config) {
   });
   config = withGradleProperties(config, (mod) => {
     for (const key of ["android.targetSdkVersion", "android.compileSdkVersion"]) {
+      const minimum = key === "android.compileSdkVersion" ? 37 : 36;
       const entry = mod.modResults.find((item) => item.type === "property" && item.key === key);
       if (entry) {
         const value = Number(entry.value);
         if (!Number.isInteger(value)) throw new Error("IAP: invalid " + key);
-        entry.value = String(Math.max(36, value));
+        entry.value = String(Math.max(minimum, value));
       } else {
-        mod.modResults.push({ type: "property", key, value: "36" });
+        mod.modResults.push({ type: "property", key, value: String(minimum) });
       }
     }
     const target = mod.modResults.find((item) => item.type === "property" && item.key === "android.targetSdkVersion");

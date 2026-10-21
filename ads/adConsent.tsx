@@ -35,6 +35,14 @@ export const useAdConsent = () => useSyncExternalStore(subscribeAdConsent, getAd
 function publish(patch: Partial<State>) { state = { ...state, ...patch }; listeners.forEach(listener => listener()); }
 async function refresh() {
   const info = await nativeSdk().AdsConsent.getConsentInfo();
+  const qaDevice = process.env.EXPO_PUBLIC_UMP_EEA_TEST_DEVICE;
+  if (qaDevice && qaDevice !== 'disabled') {
+    console.info('[UMP QA] Consent status', JSON.stringify({
+      status: info.status,
+      canRequestAds: info.canRequestAds,
+      privacyOptionsRequirementStatus: info.privacyOptionsRequirementStatus,
+    }));
+  }
   publish({ allowed: info.canRequestAds, required: info.privacyOptionsRequirementStatus === nativeSdk().AdsConsentPrivacyOptionsRequirementStatus.REQUIRED });
 }
 async function foreground() {

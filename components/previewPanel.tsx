@@ -46,6 +46,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  type TextInputInstance,
   TouchableOpacity,
   useColorScheme,
   useWindowDimensions,
@@ -240,7 +241,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
     setInputScrollViewportW((prev) => (prev === width ? prev : width));
   }, []);
 
-  const textInputRef = useRef<TextInput>(null);
+  const textInputRef = useRef<TextInputInstance>(null);
 
   const {
     displayInputText,

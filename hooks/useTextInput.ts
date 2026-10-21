@@ -11,7 +11,7 @@ import {
   useSettingsLocalizationContext,
 } from "@/contexts/settingsContext";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { Platform, ScrollView, TextInput, TextLayoutEvent, useWindowDimensions } from "react-native";
+import { Platform, type ScrollViewInstance, type TextInputInstance, TextLayoutEvent, useWindowDimensions } from "react-native";
 
 const TEXT_MEASURE_OFFSCREEN_LEFT = -100_000;
 const INPUT_WIDTH_CURSOR_PAD = 28;
@@ -23,7 +23,7 @@ function stripLegacyInputMarkers(text: string): string {
 
 export function useTextInput(params: {
   inputScrollViewportW: number;
-  textInputRef: RefObject<TextInput | null>;
+  textInputRef: RefObject<TextInputInstance | null>;
 }) {
   const { inputScrollViewportW } = params;
   const { content } = useSettingsContent();
@@ -41,7 +41,7 @@ export function useTextInput(params: {
 
   const [measuredTextMaxW, setMeasuredTextMaxW] = useState(0);
 
-  const inputScrollRef = useRef<ScrollView>(null);
+  const inputScrollRef = useRef<ScrollViewInstance>(null);
   const inputScrollXRef = useRef(0);
 
   const displayInputText = previewText ? stripLegacyInputMarkers(previewText) : "";
