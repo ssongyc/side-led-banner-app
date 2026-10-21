@@ -16,7 +16,7 @@ export function useHeartBackgroundScroll(isActive: boolean) {
   const { setActive } = useFrameCallback((frame) => {
     if (!running || frame.timeSincePreviousFrame == null) return;
     // Same logical pixels/second as the text, independent of its loop length.
-    translateX.value -= (speed * 3 * frame.timeSincePreviousFrame) / 1000;
+    translateX.value -= (speed * 3.3 * frame.timeSincePreviousFrame) / 1000;
   }, false);
 
   useEffect(() => {

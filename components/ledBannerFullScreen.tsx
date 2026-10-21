@@ -207,23 +207,27 @@ export const LedBannerFullScreen = ({
       onShow={hideAndroidNavigationBar}
       animationType={Platform.OS === "ios" ? "none" : "fade"}
       presentationStyle="fullScreen"
+      hardwareAccelerated
+      backdropColor={backgroundColor}
       supportedOrientations={["portrait", "landscape"]}
       statusBarTranslucent
       navigationBarTranslucent
       onRequestClose={onClose}
     >
       <StatusBar hidden />
-      <View style={styles.root} onLayout={onStageLayout} onTouchStart={hideAndroidNavigationBar}>
+      <View
+        style={[styles.root, { backgroundColor }]}
+        onLayout={onStageLayout}
+        onTouchStart={hideAndroidNavigationBar}
+      >
         <View style={styles.layerPassThrough} pointerEvents="box-none">
           <View
             collapsable={false}
             style={[
               styles.flex,
               {
-                backgroundColor:
-                  effects.isPixelEffect
-                    ? undefined
-                    : backgroundColor,
+                // Cover newly exposed bounds while the GPU surface resizes.
+                backgroundColor,
                 justifyContent: "flex-start",
                 overflow: "hidden",
               },

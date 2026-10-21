@@ -69,7 +69,7 @@ export function useMarqueeAnimation({
     }
 
     const totalShift = textWidth + spacer + effectBleedPx;
-    const duration = (totalShift / (speed * 3)) * 1000;
+    const duration = (totalShift / (speed * 3.3)) * 1000;
 
     // translate 0으로 이동하지 않고, 현재 진행 정도에 맞춰 복구
     const prevTotalShift = totalShiftRef.current;

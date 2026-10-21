@@ -141,7 +141,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
     speechMaxHeight: speechBubble.maxTextHeight,
   });
 
-  const effects = useEffects({ fontSizePx: previewFontSize });
+  const effects = useEffects({ fontSizePx: previewFontSize, mode: "preview" });
 
   const backgroundTranslateX = useHeartBackgroundScroll(isAnimationActive);
 

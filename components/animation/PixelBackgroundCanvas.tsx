@@ -128,7 +128,11 @@ export function PixelBackgroundCanvas({
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <Canvas style={{ width, height }} opaque={false}>
+      {/* Follow native fullscreen bounds before JS layout sizes arrive. */}
+      <Canvas
+        style={isFullscreen ? StyleSheet.absoluteFill : { width, height }}
+        opaque={false}
+      >
         {/* Layer 0: clean selected background; pixel gaps reveal this color. */}
         <Rect x={0} y={0} width={width} height={height} color={backgroundColor} />
 

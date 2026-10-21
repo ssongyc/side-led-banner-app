@@ -665,7 +665,6 @@ export const sliderComponentStyles = StyleSheet.create({
 export const ledBannerFullScreenStyles = StyleSheet.create({
   root: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: "#000000",
   },
   flex: {
     flex: 1,

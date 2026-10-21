@@ -6,6 +6,26 @@ The initial review inspected the local release wrapper and retained build logs w
 
 ## Current QA and store handoff — 2026-10-20
 
+### Production completion — 2026-10-21
+
+After memory recovery, preparation run `20261021-124257-a9e0c7fc` reused dependencies and generated production native settings in 32.99 seconds, then stopped when a process-command-line query was transiently unreadable. A fresh read passed with about 5.24 GiB available. Run `20261021-124440-61801b3a` resumed with `-IncludeBundle -AdProfile production -ResumeNative`: zero changed inputs, no installation/native regeneration, existing signer/four ABIs retained, V1.1.3/code31, source `6cdcda83eff43be4406ebbe0fb91d8dfb83b7aec` plus build-status documentation only. **compile-ok**, Gradle **8m4s**, 1209 tasks: 87 executed, 1122 up-to-date. AAB built once; universal APK derived from those signed AAB bytes.
+
+The original post-build verifier failed with `KeyError: sources`: SDK 58 emits an indexed packager source map containing inline `sections`. `verify-store-release.py` now reads ordinary and inline indexed v3 source inventories, rejects unsupported/malformed or external sections and preserves exact bundled-source content checks. Re-ran only artifact verification on the unchanged signed files; **479 checks passed** in 12.05 seconds. Original failed wrapper status/timing (522.07 seconds through the first verification) is preserved, with successful recheck linked in `artifact-recheck-result.json`; no second compilation was needed. Full 1,834-line compile output reviewed. Remaining warnings: upstream Kotlin/DSL/variant deprecations, config-plugin-covered AdMob app.json warning, console color flags and manifest merge replace/remove notices. No warning-free or Gradle 10 claim.
+
+- APK: `artifacts/apk-runs/20261021-124440-61801b3a/apk-deliveries/20261021-125309-c04a6ea831f9468da3328f7fbe4b8f32/LedPopV113.apk`, 191,798,439 bytes; SHA-256 `CB41F02C31A11AD0ACDA3233A00AACEFBC77541D1E4B42652FC108C64B869855`.
+- AAB: `artifacts/apk-runs/20261021-124440-61801b3a/aab-deliveries/20261021-125252-fef1e5da082e4c91abc7a56dd9082bb9/LedPopV113.aab`, 147,301,935 bytes; SHA-256 `746E33925C7A056A48FB474F819BE59DE4E38D72D344F1047873307EC194CE87`.
+- Mapping SHA-256: `D224D9B173BB12D71B85CD4FCA3AC995DD6DBAA226C5CB9CD1B708A251F50BAF`; matches embedded AAB mapping. Same-build Hermes maps and native symbols retained. R8 optimization/shrinking/obfuscation metadata: 81.41% / 81.84% / 81.84%.
+- Verified existing signature, API 36 target, compileSDK 37, four ABIs, 16 KiB ZIP/ELF alignment, Billing 9.1.0, production manifest/config/ad module and bundled-source checks. Supplementary DEX checks use R8-mapped UMP ConsentForm/ConsentInformation names; literal un-obfuscated package-name absence is not absence of the SDK. QA EEA device identifier and QA diagnostic marker are absent from the production Hermes bundle. UMP takes normal regional eligibility, without the QA reset/geography override.
+- This production artifact has not been installed/device-tested here; preceding test-profile SDK 58 QA retains its original scope. Actual ad supply, this artifact's UMP form/reward runtime, purchases, iOS and Play processing remain unverified. Code31 eligibility is checked by the user at manual upload. No standalone lint/tests, Git delivery or upload performed.
+
+### Earlier attempts and workflow confirmation
+
+2026-10-21 second retry: initial preflight again stopped, this time at 2.46 GiB available memory (4 GiB minimum). No preparation or compilation started and no new APK/AAB was produced. Existing inputs/caches were preserved. Log: `artifacts/release-20261021-production-retry2.log`.
+
+2026-10-21 retry: the same authorized production command stopped at initial preflight with 2.84 GiB available memory against the unchanged 4 GiB minimum. Only the preceding build-status documentation was dirty; source HEAD remained `6cdcda83eff43be4406ebbe0fb91d8dfb83b7aec`. No preparation, compilation or new artifact creation occurred. Log: `artifacts/release-20261021-production.log`. No processes or caches were removed.
+
+Production retry from clean main `6cdcda83eff43be4406ebbe0fb91d8dfb83b7aec`: the user requested production AdMob plus Google UMP APK/AAB, retaining V1.1.3/code31. `pwsh -NoProfile -File scripts/build-local-apk.ps1 -IncludeBundle -AdProfile production` stopped at the initial resource gate with 1.70 GiB available memory (minimum 4 GiB). Dependency installation, source/native preparation, compilation and artifact verification were not reached; no new APK/AAB was generated. Existing caches, signing and previous artifacts were retained. Log: `artifacts/release-20261020-production.log`. Awaiting the user's memory recovery; no safety threshold was lowered or unrelated process terminated.
+
 The existing wrapper already separates APK-only QA from one-AAB production export. Source inspection reconfirmed that `-IncludeBundle` invokes only `:app:bundleRelease`, then derives the universal APK from that exact AAB. It rejects test ads and forced EEA configuration in bundle mode. Do not add another assemble task or a second wrapper for these workflows.
 
 Use PowerShell 7 from the repository root for the next explicitly authorized build:

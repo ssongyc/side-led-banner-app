@@ -15,6 +15,27 @@ import xml.etree.ElementTree as ET
 import zipfile
 
 
+def source_entries(source_map):
+    """Read source inventory from regular or inline indexed v3 source maps."""
+    if source_map.get("version") != 3:
+        raise RuntimeError("Unsupported source map version")
+    if "sections" in source_map:
+        if "sources" in source_map or not isinstance(source_map["sections"], list):
+            raise RuntimeError("Invalid indexed source map")
+        entries = []
+        for section in source_map["sections"]:
+            if "url" in section or not isinstance(section.get("map"), dict):
+                raise RuntimeError("Source map section must contain its inline map")
+            entries.extend(source_entries(section["map"]))
+        return entries
+    sources, contents = source_map.get("sources"), source_map.get("sourcesContent")
+    if not isinstance(sources, list) or not isinstance(contents, list) or len(sources) != len(contents):
+        raise RuntimeError("Source map inventory/content mismatch")
+    if not all(isinstance(name, str) for name in sources):
+        raise RuntimeError("Invalid source map path")
+    return list(zip(sources, contents))
+
+
 def read_json(path):
     return json.loads(path.read_text(encoding="utf-8-sig"))
 
@@ -138,7 +159,8 @@ def verify(args, out, report):
 
     sm_path = root / "android/app/build/intermediates/sourcemaps/react/release/index.android.bundle.packager.map"
     sm = read_json(sm_path)
-    names = [n.replace("\\", "/") for n in sm["sources"]]
+    entries = source_entries(sm)
+    names = [name.replace("\\", "/") for name, _ in entries]
     required = ["app/index.tsx", "constants/styles.tsx", "utils/skiaBubbleTextLayout.ts", "utils/SystemChrome.ts",
                 "hooks/useHeartBackgroundScroll.ts", "components/previewPanel.tsx", "components/ledBannerFullScreen.tsx",
                 "components/animation/PixelBackgroundCanvas.tsx", "ads/AdClient.tsx", "ads/rewardedState.ts",
@@ -150,7 +172,7 @@ def verify(args, out, report):
     source_checks = {}
     for name in required:
         hits = [i for i, n in enumerate(names) if "/node_modules/" not in n and (n == name or n.endswith("/"+name))]
-        source_checks[name] = len(hits) == 1 and sm["sourcesContent"][hits[0]].replace("\r\n", "\n") == (
+        source_checks[name] = len(hits) == 1 and isinstance(entries[hits[0]][1], str) and entries[hits[0]][1].replace("\r\n", "\n") == (
             root / name).read_text(encoding="utf-8").replace("\r\n", "\n")
     report["sourceChecks"] = source_checks
     check("bundledSourceMatches", all(source_checks.values()))

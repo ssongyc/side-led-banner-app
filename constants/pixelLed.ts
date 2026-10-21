@@ -62,14 +62,23 @@ export function resolvePixelFontSizeSliderMinPercent(params: {
 export function resolvePixelShaderSizePx(params: {
   playOption: "one" | "multi";
   fontSizePx?: number;
+  mode?: "preview" | "fullscreen";
 }): number {
   const fontSize = Math.max(1, params.fontSizePx ?? PIXEL_LED_REF_FONT_PX);
+  if (params.mode === "preview") {
+    // Preserve small glyph strokes instead of forcing them into 4px cells.
+    return Math.min(6, scalePixelLedDotByFontSize(
+      resolveReferencePixelLedDotPx(params.playOption),
+      fontSize,
+      1,
+    ));
+  }
   const raw = scalePixelLedDotByFontSize(
     resolveReferencePixelLedDotPx(params.playOption),
     fontSize,
     resolvePixelDotMinPx(params.playOption),
   );
-  // A stable 4–6px grid reads as conventional pixel art across text sizes.
+  // Keep the existing 4–6px fullscreen appearance.
   return Math.max(4, Math.min(6, raw));
 }
 

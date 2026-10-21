@@ -22,6 +22,7 @@ import { useMemo } from "react";
 
 type EffectsInput = {
   fontSizePx?: number;
+  mode?: "preview" | "fullscreen";
 };
 
 /** Skia마퀴효과용 */
@@ -49,7 +50,7 @@ export function useEffects(input: EffectsInput = {}) {
 
   const pixelPlay = { playOption };
   const pixelShaderSize = isPixelEffect
-    ? resolvePixelShaderSizePx({ ...pixelPlay, fontSizePx: input.fontSizePx })
+    ? resolvePixelShaderSizePx({ ...pixelPlay, fontSizePx: input.fontSizePx, mode: input.mode })
     : 1;
   const pixelBackgroundShaderSize = isPixelEffect
     ? resolvePixelBackgroundShaderSizePx(pixelPlay)
