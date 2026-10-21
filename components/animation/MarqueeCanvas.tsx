@@ -200,6 +200,8 @@ export function MarqueeCanvas({
   );
 
   const pixelDotRadius = pixelShaderSize * pixelTextShaderUniforms.dotRadiusScale;
+  // Text fill can be denser without widening the existing outline rings.
+  const outlineDotRadius = pixelShaderSize * 0.40;
 
   const outlineLuminance = useMemo(
     () => isNearWhiteColor(backgroundColor) || isNearWhiteColor(previewTextColor) ? 0.5 : 1.0,
@@ -241,7 +243,7 @@ export function MarqueeCanvas({
             source={outlineRingDotSource}
             uniforms={{
               dotSize: pixelShaderSize,
-              dotRadius: pixelDotRadius,
+              dotRadius: outlineDotRadius,
               textThreshold: pixelTextShaderUniforms.textThreshold,
               ringDetectThreshold: 0.01,
               outlineRings: pixelOutlineRings,
@@ -255,7 +257,7 @@ export function MarqueeCanvas({
       hasPixelOutlineDots,
       outlineRingDotSource,
       pixelShaderSize,
-      pixelDotRadius,
+      outlineDotRadius,
       pixelOutlineRings,
       pixelTextShaderUniforms,
       outlineLuminance,

@@ -117,14 +117,15 @@ type PixelTextShaderUniforms = {
  * Pixel 텍스트의 정사각형 블록용.
  * inner-only smoothstep 방식: 블록 바깥으로 번지지 않으므로
  * dotRadius < halfCell 조건만 충족하면 됨 (aa는 내부 페이드 범위).
- *   갭(CSS px) = halfCell - dotRadius = dotSize * (0.5 - dotRadiusScale)
- *   DPR=3 기준 물리 갭 = 갭 × 3
- *   dotSize=4, scale=0.40 → 갭 0.4px CSS = 1.2px physical (선명하게 보임)
- *   dotSize=6, scale=0.40 → 갭 0.6px CSS = 1.8px physical
+ *   셀 사이 전체 간격 = dotSize * (1 - 2 * dotRadiusScale)
+ *   DPR=3 기준 물리 간격 = 논리 간격 × 3
+ *   dotSize=4, scale=0.45 → 간격 0.4px = 1.2px physical
+ *   dotSize=6, scale=0.45 → 간격 0.6px = 1.8px physical
  */
 export function resolvePixelTextShaderUniforms(): PixelTextShaderUniforms {
-  // 80% square block with a 20% inter-cell gap.
-  const dotRadiusScale = 0.40;
+  // Keep selected text colors readable over photo grids at fullscreen scale.
+  // 90% square block with a 10% gap; background/outline grids remain at 80%.
+  const dotRadiusScale = 0.45;
   return {
     textThreshold: 0.28,
     panelAlphaThreshold: 0.08,
