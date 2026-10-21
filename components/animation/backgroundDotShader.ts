@@ -32,3 +32,24 @@ export const DOT_MATRIX_BACKGROUND_SKSL = `
     return half4(rgb * mask, mask);
   }
 `;
+
+/** Photo gaps retain a dim sample of the photo, independent of the solid backdrop. */
+export const DOT_MATRIX_PHOTO_BACKGROUND_SKSL = `
+  uniform shader content;
+  uniform float dotSize;
+  uniform float dotRadius;
+
+  ${PIXEL_BLOCK_MASK_GLSL}
+
+  half4 main(vec2 pos) {
+    vec2 cellOrigin = floor(pos / dotSize) * dotSize;
+    vec2 cellCenter = cellOrigin + dotSize * 0.5;
+    float mask = pixelBlockMask(pos, cellCenter);
+    half4 sampled = content.eval(cellCenter);
+
+    // Preserve source alpha at the photo boundary; opaque photo cells must not
+    // expose the selected solid color through their inter-pixel gaps.
+    half brightness = half(mix(0.30, 1.0, mask));
+    return half4(sampled.rgb * brightness, sampled.a);
+  }
+`;

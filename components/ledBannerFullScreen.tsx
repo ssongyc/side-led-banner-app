@@ -40,6 +40,7 @@ import { Canvas } from "@shopify/react-native-skia";
 import { useMarqueeCanvasProps } from "./animation/useMarqueeCanvasProps";
 import { buildPixelBackground } from "./animation/buildPixelBackground";
 import { PixelBackgroundCanvas } from "./animation/PixelBackgroundCanvas";
+import { PlaybackTextLayer } from "./PlaybackTextLayer";
 
 const FULLSCREEN_PHOTO_FILL_BLUR = 24;
 
@@ -290,36 +291,42 @@ export const LedBannerFullScreen = ({
               suppressPixelManagedBackgrounds={effects.isPixelEffect}
               blurRadius={backgroundBlur / 8}
             />
-            {speechBubble.isActive ? (
-              <View
-                style={{
-                  ...StyleSheet.absoluteFill,
-                  alignItems: "center",
-                  ...(speechBubble.speechTextTop == null
-                    ? { justifyContent: "center" }
-                    : null),
-                }}
-                pointerEvents="none"
-              >
+            <PlaybackTextLayer
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+              layoutRevision={`${stageWidth}:${stageHeight}:${canvas.skiaCanvasLayout.width}:${canvas.skiaCanvasLayout.height}`}
+            >
+              {speechBubble.isActive ? (
                 <View
-                  style={speechBubble.textContainerStyle!}
+                  style={{
+                    ...StyleSheet.absoluteFill,
+                    alignItems: "center",
+                    ...(speechBubble.speechTextTop == null
+                      ? { justifyContent: "center" }
+                      : null),
+                  }}
+                  pointerEvents="none"
+                >
+                  <View
+                    style={speechBubble.textContainerStyle!}
+                    onLayout={canvas.onSkiaCanvasLayout}
+                  >
+                    <MarqueeCanvas
+                      {...marqueeCanvasProps}
+                    />
+                  </View>
+                </View>
+              ) : (
+                <View
+                  style={StyleSheet.absoluteFill}
                   onLayout={canvas.onSkiaCanvasLayout}
                 >
                   <MarqueeCanvas
                     {...marqueeCanvasProps}
                   />
                 </View>
-              </View>
-            ) : (
-              <View
-                style={StyleSheet.absoluteFill}
-                onLayout={canvas.onSkiaCanvasLayout}
-              >
-                <MarqueeCanvas
-                  {...marqueeCanvasProps}
-                />
-              </View>
-            )}
+              )}
+            </PlaybackTextLayer>
           </View>
         </View>
         <Pressable

@@ -1,5 +1,8 @@
 import { isSignBoardPreset } from "@/constants/signBoardPresets";
-import { DOT_MATRIX_BACKGROUND_SKSL } from "@/components/animation/backgroundDotShader";
+import {
+  DOT_MATRIX_BACKGROUND_SKSL,
+  DOT_MATRIX_PHOTO_BACKGROUND_SKSL,
+} from "@/components/animation/backgroundDotShader";
 import { PixelEffect1Background } from "@/components/animation/PixelEffect1Background";
 import { PixelHeartBackground } from "@/components/animation/PixelHeartBackground";
 import { PixelSpeechBubbleFrame } from "@/components/animation/PixelSpeechBubbleFrame";
@@ -141,7 +144,7 @@ export function PixelBackgroundCanvas({
         onSize={isFullscreen ? surfaceSize : undefined}
         opaque={false}
       >
-        {/* Layer 0: clean selected background; pixel gaps reveal this color. */}
+        {/* Selected background remains visible outside photo/effect coverage. */}
         <Fill color={backgroundColor} />
         <Group transform={surfaceTransform}>
 
@@ -166,7 +169,7 @@ export function PixelBackgroundCanvas({
             ) : null}
           </Group>
         ) : showGradientBackdrop ? (
-          <Group layer={photoBackgroundShaderLayer}>
+          <Group layer={backgroundShaderLayer}>
             <GradientBackdrop
               isActive={isActive}
               key={`gradient-${gradientBackgroundPreset}`}
@@ -229,6 +232,14 @@ function usePixelDotShaderLayers(dotSize: number) {
       ),
     [],
   );
+  const photoSource = useMemo(
+    () =>
+      getCachedSkiaRuntimeEffect(
+        DOT_MATRIX_PHOTO_BACKGROUND_SKSL,
+        "Failed to compile photo dot matrix background shader.",
+      ),
+    [],
+  );
   const pixelDotUniforms = useMemo(() => pixelLedDotUniforms(dotSize), [dotSize]);
   const backgroundShaderLayer = useMemo(
     () => (
@@ -245,12 +256,12 @@ function usePixelDotShaderLayers(dotSize: number) {
     () => (
       <Paint>
         <RuntimeShader
-          source={backgroundSource}
+          source={photoSource}
           uniforms={pixelDotUniforms}
         />
       </Paint>
     ),
-    [backgroundSource, pixelDotUniforms],
+    [photoSource, pixelDotUniforms],
   );
   return { backgroundShaderLayer, photoBackgroundShaderLayer };
 }
