@@ -1,6 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const PRO_MODE_STORAGE_KEY = "@led_banner_pro_mode_expiry_v1";
+const rewardExpiryQa = process.env.EXPO_PUBLIC_REWARD_EXPIRY_QA === "true";
+export const PRO_REWARD_DURATION_MS = rewardExpiryQa ? 30_000 : 2 * 60 * 60 * 1000;
+const PRO_MODE_STORAGE_KEY = rewardExpiryQa
+  ? "@led_banner_qa_pro_mode_expiry_v1" : "@led_banner_pro_mode_expiry_v1";
 
 export async function readProModeExpiry(): Promise<number | null> {
   const raw = await AsyncStorage.getItem(PRO_MODE_STORAGE_KEY);
