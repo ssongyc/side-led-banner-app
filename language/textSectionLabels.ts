@@ -19,6 +19,10 @@ export type TextSectionLabelKey =
   /** 배경*/
   | "backgroundColor"
   | "blur"
+  | "photoLandscape"
+  | "photoPortrait"
+  | "cancel"
+  | "done"
   | "speed"
   | "size"
   | "lineSpacing"
@@ -111,6 +115,42 @@ const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
     zhSC: "模糊",
     fr: "Flou",
     es: "Desenfoque",
+  },
+  photoLandscape: {
+    ko: "가로",
+    en: "Landscape",
+    ja: "横向き",
+    zhTC: "橫向",
+    zhSC: "横向",
+    fr: "Paysage",
+    es: "Horizontal",
+  },
+  photoPortrait: {
+    ko: "세로",
+    en: "Portrait",
+    ja: "縦向き",
+    zhTC: "直向",
+    zhSC: "竖向",
+    fr: "Portrait",
+    es: "Vertical",
+  },
+  cancel: {
+    ko: "취소",
+    en: "Cancel",
+    ja: "キャンセル",
+    zhTC: "取消",
+    zhSC: "取消",
+    fr: "Annuler",
+    es: "Cancelar",
+  },
+  done: {
+    ko: "완료",
+    en: "Done",
+    ja: "完了",
+    zhTC: "完成",
+    zhSC: "完成",
+    fr: "Terminé",
+    es: "Listo",
   },
   speed: {
     ko: "속도",

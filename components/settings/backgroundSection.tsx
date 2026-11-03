@@ -3,12 +3,12 @@ import { styles as base, colorPickerLockStyles as bgLock, colorPickerStyles as c
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import React, { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Alert,
-  Image as RNImage,
   Modal,
   Platform,
+  Image as RNImage,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -19,6 +19,7 @@ import {
   useSettingsLocalizationContext,
   useSettingsUI,
 } from "../../contexts/settingsContext";
+import { CropModal } from "./cropModal";
 import { SettingsSliderBlock } from "./settingsSliderBlock";
 
 const LOCK_ICON = require("@/assets/images/icon_lock_type2.png");
@@ -45,6 +46,7 @@ export const BackgroundSection = () => {
     background;
   const [photoPickerCoverVisible, setPhotoPickerCoverVisible] = useState(false);
   const photoPickerLaunchPendingRef = useRef(false);
+  const [cropSourceUri, setCropSourceUri] = useState<string | null>(null);
 
   const setBackgroundBlur = (value: number) =>
     updateConfig("background", { backgroundBlur: value });
@@ -58,15 +60,11 @@ export const BackgroundSection = () => {
   const launchAlbumPicker = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
-      allowsEditing: true,
-      quality: 0.85,
-      aspect: [16, 9],
+      allowsEditing: false,
     });
     if (result.canceled || !result.assets[0]) return;
-    updateConfig("background", {
-      backgroundImageUri: result.assets[0].uri,
-    });
-  }, [updateConfig]);
+    setCropSourceUri(result.assets[0].uri);
+  }, []);
 
   const launchAndroidAlbumFromCover = useCallback(() => {
     if (!photoPickerLaunchPendingRef.current) return;
@@ -75,6 +73,18 @@ export const BackgroundSection = () => {
       setPhotoPickerCoverVisible(false);
     });
   }, [launchAlbumPicker]);
+
+  const closeCrop = useCallback(() => {
+    setCropSourceUri(null);
+  }, []);
+
+  const applyCrop = useCallback(
+    (uri: string) => {
+      setCropSourceUri(null);
+      updateConfig("background", { backgroundImageUri: uri });
+    },
+    [updateConfig],
+  );
 
   const openAlbum = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -216,6 +226,11 @@ export const BackgroundSection = () => {
       >
         <View style={{ flex: 1, backgroundColor: "#000000" }} />
       </Modal>
+      <CropModal
+        sourceUri={cropSourceUri}
+        onCancel={closeCrop}
+        onDone={applyCrop}
+      />
     </>
   );
 };

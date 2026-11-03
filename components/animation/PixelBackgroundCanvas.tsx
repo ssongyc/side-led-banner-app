@@ -75,7 +75,14 @@ function PixelBackgroundImage({
           fit="cover"
         />
       ) : null}
-      <Image image={image} x={0} y={0} width={width} height={height} fit="contain" />
+      <Image
+        image={image}
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        fit={fillViewport ? "contain" : "cover"}
+      />
     </>
   );
 }

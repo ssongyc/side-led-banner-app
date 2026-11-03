@@ -1,11 +1,8 @@
-import { StartupPreviewContext } from "@/contexts/startupContext";
-import { useHeartBackgroundScroll } from "@/hooks/useHeartBackgroundScroll";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { isSignBoardPreset } from "@/constants/signBoardPresets";
 import { DeleteAllButton } from "@/assets/svg/deleteAllButton";
 import { GradientBackdrop } from "@/components/skia/GradientBackdrop";
 import { btnStyles } from "@/constants/btnStyles";
 import { type GradientBackdropId } from "@/constants/gradientBackgroundPresets";
+import { isSignBoardPreset } from "@/constants/signBoardPresets";
 import {
   CONTENTS_INPUT_FONT_SIZE,
   styles,
@@ -19,11 +16,13 @@ import {
   useSettingsContent,
   useSettingsUI,
 } from "@/contexts/settingsContext";
+import { StartupPreviewContext } from "@/contexts/startupContext";
 import { useBackgroundAnimation } from "@/hooks/useBackgroundAnimation";
 import { useBlinkOpacityStyle } from "@/hooks/useBlinkOpacityStyle";
 import { useEffects } from "@/hooks/useEffects";
-import { usePlaybackActive } from "@/hooks/usePlaybackActive";
+import { useHeartBackgroundScroll } from "@/hooks/useHeartBackgroundScroll";
 import { useMarqueeAnimation } from "@/hooks/useMarqueeAnimation";
+import { usePlaybackActive } from "@/hooks/usePlaybackActive";
 import { usePreviewPanelCanvas } from "@/hooks/usePreviewPanelCanvas";
 import {
   resolveSpeechCanvasFallback,
@@ -34,10 +33,11 @@ import { useTextInput } from "@/hooks/useTextInput";
 import { useTextMetrics } from "@/hooks/useTextMetrics";
 import { resolveBubbleCanvasOpts } from "@/utils/skiaBubbleTextLayout";
 import { getSizingPolicy } from "@/utils/textSizing";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Canvas } from "@shopify/react-native-skia";
 import { Image } from "expo-image";
 import { LinearGradient as LinearGradientExpo } from "expo-linear-gradient";
-import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   InputAccessoryView,
   Keyboard,
@@ -46,17 +46,17 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  type TextInputInstance,
   TouchableOpacity,
   useColorScheme,
   useWindowDimensions,
-  View
+  View,
+  type TextInputInstance
 } from "react-native";
 import { BackgroundEffectLayer } from "./animation/BackgroundEffectLayer";
-import { useMarqueeCanvasProps } from "./animation/useMarqueeCanvasProps";
 import { buildPixelBackground } from "./animation/buildPixelBackground";
 import { MarqueeCanvas } from "./animation/MarqueeCanvas";
 import { PixelBackgroundCanvas } from "./animation/PixelBackgroundCanvas";
+import { useMarqueeCanvasProps } from "./animation/useMarqueeCanvasProps";
 
 const inputAccessoryViewID = "doneAccessory";
 const EDITOR_DISPLAY_HEIGHT_RATIO = 0.31;
@@ -363,7 +363,7 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
           <Image
             source={{ uri: backgroundImageUri }}
             style={StyleSheet.absoluteFill}
-            contentFit="contain"
+            contentFit="cover"
             blurRadius={backgroundBlur / 8}
           />
         ) : null}

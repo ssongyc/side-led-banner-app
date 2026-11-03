@@ -1,4 +1,3 @@
-import { useHeartBackgroundScroll } from "@/hooks/useHeartBackgroundScroll";
 import { BackgroundEffectLayer } from "@/components/animation/BackgroundEffectLayer";
 import { MarqueeCanvas } from "@/components/animation/MarqueeCanvas";
 import { GradientBackdrop } from "@/components/skia/GradientBackdrop";
@@ -11,35 +10,37 @@ import {
 import { useBackgroundAnimation } from "@/hooks/useBackgroundAnimation";
 import { useBlinkOpacityStyle } from "@/hooks/useBlinkOpacityStyle";
 import { useEffects } from "@/hooks/useEffects";
-import { usePlaybackActive } from "@/hooks/usePlaybackActive";
+import { useHeartBackgroundScroll } from "@/hooks/useHeartBackgroundScroll";
 import { useMarqueeAnimation } from "@/hooks/useMarqueeAnimation";
+import { usePlaybackActive } from "@/hooks/usePlaybackActive";
 import { usePreviewPanelCanvas } from "@/hooks/usePreviewPanelCanvas";
 import {
-    resolveSpeechCanvasFallback,
-    useSpeechBubble,
+  resolveSpeechCanvasFallback,
+  useSpeechBubble,
 } from "@/hooks/useSpeechBubble";
 import { useTextMetrics } from "@/hooks/useTextMetrics";
 import { resolveBubbleCanvasOpts } from "@/utils/skiaBubbleTextLayout";
-import { getSizingPolicy } from "@/utils/textSizing";
 import {
-    hideAndroidNavigationBar,
+  hideAndroidNavigationBar,
 } from "@/utils/SystemChrome";
-import { Image } from "expo-image";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-    BackHandler,
-    Modal,
-    Platform,
-    Pressable,
-    StatusBar,
-    StyleSheet,
-    useWindowDimensions,
-    View,
-} from "react-native";
+import { getSizingPolicy } from "@/utils/textSizing";
 import { Canvas } from "@shopify/react-native-skia";
-import { useMarqueeCanvasProps } from "./animation/useMarqueeCanvasProps";
+import { Image } from "expo-image";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  BackHandler,
+  Modal,
+  Platform,
+  Pressable,
+  StatusBar,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { buildPixelBackground } from "./animation/buildPixelBackground";
 import { PixelBackgroundCanvas } from "./animation/PixelBackgroundCanvas";
+import { useMarqueeCanvasProps } from "./animation/useMarqueeCanvasProps";
 import { PlaybackTextLayer } from "./PlaybackTextLayer";
 
 const FULLSCREEN_PHOTO_FILL_BLUR = 24;
@@ -162,6 +163,15 @@ export const LedBannerFullScreen = ({
   });
 
   const { opacity: blinkOpacity } = useBlinkOpacityStyle(isAnimationActive);
+  //가로 모드 시, 가장자리 <-> 노치 사이의 영역에 텍스트 잘림 방지
+  const insets = useSafeAreaInsets();
+  const rawTextShiftX = insets.left - insets.right;
+  const textShiftX =
+    effects.isPixelEffect && effects.pixelShaderSize > 0
+      ? Math.sign(rawTextShiftX) *
+        Math.ceil(Math.abs(rawTextShiftX) / effects.pixelShaderSize) *
+        effects.pixelShaderSize
+      : rawTextShiftX;
 
   const canvasFallback = useMemo(
     () =>
@@ -318,7 +328,10 @@ export const LedBannerFullScreen = ({
                 </View>
               ) : (
                 <View
-                  style={StyleSheet.absoluteFill}
+                  style={[
+                    StyleSheet.absoluteFill,
+                    { transform: [{ translateX: textShiftX }] },
+                  ]}
                   onLayout={canvas.onSkiaCanvasLayout}
                 >
                   <MarqueeCanvas
