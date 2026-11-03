@@ -3,6 +3,7 @@ import { styles as base, colorPickerLockStyles as bgLock, colorPickerStyles as c
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import { persistBackgroundPhoto } from "@/utils/backgroundPhotoStorage";
 import React, { useCallback, useRef, useState } from "react";
 import {
   Alert,
@@ -63,15 +64,18 @@ export const BackgroundSection = () => {
       aspect: [16, 9],
     });
     if (result.canceled || !result.assets[0]) return;
+    const savedUri = await persistBackgroundPhoto(result.assets[0].uri);
     updateConfig("background", {
-      backgroundImageUri: result.assets[0].uri,
+      backgroundImageUri: savedUri,
     });
   }, [updateConfig]);
 
   const launchAndroidAlbumFromCover = useCallback(() => {
     if (!photoPickerLaunchPendingRef.current) return;
     photoPickerLaunchPendingRef.current = false;
-    void launchAlbumPicker().finally(() => {
+    void launchAlbumPicker().catch(error => {
+      console.error("[background] Photo selection or permanent save failed", error);
+    }).finally(() => {
       setPhotoPickerCoverVisible(false);
     });
   }, [launchAlbumPicker]);
@@ -128,7 +132,11 @@ export const BackgroundSection = () => {
               style={chip.colorPickerItemButton}
               hitSlop={PHOTO_BUTTON_HIT_SLOP}
               activeOpacity={0.65}
-              onPress={() => void openAlbum()}
+              onPress={() => {
+                void openAlbum().catch(error => {
+                  console.error("[background] Photo selection or permanent save failed", error);
+                });
+              }}
               accessibilityRole="button"
               accessibilityLabel="Background photo"
             >

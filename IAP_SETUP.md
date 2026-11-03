@@ -41,7 +41,7 @@ SDK 55 기준 2026-09-08 Android preview APK `1cfedbc5-0306-4113-8e65-68e9aebb89
 
 ## 1. App Store Connect
 
-앱 식별자: `com.minkyokim.sideledbannerapp`
+앱 식별자: `com.sunnyinnolab.ledpop` (2026-10-21 App Store Connect의 LED POP `6749168042`에서 확인). 아래 Product ID는 별도 식별자이며 이번 앱 ID 정정으로 임의 변경하지 않았습니다. 현재 구매 화면은 비활성 보관 상태이고 제품 등록·결제·복원은 미검증입니다.
 
 | 항목 | 설정 |
 | --- | --- |

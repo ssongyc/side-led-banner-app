@@ -23,7 +23,13 @@
     },
     "production": {
       "ios": {
-        "image": "macos-tahoe-26.5-xcode-26.6"
+        "image": "macos-tahoe-26.6-xcode-27.1",
+        "buildArtifactPaths": [
+          "ios/build/*.dSYM.zip",
+          "ios/build/*.xcarchive.zip",
+          "ios/build/ios-verification.json",
+          "ios/Podfile.lock"
+        ]
       },
       "autoIncrement": true,
       "environment": "production",

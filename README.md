@@ -9,13 +9,17 @@
 
 ## 현재 문서의 기준
 
+**사진 배경 저장 보완 — 2026-10-25:** 사진 선택기의 캐시 URI를 그대로 저장하던 경로를 수정했습니다. 새 사진은 Documents에 바이트 그대로 복사한 뒤 적용하고, 프리셋에는 앱 컨테이너에 의존하지 않는 사진 참조를 저장합니다. 과거 iOS 절대 경로는 현재 컨테이너에서 파일을 찾아 남아 있는 사진을 이전합니다. 기존 프리셋 키와 다른 설정을 유지하며, 이미 삭제된 캐시는 복구할 수 없어 원래 참조를 지우거나 기본 프리셋으로 덮어쓰지 않습니다. 소스 검토만 완료했으며 빌드·업데이트 설치·실기기 검증은 미실행입니다. 전달된 TestFlight 1.1.4 (3)에는 미포함입니다.
+
+**TestFlight 업로드 — 2026-10-21:** **1.1.4 (3)**은 기존 LED POP 인증서로 EAS 빌드·Mac 서명/Archive/React 프레임워크/dSYM/실제 광고·일반 UMP 설정 검증을 통과했고, App Store Connect 업로드가 완료됐습니다. Apple 처리 **VALID**, 기존 내부 테스트 그룹 **LPT**, 내부 상태 **IN_BETA_TESTING**을 확인했습니다. iOS 실기기 동작은 미검증이며 외부 베타 심사/App Review 제출은 하지 않았습니다. 원본 P12의 Mac 가져오기 실패 후 사용자 승인으로 같은 인증서·개인키를 호환 형식으로 재포장했습니다. Android 코드 31 유지, Android 재빌드는 하지 않았습니다. [정확한 빌드·해시·제한](docs/SIGNING_POLICY.md#testflight-upload-request--2026-10-21).
+
 > **TestFlight 1.1.3 (1) 시작 충돌 확인:** 사용자 제공 iPhone 로그는 `ExpoModulesWorklets`가 참조하는 `React.framework` 누락으로 앱 코드 실행 전에 종료됨을 보여줍니다. Apple 경고에는 `ReactNativeDependencies.framework`도 포함됩니다. 이후 제공된 Mac 설정에서는 소스 방식 React Native와 사전 컴파일 Expo 프레임워크의 혼합이 확인되어, package.json에서 iOS autolinking 모듈의 소스 빌드를 명시했습니다. Mac에서 pod install·새 Archive·실기기 실행 확인은 아직 필요합니다. Mac용 읽기 전용 검사와 개발자 전달 사항은 [충돌 기록](docs/SIGNING_POLICY.md#ios-launch-crash--2026-09-22)을 참고하세요.
 
-현재 소스 버전은 **1.1.3 (app.json의 Android versionCode 31)**이며 Settings는 Expo 버전을 읽어 **V1.1.3**을 표시합니다. 소스 설정, 로컬 빌드의 버전 코드, 실제 스토어 배포 버전은 별개입니다.
+현재 소스 버전은 **1.1.4 (app.json의 Android versionCode 32, iOS buildNumber 3)**이며 Settings는 Expo 버전을 읽어 **V1.1.4**를 표시합니다. 2026-10-22 사용자 요청으로 Android 코드만 31→32로 변경했으며 새 APK/AAB는 생성하지 않았습니다. 소스 설정, 로컬 빌드의 버전 코드, 실제 스토어 배포 버전은 별개입니다.
 
 **2026-10-20 도구 체인 업그레이드:** Expo 58.0.16 / React Native 0.88.0 / AGP 9.2.1, compileSdk 37 / targetSdk 36, AGP 내장 R8 9.2.14를 적용했습니다. Windows CMake 경로 길이 오류와 R8이 Room 생성자를 제거해 발생한 시작 충돌을 수정했습니다. 수정 QA APK는 `compile-ok`이며 Galaxy에서 재시작, 테스트 UMP 거부·동의·개인정보 재변경, 테스트 배너·보상 광고 및 보상 후 잠금 해제를 확인했습니다. 당시 수정 QA 재빌드는 Gradle 6분 50초(72 executed / 1138 up-to-date)였습니다. 최신 production 빌드 기록은 아래에서 구분합니다. 구매 화면은 승인된 비활성 상태를 유지하며 결제·복원과 iOS는 미검증입니다. 이 APK는 테스트 광고·EEA QA 설정이 포함되어 스토어 제출용이 아닙니다. [빌드 기록](docs/SIGNING_POLICY.md#combined-exporn-upgrade-assessment--2026-10-20)과 [광고 QA 범위](docs/ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20)를 참고하세요.
 
-- **최신 production APK/AAB:** 2026-10-21, V1.1.3 (31), 실행 `20261021-163700-75ec4373`, clean main `1c34d59`입니다. 회전 텍스트 숨김·사진 픽셀 틈 대비 보완과 앞선 회전·Pixel 미리보기·Speed 변경을 포함합니다. 실제 AdMob·일반 Google UMP, compile-ok 및 정적 검사 479개 통과. 의존성 재설치는 생략하고 새 모듈 등록용 네이티브 생성과 R8 재실행을 거쳤습니다. Gradle 7분, 전체 7분 43초. 이 파일의 실기기 QA와 Play 업로드는 미실행입니다. [완료 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#latest-main-build-request--2026-10-21).
+- **최신 production APK/AAB:** 2026-10-21, V1.1.3 (31), 실행 `20261021-170512-4ed611b7`, clean main `c071835`입니다. 흰 Pixel 글자 채움 90% 보완과 회전 텍스트 숨김·사진 픽셀 틈 대비 보완을 포함합니다. 실제 AdMob·일반 Google UMP, compile-ok 및 정적 검사 479개 통과. 의존성 재설치·네이티브 생성을 생략하고 R8을 재사용했습니다. Gradle 2분 19초, 전체 2분 55초입니다. 이 파일의 실기기 QA와 Play 업로드는 미실행입니다. [완료 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#latest-main-build-request--2026-10-21).
 - **최신 테스트 광고 QA APK:** 2026-10-20, V1.1.3 (31), 실행 `20261020-204946-3c27c770`. Expo 58 업그레이드와 시작 충돌 수정이 포함되며, UMP·테스트 배너·보상·재시작 검증 범위는 [광고 QA 기록](docs/ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20)을 참고하세요. 테스트 광고·강제 EEA 설정이 포함되어 스토어 제출용이 아닙니다.
 - **산출물 구분:** 위 production 및 QA 산출물 모두 리소스 축소·보상 팝업 분리·UMP 설정 항목 색상·SDK 업그레이드·시작 충돌 수정을 포함합니다. 실제 기기 QA는 테스트 광고 빌드에서 수행했으며, 새 production 파일의 실기기 확인과 iOS 검증은 별개입니다.
 
@@ -305,10 +309,11 @@ side-led-banner-app/
 │   ├── settingsStyles.tsx           # 설정 화면 스타일
 │   └── speechBubblePresets.ts       # 말풍선 프리셋
 ├── contexts/
-│   ├── settingsContext.tsx          # 상태·저장 수명주기 및 Context 연결
+│   ├── settingsContext.tsx          # 화면 상태 및 Context 연결
 │   ├── premiumContext.tsx           # 구매 권한 구독
 │   └── settings/
 │       ├── presetModel.ts           # 타입·기본값·프리셋 변환 규칙
+│       ├── usePresetPersistence.ts  # 프리셋 복원·자동 저장·수동 재시도
 │       └── useSettingsLocalization.ts # 언어·시트·라벨·폰트 로드
 ├── language/
 │   ├── deviceLocale.ts              # 기기 로케일 변환
@@ -382,11 +387,11 @@ side-led-banner-app/
 
 ## 최신 소스 변경 메모
 
-**Pixel 흰 글자 대비 보완(소스 반영·미빌드):** 미리보기와 Play는 같은 선택 RGB를 사용하지만 Play의 큰 격자 틈이 어두운 사진과 섞여 글자가 어둡게 느껴질 수 있어, 공통 텍스트 블록 폭을 셀의 80%에서 90%로 넓혔습니다. 글자색·Blink·사진 배경의 80% 격자·사진 틈 30% 밝기와 외곽선 격자는 유지합니다. 기존 `20261021-163700-75ec4373` APK/AAB에는 미포함이며, 새 빌드에서 같은 설정의 시각 비교가 필요합니다. [범위와 검증 제한](docs/UI_INTERACTION_1.0.9_27.md#pixel-흰-글자의-전체화면-대비-보완--2026-10-21).
+**Pixel 흰 글자 대비 보완(빌드 완료·실기기 미검증):** 미리보기와 Play는 같은 선택 RGB를 사용하지만 Play의 큰 격자 틈이 어두운 사진과 섞여 글자가 어둡게 느껴질 수 있어, 공통 텍스트 블록 폭을 셀의 80%에서 90%로 넓혔습니다. 글자색·Blink·사진 배경의 80% 격자·사진 틈 30% 밝기와 외곽선 격자는 유지합니다. 최신 `20261021-170512-4ed611b7` APK/AAB에 포함됐으며, 같은 설정의 실기기 시각 비교는 아직 필요합니다. [범위와 검증 제한](docs/UI_INTERACTION_1.0.9_27.md#pixel-흰-글자의-전체화면-대비-보완--2026-10-21).
 
 **후속 빌드 — 2026-10-21:** 아래 텍스트 숨김·사진 대비 변경은 clean main `1c34d59`의 production 실행 `20261021-163700-75ec4373`에 포함되어 컴파일·정적 검사를 완료했습니다. 아래의 미빌드/빌드 필요 문구는 각 구현·정리 당시 기록이며, 새 바이너리의 실기기 동작은 아직 미검증입니다.
 
-**최근 정리·린트 확인 — 2026-10-21:** 흰 글자 보완 후 텍스트/외곽선 반경, 사진 전용 셰이더, 네이티브 모듈과 플랫폼 진입점의 소비자를 재확인했습니다. 추가로 삭제할 근거가 확실한 파일·리소스·API는 발견되지 않았습니다. 비활성 Premium 참조, 표지판·아이콘 원본과 글꼴 라이선스/출처 자료는 유지합니다. 이번 `npm run lint`는 종료 코드 0, 오류·경고 없이 통과했습니다(npm 자체 업데이트 알림만 출력). 회전 숨김·사진 대비 보완은 위 최신 production에 포함됐고, 흰 글자 90% 채움 보완만 아직 미빌드입니다. 이 정리에서는 빌드·별도 테스트·실기기 QA·커밋·푸시를 실행하지 않았습니다.
+**최근 정리·린트 확인 — 2026-10-21:** 흰 글자 보완 후 텍스트/외곽선 반경, 사진 전용 셰이더, 네이티브 모듈과 플랫폼 진입점의 소비자를 재확인했습니다. 추가로 삭제할 근거가 확실한 파일·리소스·API는 발견되지 않았습니다. 비활성 Premium 참조, 표지판·아이콘 원본과 글꼴 라이선스/출처 자료는 유지합니다. 이번 `npm run lint`는 종료 코드 0, 오류·경고 없이 통과했습니다(npm 자체 업데이트 알림만 출력). 회전 숨김·사진 대비 보완은 위 최신 production에 포함됐고, 흰 글자 90% 채움 보완도 후속 production 실행 `20261021-170512-4ed611b7`에 포함됐습니다. 실기기 시각 확인은 미실행입니다. 이 정리에서는 빌드·별도 테스트·실기기 QA·커밋·푸시를 실행하지 않았습니다.
 
 **Pixel 사진 배경 대비 보완(빌드 완료·실기기 미검증):** 사진의 픽셀 사이를 투명하게 뚫어 선택 배경색을 노출하던 경로를 사진 전용 셰이더로 분리했습니다. 사진이 있는 영역의 틈은 사진 샘플을 어둡게 표시해 흰 배경 선택에 따라 사진이 씻겨 보이는 현상을 줄입니다. 원본 사진·크롭·격자 크기와 사진 없는 배경 효과는 유지합니다. 두 사용자 캡처는 글자색 등 조건도 달라 이전 결과와 완전히 동일하다고 주장하지 않으며, 새 바이너리에서 비교해야 합니다. [변경 범위](docs/UI_INTERACTION_1.0.9_27.md#pixel-사진-배경의-흰-격자-대비-보완--2026-10-21).
 
@@ -409,7 +414,7 @@ side-led-banner-app/
 
 ## 스토어 버전과 제출 상태
 
-Play Console의 현재 출시 버전과 최대 versionCode는 확인하지 못했습니다. 현재 소스 설정은 1.1.3 (31)입니다. 최신 확인된 production APK/AAB는 2026-10-21의 1.1.3 (31), 실행 `20261021-163700-75ec4373`, 최신 테스트 광고 QA APK는 2026-10-20의 1.1.3 (31), 실행 `20261020-204946-3c27c770`입니다. 같은 버전 번호라도 소스·광고 프로필·빌드가 다르며, 새 production APK/AAB에는 회전 텍스트 숨김·Pixel 사진 대비 보완·UMP 색상 수정과 Expo 58 업그레이드가 포함되며 정적 검사 479개가 통과했지만 해당 파일의 실기기 QA는 아직 수행하지 않았습니다. 최신 QA APK에는 테스트 광고·강제 EEA 설정이 포함되어 제출할 수 없습니다. 파일 생성은 업로드·심사 제출·승인을 의미하지 않습니다. 향후 제출 시 Play Console의 실제 최대 versionCode와 동일 빌드 매핑 등록 여부를 별도로 확인해야 합니다.
+Play Console의 현재 출시 버전과 최대 versionCode는 확인하지 못했습니다. 현재 소스 설정은 1.1.4 (Android 32, iOS 3)입니다. 최신 확인된 production APK/AAB는 2026-10-21의 1.1.3 (31), 실행 `20261021-170512-4ed611b7`, 이 문단에서 비교하는 테스트 광고 QA APK는 2026-10-20의 1.1.3 (31), 실행 `20261020-204946-3c27c770`입니다. 같은 버전 번호라도 소스·광고 프로필·빌드가 다르며, 새 production APK/AAB에는 흰 Pixel 글자 채움 90%·회전 텍스트 숨김·Pixel 사진 대비 보완·UMP 색상 수정과 Expo 58 업그레이드가 포함되며 정적 검사 479개가 통과했지만 해당 파일의 실기기 QA는 아직 수행하지 않았습니다. 위 QA APK에는 테스트 광고·강제 EEA 설정이 포함되어 제출할 수 없습니다. 이후 2026-11-02에는 별도의 테스트 광고·30초 보상 QA APK로 Android에서 보상 만료와 두 번째 광고 시청을 확인했습니다. 이 APK도 제출용이 아닙니다. [광고 검증 기록](docs/ADVERTISING.md)을 참고하세요. 파일 생성은 업로드·심사 제출·승인을 의미하지 않습니다. 향후 제출 시 Play Console의 실제 최대 versionCode와 동일 빌드 매핑 등록 여부를 별도로 확인해야 합니다.
 
 TypeScript 검증은 node_modules와 생성 산출물 artifacts를 제외합니다. 과거 빌드 복사본을 현재 소스로 중복 검사하지 않도록 범위를 고정했습니다.
 
@@ -428,7 +433,10 @@ Decibella 2의 store/audioMeterStore에서 기능별 모듈을 조합하는 방�
 
 - contexts/settings/presetModel.ts: BannerConfig/프리셋 타입, 기본값, 기존 Pro 제한 정규화, 텍스트 줄 수 규칙, 프리셋 복사·변환·이전 데이터 복원 규칙.
 - contexts/settings/useSettingsLocalization.ts: 기기 언어 해석, 시트 조회·리비전, 라벨 함수, 로케일 폰트 로드.
-- contexts/settingsContext.tsx: 상태 소유·업데이트, 저장·복원 순서, Pro 만료와 프리셋 선택, Context 값 연결. 기존 공개 타입과 함수는 재노출해 소비자의 import를 유지합니다.
+- contexts/settings/usePresetPersistence.ts: 시작 시 프리셋·사진 배경 복원, 500ms 자동 저장, 슬롯 전환 시 저장, 복원 실패 후 수동 재시도.
+- contexts/settingsContext.tsx: 화면 상태, Pro 만료·제한 적용, Context 구독 연결.
+
+외부 호출이 없는 `useSettingsRest`는 내부 전용으로 전환했습니다. 기존 프리셋 저장 키·형식과 복원 실패 시 수동 재시도는 유지합니다. 직전 정리의 `npm run lint`는 오류·경고 없이 통과했으며, 프리셋 분리와 사진 복원의 실기기 검증은 아직 하지 않았습니다.
 
 ContentContext/RestContext, 저장 키·포맷, 초기값과 갱신 규칙은 유지합니다. Zustand 도입이나 선택적 구독 전환은 하지 않았으며, 이번 분리가 렌더 횟수나 프레임 시간을 줄였다는 의미는 아닙니다. 성능 이득은 미측정입니다. 이 분리 작업에서 컴파일·린트·테스트·새 빌드는 실행하지 않았습니다. 소스와 문서는 후속 main 전달에 포함합니다.
 ## 미사용 공개 API 정리

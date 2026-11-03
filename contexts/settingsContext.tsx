@@ -1,10 +1,9 @@
 import { AppState } from "react-native";
 import type { StorageStartupState } from "./startupContext";
+import { usePresetPersistence } from "./settings/usePresetPersistence";
 import { useSettingsLocalization } from "./settings/useSettingsLocalization";
 import {
-  type BannerConfig, type PresetSnapshot, PRESET_SLOT_COUNT, DEFAULT_BANNER_CONFIG,
-  PRESET_AUTOSAVE_DEBOUNCE_MS, normalizePreviewTextMaxLines, nonProSanitize,
-  presetFromConfig, configFromPreset, blankPresetSnapshot, normalizePresetSlot,
+  type BannerConfig, DEFAULT_BANNER_CONFIG, normalizePreviewTextMaxLines, nonProSanitize,
 } from "./settings/presetModel";
 import {
   fontBelongsToLocale,
@@ -29,13 +28,7 @@ import type { RewardAdLabelKey } from "@/language/rewardAdLabels";
 import type { TextSectionLabelKey } from "@/language/textSectionLabels";
 
 import { usePremium } from "@/contexts/premiumContext";
-import { readAppLanguage, writeAppLanguage } from "@/utils/appLanguageStorage";
-
-import {
-  persistPresetSlotsSnapshot,
-  readPresetSlotsJson,
-} from "@/utils/presetStorage";
-import { readProModeExpiry, writeProModeExpiry, PRO_REWARD_DURATION_MS } from "@/utils/proModeStorage";
+import { writeProModeExpiry, PRO_REWARD_DURATION_MS } from "@/utils/proModeStorage";
 import { getRelLineSpacing } from "@/utils/textSizing";
 
 import React, {
@@ -249,7 +242,7 @@ export const useSettingsLocalizationContext = () =>
  * Compatibility hook for existing consumers that need several settings groups.
  * Prefer the domain hooks above for focused consumers.
  */
-export const useSettingsRest = (): RestContextValue => {
+const useSettingsRest = (): RestContextValue => {
   const appearance = useRequiredContext(AppearanceContext, "useSettingsRest");
   const background = useRequiredContext(BackgroundContext, "useSettingsRest");
   const motion = useRequiredContext(MotionContext, "useSettingsRest");
@@ -298,19 +291,6 @@ export function SettingsProvider({ children, onStartupStateChange }: {
   const { isPremium, entitlement } = usePremium();
   const [config, setConfig] = useState<BannerConfig>(DEFAULT_BANNER_CONFIG);
 
-  const [presetSlots, setPresetSlots] = useState<PresetSnapshot[]>(() =>
-    Array.from({ length: PRESET_SLOT_COUNT }, (_, i) =>
-      i === 0 ? presetFromConfig(DEFAULT_BANNER_CONFIG) : blankPresetSnapshot(),
-    ),
-  );
-
-  /** AsyncStorage에서 슬롯 복원 완료 전에는 자식을 마운트하지 않음(로드 전 저장·조작 레이스 방지) */
-  const [presetsStorageReady, setPresetsStorageReady] = useState(false);
-  const [storageLoadFailed, setStorageLoadFailed] = useState(false);
-  const [storageLoadAttempt, setStorageLoadAttempt] = useState(0);
-  /** state 커밋 전에도 “복원 완료” 여부를 동기적으로 알기 위함(저장 콜백에서 사용) */
-  const presetsStorageReadyRef = useRef(false);
-
   const [ui, setUI] = useState<UIState>({
     isPlaying: false,
     activeTab: "TEXT",
@@ -330,14 +310,10 @@ export function SettingsProvider({ children, onStartupStateChange }: {
   } = useSettingsLocalization(ui.appLanguage);
   /** 프리셋 저장/로드 시 최신 state용 */
   const configRef = useRef(config);
-  const presetSlotsRef = useRef(presetSlots);
   const activePresetRef = useRef(ui.activePreset);
   useEffect(() => {
     configRef.current = config;
   }, [config]);
-  useEffect(() => {
-    presetSlotsRef.current = presetSlots;
-  }, [presetSlots]);
   useEffect(() => {
     activePresetRef.current = ui.activePreset;
   }, [ui.activePreset]);
@@ -351,97 +327,26 @@ export function SettingsProvider({ children, onStartupStateChange }: {
 
   const isProActiveRef = useRef(false);
 
-  useEffect(() => {
-    if (!presetsStorageReadyRef.current) return;
-    const timeoutId = setTimeout(() => {
-      const active = activePresetRef.current;
-      setPresetSlots((prev) => {
-        if (active < 0 || active >= PRESET_SLOT_COUNT) return prev;
-        const next = [...prev];
-        next[active] = presetFromConfig(configRef.current);
-        void persistPresetSlotsSnapshot(next).catch((err) => {
-          if (__DEV__) console.warn("[presets] autosave persist failed", err);
-        });
-        return next;
-      });
-    }, PRESET_AUTOSAVE_DEBOUNCE_MS);
-
-    return () => clearTimeout(timeoutId);
-  }, [config, ui.activePreset]);
-
-  useEffect(() => {
-    if (!presetsStorageReadyRef.current) return;
-    void writeAppLanguage(ui.appLanguage).catch((err) => {
-      if (__DEV__) console.warn("[settings] appLanguage persist failed", err);
-    });
-  }, [ui.appLanguage]);
-
-  useEffect(() => {
-    if (!presetsStorageReadyRef.current) return;
-    void writeProModeExpiry(ui.proMode).catch((err) => {
-      if (__DEV__) console.warn("[settings] proMode persist failed", err);
-    });
-  }, [ui.proMode]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const blankSlots = Array.from({ length: PRESET_SLOT_COUNT }, (_, i) =>
-      i === 0 ? presetFromConfig(DEFAULT_BANNER_CONFIG) : blankPresetSnapshot(),
-    );
-    (async () => {
-      try {
-        const storedAppLanguage = await readAppLanguage();
-
-        const [raw, storedProModeExpiry] = await Promise.all([
-          readPresetSlotsJson(),
-          readProModeExpiry(),
-        ]);
-        if (cancelled) return;
-
-        // Validate before applying state or permitting any automatic writes.
-        let slots = blankSlots;
-        if (raw !== null) {
-          const parsed: unknown = JSON.parse(raw);
-          if (!Array.isArray(parsed) || parsed.length !== PRESET_SLOT_COUNT ||
-              parsed.some(item => !item || typeof item !== "object" || Array.isArray(item))) {
-            throw new Error("Invalid saved preset slots");
-          }
-          slots = parsed.map(item => normalizePresetSlot(item));
-        }
-        if (storedAppLanguage) {
-          setUI((prev) => ({ ...prev, appLanguage: storedAppLanguage }));
-        }
-        if (storedProModeExpiry !== null) {
-          if (Date.now() < storedProModeExpiry) {
-            setUI((prev) => ({ ...prev, proMode: storedProModeExpiry }));
-          } else {
-            void writeProModeExpiry(null).catch(() => {});
-          }
-        }
-        setPresetSlots(slots);
-        const active = activePresetRef.current;
-        if (active >= 0 && active < slots.length) {
-          const chosen = slots[active];
-          if (chosen) {
-            setConfig(
-              configFromPreset(chosen, configRef.current.content.playOption),
-            );
-          }
-        }
-        presetsStorageReadyRef.current = true;
-        setPresetsStorageReady(true);
-      } catch (error) {
-        if (!cancelled) {
-          // Never replace unreadable data or enable autosave after a read failure.
-          setStorageLoadFailed(true);
-          if (__DEV__) console.error("[settings] saved settings load failed", error);
-        }
+  const applyRestoredPreferences = useCallback((
+    storedAppLanguage: AppLanguagePreference | null,
+    storedProModeExpiry: number | null,
+  ) => {
+    if (storedAppLanguage) {
+      setUI((prev) => ({ ...prev, appLanguage: storedAppLanguage }));
+    }
+    if (storedProModeExpiry !== null) {
+      if (Date.now() < storedProModeExpiry) {
+        setUI((prev) => ({ ...prev, proMode: storedProModeExpiry }));
+      } else {
+        void writeProModeExpiry(null).catch(() => {});
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [storageLoadAttempt]);
+    }
+  }, []);
+
+  const { presetsStorageReady, storageLoadFailed, retryStorage, selectPreset } = usePresetPersistence({
+    config, configRef, setConfig, activePreset: ui.activePreset, activePresetRef,
+    appLanguage: ui.appLanguage, proMode: ui.proMode, applyRestoredPreferences,
+  });
 
   // config 업데이트 함수
   const updateConfig = useCallback(
@@ -473,30 +378,12 @@ export function SettingsProvider({ children, onStartupStateChange }: {
   }, []);
 
   const loadPreset = useCallback((slot: number) => {
-    if (slot < 0 || slot >= PRESET_SLOT_COUNT) return;
-
-    const cfg = configRef.current;
-    const prev = activePresetRef.current;
-    const slots = [...presetSlotsRef.current];
-
-    if (prev !== slot) {
-      slots[prev] = presetFromConfig(cfg);
-    }
-
-    const chosen = slots[slot];
-    if (!chosen) return;
-
-    if (presetsStorageReadyRef.current) {
-      void persistPresetSlotsSnapshot(slots).catch((err) => {
-        if (__DEV__) console.warn("[presets] loadPreset persist failed", err);
-      });
-    }
-    setPresetSlots(slots);
-    const raw = configFromPreset(chosen, cfg.content.playOption);
+    const raw = selectPreset(slot);
+    if (!raw) return;
     const nextConfig = isProActiveRef.current ? raw : nonProSanitize(raw);
     setConfig(nextConfig);
     setUI((u) => ({ ...u, activePreset: slot }));
-  }, []);
+  }, [selectPreset]);
 
   //Preset 불러올 시 pro mode에 따른  적용
   const [proClock, setProClock] = useState(() => Date.now());
@@ -672,11 +559,6 @@ export function SettingsProvider({ children, onStartupStateChange }: {
       loadPreset,
     ],
   );
-
-  const retryStorage = useCallback(() => {
-    setStorageLoadFailed(false);
-    setStorageLoadAttempt(attempt => attempt + 1);
-  }, []);
 
   useEffect(() => {
     onStartupStateChange({ ready: presetsStorageReady, failed: storageLoadFailed,
