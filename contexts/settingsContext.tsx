@@ -1,3 +1,4 @@
+import { AppState } from "react-native";
 import type { StorageStartupState } from "./startupContext";
 import { useSettingsLocalization } from "./settings/useSettingsLocalization";
 import {
@@ -34,7 +35,7 @@ import {
   persistPresetSlotsSnapshot,
   readPresetSlotsJson,
 } from "@/utils/presetStorage";
-import { readProModeExpiry, writeProModeExpiry } from "@/utils/proModeStorage";
+import { readProModeExpiry, writeProModeExpiry, PRO_REWARD_DURATION_MS } from "@/utils/proModeStorage";
 import { getRelLineSpacing } from "@/utils/textSizing";
 
 import React, {
@@ -499,6 +500,16 @@ export function SettingsProvider({ children, onStartupStateChange }: {
 
   //Preset 불러올 시 pro mode에 따른  적용
   const [proClock, setProClock] = useState(() => Date.now());
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") return;
+      const now = Date.now();
+      setProClock(now);
+      setUI((previous) => previous.proMode !== null && previous.proMode <= now
+        ? { ...previous, proMode: null } : previous);
+    });
+    return () => subscription.remove();
+  }, []);
   const isProActive = isPremium || (ui.proMode !== null && proClock < ui.proMode);
   const prevIsProActiveRef = useRef(isProActive);
   useEffect(() => {
@@ -515,7 +526,7 @@ export function SettingsProvider({ children, onStartupStateChange }: {
   }, [isProActive, entitlement, loadPreset]);
 
   const activatePro = useCallback(() => {
-    setUI((prev) => ({ ...prev, proMode: Date.now() + 2 * 60 * 60 * 1000 }));
+    setUI((prev) => ({ ...prev, proMode: Date.now() + PRO_REWARD_DURATION_MS }));
   }, []);
 
   const openRewardAdModal = useCallback(() => {

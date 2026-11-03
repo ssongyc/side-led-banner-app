@@ -3,6 +3,7 @@ module.exports = ({ config }) => {
   require('./plugins/patchRewardedCleanup.cjs')();
   const profile = process.env.LEDPOP_AD_PROFILE ?? 'production';
   if (!Object.hasOwn(profiles, profile)) throw new Error('Invalid LEDPOP_AD_PROFILE');
+  if (process.env.EXPO_PUBLIC_REWARD_EXPIRY_QA === 'true' && (profile !== 'test' || process.env.EAS_BUILD_PLATFORM)) throw new Error('Short reward expiry is restricted to local test-ad builds');
   const buildProfile = process.env.EAS_BUILD_PROFILE;
   if (buildProfile === 'production' && profile !== 'production') throw new Error('Store builds require production ads');
   if (process.env.EAS_BUILD_PLATFORM && process.env.EXPO_PUBLIC_WEB_AD_DIAGNOSTICS === '1') throw new Error('Web diagnostics cannot be used in native builds');

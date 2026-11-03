@@ -8,6 +8,7 @@ const config = getDefaultConfig(__dirname);
 const { createHash } = require('node:crypto');
 config.cacheVersion = `${config.cacheVersion ?? ''}:ledpop:${createHash('sha256')
   .update(JSON.stringify({
+    rewardExpiryQa: process.env.EXPO_PUBLIC_REWARD_EXPIRY_QA ?? 'false',
     umpDevice: process.env.EXPO_PUBLIC_UMP_EEA_TEST_DEVICE ?? '',
     adProfile: process.env.LEDPOP_AD_PROFILE ?? 'production',
   })).digest('hex')}`;

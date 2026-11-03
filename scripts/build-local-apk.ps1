@@ -1,6 +1,8 @@
 param(
  [string]$BuildRoot=(Join-Path $PSScriptRoot '../artifacts/b'),
  [switch]$ResumeNative,
+ [switch]$RewardExpiryQa,
+ [switch]$Arm64Qa,
  [switch]$IncludeBundle,
  [ValidatePattern('^$|^[A-Fa-f0-9]{32}$')][string]$UmpEeaTestDevice = '',
  [ValidateSet("production", "test")][string]$AdProfile="production",
@@ -21,11 +23,15 @@ $PSNativeCommandUseErrorActionPreference=$false
 . (Join-Path $PSScriptRoot 'android-build-observability.ps1')
 $timingState=New-AndroidBuildTiming
 if($UmpEeaTestDevice -and $IncludeBundle){throw 'Forced UMP is restricted to an APK-only QA build'}
+if($RewardExpiryQa -and ($IncludeBundle -or $AdProfile -ne 'test')){throw 'Short reward expiry requires an APK-only test-ad build'}
+if($Arm64Qa -and ($IncludeBundle -or $AdProfile -ne 'test')){throw 'ARM64 QA requires an APK-only test-ad build'}
+$previousRewardExpiry=$env:EXPO_PUBLIC_REWARD_EXPIRY_QA
 $previousUmpDevice=$env:EXPO_PUBLIC_UMP_EEA_TEST_DEVICE
 $timingStatus='failed'
 $record=$null
 Start-AndroidBuildStage $timingState 'preflight'
 try {
+$env:EXPO_PUBLIC_REWARD_EXPIRY_QA=$RewardExpiryQa.IsPresent.ToString().ToLowerInvariant()
 $env:EXPO_PUBLIC_UMP_EEA_TEST_DEVICE=$UmpEeaTestDevice
 if($IncludeBundle -and $AdProfile -ne 'production'){throw 'Store AAB requires production ads'}
 $verificationScript=Join-Path $PSScriptRoot 'verify-store-release.py'
@@ -242,6 +248,7 @@ android {
   $daemonArgument=if($ReuseDaemon){'--daemon'}else{'--no-daemon'}
   $cacheArgument=if($ConfigurationCache){'--configuration-cache'}else{'--no-configuration-cache'}
   $gradleArguments=@('--init-script',(Join-Path $PSScriptRoot 'ump-build-input.gradle'),'-p','android')+$tasks+@('--build-cache',$daemonArgument,$cacheArgument,('--max-workers='+$GradleWorkers),'-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=1024m','--stacktrace')
+  if($Arm64Qa){$gradleArguments+='-PreactNativeArchitectures=arm64-v8a'}
   # Release bundles never use Metro. Keep host-IP changes out of resValues/R8 inputs.
   $gradleArguments+=@('-PreactNativeDevServerIp=127.0.0.1','-PreactNativeDevServerPort=8081')
   if($ConfigurationCache){$gradleArguments+='--configuration-cache-problems=fail'}
@@ -344,6 +351,7 @@ android {
    $badging=[IO.File]::ReadAllText((Join-Path $record 'apk-badging.txt'))
    $identity=[regex]::Match($badging,"(?m)^package: name='([^']+)' versionCode='(\d+)' versionName='([^']+)'")
    if(-not $identity.Success -or $identity.Groups[1].Value -ne 'com.minkyokim.sideledbannerapp' -or $identity.Groups[2].Value -ne [string]$buildVersionCode -or $identity.Groups[3].Value -ne $buildVersionName){throw 'APK application/version mismatch'}
+   if($Arm64Qa -and $badging -notmatch "(?m)^native-code: 'arm64-v8a'\s*$"){throw 'ARM64 QA APK ABI mismatch'}
    $targetSdk=[regex]::Match($badging,"(?m)^targetSdkVersion:'(\d+)'")
    if(-not $targetSdk.Success -or [int]$targetSdk.Groups[1].Value -lt 36 -or $badging.Contains('application-debuggable')){throw 'APK target SDK or debuggable configuration is invalid'}
    & (Join-Path $buildTools 'zipalign.exe') -c -P 16 4 $apk > (Join-Path $record 'apk-alignment.txt') 2>&1
@@ -362,7 +370,7 @@ android {
   $apkExportedAtUtc=$verifiedExportedAtUtc.ToString('o')
   if($apkHash -ne (Get-FileHash -LiteralPath $deliveryApk -Algorithm SHA256).Hash){throw 'APK delivery hash mismatch'}
   Write-Output ('APK: '+$deliveryApk)
-  @{ apk=$deliveryApk; apkSource=$apkSource; aab=$deliveryAab; adProfile=$AdProfile; aabSha256=$aabHash; bundletoolVersion=$bundletoolVersion; gradleTasks=$tasks; mappingSha256=$mappingHash; elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=$apkHash; revision=$plan.revision; dirty=$plan.dirty; versionName=$buildVersionName; versionCode=$plan.versionCode; apkExportedAtUtc=$apkExportedAtUtc; aabExportedAtUtc=$aabExportedAtUtc; measureBuild=[bool]$MeasureBuild; configurationCache=[bool]$ConfigurationCache; reuseDaemon=[bool]$ReuseDaemon; gradleWorkers=$GradleWorkers } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
+  @{ apk=$deliveryApk; apkSource=$apkSource; aab=$deliveryAab; adProfile=$AdProfile; rewardExpiryQa=[bool]$RewardExpiryQa; arm64Qa=[bool]$Arm64Qa; aabSha256=$aabHash; bundletoolVersion=$bundletoolVersion; gradleTasks=$tasks; mappingSha256=$mappingHash; elapsedSeconds=((Get-Date)-$started).TotalSeconds; apkSha256=$apkHash; revision=$plan.revision; dirty=$plan.dirty; versionName=$buildVersionName; versionCode=$plan.versionCode; apkExportedAtUtc=$apkExportedAtUtc; aabExportedAtUtc=$aabExportedAtUtc; measureBuild=[bool]$MeasureBuild; configurationCache=[bool]$ConfigurationCache; reuseDaemon=[bool]$ReuseDaemon; gradleWorkers=$GradleWorkers } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $record 'build-result.json')
   if($IncludeBundle){
    Start-AndroidBuildStage $timingState 'artifactVerification'
    # One verification entrypoint; it never invokes Gradle or repeats APK packaging.
@@ -385,8 +393,10 @@ android {
  $timingStatus='completed'
 } finally {
  $env:EXPO_PUBLIC_UMP_EEA_TEST_DEVICE=$previousUmpDevice
+ $env:EXPO_PUBLIC_REWARD_EXPIRY_QA=$previousRewardExpiry
  $timingReport=Get-AndroidBuildTimingReport $timingState $timingStatus
  if($record -and (Test-Path -LiteralPath $record)){
   $timingReport | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $record 'stage-timings.json')
  }
 }
+
