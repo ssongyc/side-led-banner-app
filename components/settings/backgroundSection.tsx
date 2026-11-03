@@ -64,11 +64,8 @@ export const BackgroundSection = () => {
       allowsEditing: false,
     });
     if (result.canceled || !result.assets[0]) return;
-    const savedUri = await persistBackgroundPhoto(result.assets[0].uri);
-    updateConfig("background", {
-      backgroundImageUri: savedUri,
-    });
-  }, [updateConfig]);
+    setCropSourceUri(result.assets[0].uri);
+  }, []);
 
   const launchAndroidAlbumFromCover = useCallback(() => {
     if (!photoPickerLaunchPendingRef.current) return;
@@ -87,7 +84,11 @@ export const BackgroundSection = () => {
   const applyCrop = useCallback(
     (uri: string) => {
       setCropSourceUri(null);
-      updateConfig("background", { backgroundImageUri: uri });
+      void persistBackgroundPhoto(uri).then(savedUri => {
+        updateConfig("background", { backgroundImageUri: savedUri });
+      }).catch(error => {
+        console.error("[background] Cropped photo permanent save failed", error);
+      });
     },
     [updateConfig],
   );
