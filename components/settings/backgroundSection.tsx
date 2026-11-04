@@ -237,11 +237,13 @@ export const BackgroundSection = () => {
       >
         <View style={{ flex: 1, backgroundColor: "#000000" }} />
       </Modal>
-      <CropModal
-        sourceUri={cropSourceUri}
-        onCancel={closeCrop}
-        onDone={applyCrop}
-      />
+      {cropSourceUri && (
+        <CropModal
+          sourceUri={cropSourceUri}
+          onCancel={closeCrop}
+          onDone={applyCrop}
+        />
+      )}
     </>
   );
 };

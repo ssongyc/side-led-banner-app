@@ -82,7 +82,7 @@ const touchCenter = (event: GestureResponderEvent) => {
 };
 
 interface CropModalProps {
-  sourceUri: string | null;
+  sourceUri: string;
   onCancel: () => void;
   onDone: (uri: string) => void;
 }
@@ -101,9 +101,6 @@ export const CropModal = ({ sourceUri, onCancel, onDone }: CropModalProps) => {
   const frameResizeBaseRef = useRef<FrameResizeBase | null>(null);
 
   useEffect(() => {
-    setImage(null);
-    setOrientation("landscape");
-    if (!sourceUri) return;
     let cancelled = false;
     Skia.Data.fromURI(sourceUri)
       .then((data) => {
@@ -124,7 +121,7 @@ export const CropModal = ({ sourceUri, onCancel, onDone }: CropModalProps) => {
     const aspect = screenCropAspect(orientation);
     const maxWidth = stage.width - FRAME_MARGIN * 2;
     const maxHeight = stage.height - FRAME_MARGIN * 2;
-    const width = Math.min(maxWidth, maxHeight * aspect);
+    const width = Math.max(0, Math.min(maxWidth, maxHeight * aspect));
     const height = width / aspect;
     return {
       width,
@@ -145,7 +142,8 @@ export const CropModal = ({ sourceUri, onCancel, onDone }: CropModalProps) => {
     };
   }, [frameScale, fullFrame, stage]);
 
-  const minScale = image
+  const frameReady = frame.width > 0 && frame.height > 0;
+  const minScale = image && frameReady
     ? Math.max(fullFrame.width / image.width(), fullFrame.height / image.height())
     : 1;
 
@@ -177,6 +175,8 @@ export const CropModal = ({ sourceUri, onCancel, onDone }: CropModalProps) => {
   }, []);
 
   useEffect(() => {
+    // Keep the gesture refs and displayed transform in sync when the crop geometry changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     applyFrameScale(1);
     applyTransform({ scale: minScale, x: 0, y: 0 });
   }, [applyFrameScale, applyTransform, minScale, orientation]);
@@ -187,6 +187,8 @@ export const CropModal = ({ sourceUri, onCancel, onDone }: CropModalProps) => {
 
   const panResponder = useMemo(
     () =>
+      // PanResponder stores these callbacks and reads their refs only during gestures.
+      // eslint-disable-next-line react-hooks/refs
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
@@ -267,7 +269,7 @@ export const CropModal = ({ sourceUri, onCancel, onDone }: CropModalProps) => {
   }, []);
 
   const saveCrop = useCallback(() => {
-    if (!image) return;
+    if (!image || !frameReady) return;
     try {
       const { scale, x, y } = transformRef.current;
       const cropWidth = frame.width / scale;
@@ -299,22 +301,22 @@ export const CropModal = ({ sourceUri, onCancel, onDone }: CropModalProps) => {
     } catch (error) {
       if (__DEV__) console.warn("[PhotoCrop] save failed", error);
     }
-  }, [frame, image, onDone]);
+  }, [frame, frameReady, image, onDone]);
 
   const dimPath = useMemo(() => {
-    const path = Skia.Path.Make();
-    path.addRect(Skia.XYWHRect(0, 0, stage.width, stage.height));
-    path.addRect(Skia.XYWHRect(frame.x, frame.y, frame.width, frame.height));
-    path.setFillType(FillType.EvenOdd);
-    return path;
-  }, [frame, stage]);
+    if (!image || !frameReady) return null;
+    return Skia.PathBuilder.Make()
+      .addRect(Skia.XYWHRect(0, 0, stage.width, stage.height))
+      .addRect(Skia.XYWHRect(frame.x, frame.y, frame.width, frame.height))
+      .setFillType(FillType.EvenOdd)
+      .build();
+  }, [frame, frameReady, image, stage]);
 
   const imageWidth = image ? image.width() * transform.scale : 0;
   const imageHeight = image ? image.height() * transform.scale : 0;
 
   return (
     <Modal
-      visible={sourceUri != null}
       animationType="none"
       presentationStyle="fullScreen"
       statusBarTranslucent
@@ -349,10 +351,10 @@ export const CropModal = ({ sourceUri, onCancel, onDone }: CropModalProps) => {
           <TouchableOpacity
             style={styles.toolbarButton}
             onPress={saveCrop}
-            disabled={!image}
+            disabled={!dimPath}
           >
             <Text
-              style={[styles.toolbarText, styles.toolbarTextRight, !image && styles.toolbarTextDisabled]}
+              style={[styles.toolbarText, styles.toolbarTextRight, !dimPath && styles.toolbarTextDisabled]}
               allowFontScaling={false}
             >
               {textSectionLabel("done")}
@@ -364,7 +366,7 @@ export const CropModal = ({ sourceUri, onCancel, onDone }: CropModalProps) => {
           onLayout={onStageLayout}
           {...panResponder.panHandlers}
         >
-          {image && stage.width > 0 ? (
+          {image && dimPath ? (
             <Canvas style={StyleSheet.absoluteFill}>
               <SkiaImage
                 image={image}
