@@ -23,6 +23,9 @@ export type TextSectionLabelKey =
   | "photoPortrait"
   | "cancel"
   | "done"
+  | "photoCropNotice"
+  | "photoCropNoticeHideToday"
+  | "confirm"
   | "speed"
   | "size"
   | "lineSpacing"
@@ -151,6 +154,33 @@ const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
     zhSC: "完成",
     fr: "Terminé",
     es: "Listo",
+  },
+  photoCropNotice: {
+    ko: "화면 비율에 맞춰 사진 일부가 잘릴 수 있습니다.",
+    en: "Parts of the photo may be cropped to fit the screen.",
+    ja: "画面比率に合わせて写真の一部が切り取られる場合があります。",
+    zhTC: "照片可能會依螢幕比例裁切部分內容。",
+    zhSC: "照片可能会按屏幕比例裁剪部分内容。",
+    fr: "Une partie de la photo peut être recadrée pour s'adapter à l'écran.",
+    es: "Parte de la foto puede recortarse para ajustarse a la pantalla.",
+  },
+  photoCropNoticeHideToday: {
+    ko: "오늘 하루 보지 않기",
+    en: "Don't show again today",
+    ja: "今日はこれ以上表示しない",
+    zhTC: "今天不再顯示",
+    zhSC: "今天不再显示",
+    fr: "Ne plus afficher aujourd'hui",
+    es: "No mostrar de nuevo hoy",
+  },
+  confirm: {
+    ko: "확인",
+    en: "OK",
+    ja: "OK",
+    zhTC: "確定",
+    zhSC: "确定",
+    fr: "OK",
+    es: "Aceptar",
   },
   speed: {
     ko: "속도",

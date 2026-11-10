@@ -1,6 +1,11 @@
 import { backgroundColorPalette } from "@/constants/colorPalette";
 import { styles as base, colorPickerLockStyles as bgLock, colorPickerStyles as chip } from "@/constants/styles";
 import { persistBackgroundPhoto } from "@/utils/backgroundPhotoStorage";
+import { centerCropPhoto } from "@/utils/centerCropPhoto";
+import {
+  hidePhotoCropNoticeToday,
+  isPhotoCropNoticeHiddenToday,
+} from "@/utils/photoCropNoticeStorage";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -20,7 +25,7 @@ import {
   useSettingsLocalizationContext,
   useSettingsUI,
 } from "../../contexts/settingsContext";
-import { CropModal } from "./cropModal";
+import { PhotoCropNoticeModal } from "./photoCropNoticeModal";
 import { SettingsSliderBlock } from "./settingsSliderBlock";
 
 const LOCK_ICON = require("@/assets/images/icon_lock_type2.png");
@@ -47,7 +52,7 @@ export const BackgroundSection = () => {
     background;
   const [photoPickerCoverVisible, setPhotoPickerCoverVisible] = useState(false);
   const photoPickerLaunchPendingRef = useRef(false);
-  const [cropSourceUri, setCropSourceUri] = useState<string | null>(null);
+  const [pendingPhotoUri, setPendingPhotoUri] = useState<string | null>(null);
 
   const setBackgroundBlur = (value: number) =>
     updateConfig("background", { backgroundBlur: value });
@@ -58,14 +63,46 @@ export const BackgroundSection = () => {
       backgroundImageUri: null,
     });
 
+  const applyPhoto = useCallback(async (uri: string) => {
+    const croppedUri = await centerCropPhoto(uri);
+    const savedUri = await persistBackgroundPhoto(croppedUri);
+    updateConfig("background", { backgroundImageUri: savedUri });
+  }, [updateConfig]);
+
   const launchAlbumPicker = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: false,
     });
     if (result.canceled || !result.assets[0]) return;
-    setCropSourceUri(result.assets[0].uri);
+    const uri = result.assets[0].uri;
+    if (await isPhotoCropNoticeHiddenToday()) {
+      await applyPhoto(uri);
+      return;
+    }
+    setPendingPhotoUri(uri);
+  }, [applyPhoto]);
+
+  const cancelPhotoCropNotice = useCallback(() => {
+    setPendingPhotoUri(null);
   }, []);
+
+  const confirmPhotoCropNotice = useCallback(
+    (hideToday: boolean) => {
+      if (!pendingPhotoUri) return;
+      const uri = pendingPhotoUri;
+      setPendingPhotoUri(null);
+      if (hideToday) {
+        void hidePhotoCropNoticeToday().catch(error => {
+          console.error("[background] Photo crop notice preference save failed", error);
+        });
+      }
+      void applyPhoto(uri).catch(error => {
+        console.error("[background] Photo crop or permanent save failed", error);
+      });
+    },
+    [applyPhoto, pendingPhotoUri],
+  );
 
   const launchAndroidAlbumFromCover = useCallback(() => {
     if (!photoPickerLaunchPendingRef.current) return;
@@ -76,22 +113,6 @@ export const BackgroundSection = () => {
       setPhotoPickerCoverVisible(false);
     });
   }, [launchAlbumPicker]);
-
-  const closeCrop = useCallback(() => {
-    setCropSourceUri(null);
-  }, []);
-
-  const applyCrop = useCallback(
-    (uri: string) => {
-      setCropSourceUri(null);
-      void persistBackgroundPhoto(uri).then(savedUri => {
-        updateConfig("background", { backgroundImageUri: savedUri });
-      }).catch(error => {
-        console.error("[background] Cropped photo permanent save failed", error);
-      });
-    },
-    [updateConfig],
-  );
 
   const openAlbum = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -237,11 +258,10 @@ export const BackgroundSection = () => {
       >
         <View style={{ flex: 1, backgroundColor: "#000000" }} />
       </Modal>
-      {cropSourceUri && (
-        <CropModal
-          sourceUri={cropSourceUri}
-          onCancel={closeCrop}
-          onDone={applyCrop}
+      {pendingPhotoUri && (
+        <PhotoCropNoticeModal
+          onCancel={cancelPhotoCropNotice}
+          onConfirm={confirmPhotoCropNotice}
         />
       )}
     </>
