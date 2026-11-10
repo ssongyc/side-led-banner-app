@@ -1,3 +1,4 @@
+import { canUseAdNetwork, subscribeAdNetwork } from './adNetwork';
 import { ConsentBlockedError, canRetryAdConsent, prepareAdConsentRetry, subscribeAdConsent, isAdConsentAllowed, registerConsentLifecycle } from './adConsent';
 import { disposeRewardedAd, createNativeRewardedAd, rewardedAdEvents, beginRewardedPresentation, endRewardedPresentation, showRewardedAd, type RewardedAdHandle } from "./AdClient";
 import { getAdConfiguration } from "@/ads/adConfiguration";
@@ -231,7 +232,7 @@ function requestSlotLoad(slotName: SlotName) {
   if (getPremiumSnapshot().entitlement !== "free") return;
   const slot = slots[slotName];
   // Keep preparation/retry ownership while absent; no issued attempt is refunded.
-  if (AppState.currentState !== "active") {
+  if (!canUseAdNetwork() || AppState.currentState !== "active") {
     slot.pendingLoad = true;
     slot.state = "loading";
     trace(slotName, "load_deferred_background");
@@ -289,7 +290,7 @@ function handleSlotError(slotName: SlotName) {
 }
 
 function resumeSlotLoad(slot: RewardedSlot) {
-  if (AppState.currentState !== "active" || getPremiumSnapshot().entitlement !== "free") return;
+  if (!canUseAdNetwork() || AppState.currentState !== "active" || getPremiumSnapshot().entitlement !== "free") return;
   const name = slots.current === slot ? "current" : slots.next === slot ? "next" : null;
   if (!name || slot.retryTimer) return;
   if (slot.retryAt !== null) {
@@ -304,6 +305,17 @@ function resumeSlotLoad(slot: RewardedSlot) {
     requestSlotLoad(name);
   }
 }
+
+subscribeAdNetwork(() => {
+  if (!canUseAdNetwork()) {
+    clearSlotRetryTimer(slots.current);
+    clearSlotRetryTimer(slots.next);
+  } else {
+    resumeSlotLoad(slots.current);
+    resumeSlotLoad(slots.next);
+  }
+  notifySubscribers();
+});
 
 // One observer for the process-owned slots; promotion retains their deadlines.
 AppState.addEventListener("change", state => {
@@ -417,7 +429,7 @@ export function loadRewardedAd(options?: { restartFailed?: boolean }) {
 }
 
 function getLoadedState() {
-  return isAdConsentAllowed() && getPremiumSnapshot().entitlement === "free" && slots.current.state === "loaded" &&
+  return canUseAdNetwork() && isAdConsentAllowed() && getPremiumSnapshot().entitlement === "free" && slots.current.state === "loaded" &&
     slots.current.ad?.loaded === true && slots.current.ad.googleRewardOrderGuaranteed &&
     !isLoadedSlotExpired(slots.current);
 }
@@ -451,7 +463,7 @@ export function subscribeRewardedState(onState: () => void, onReward: () => void
 }
 export { getLoadedState as isRewardedReady };
 export function showRewarded() {
-  if (!isAdConsentAllowed()) return;
+  if (!canUseAdNetwork() || !isAdConsentAllowed()) return;
     if (getPremiumSnapshot().entitlement !== "free") return;
     const configError = getRewardedAdConfigurationError();
     if (configError) {
@@ -506,7 +518,7 @@ export function showRewarded() {
           return;
         }
         const expired = current.loadedAt === null || performance.now() - current.loadedAt >= AD_VALID_MS;
-        if (cancelled || AppState.currentState !== "active") {
+        if (!canUseAdNetwork() || cancelled || AppState.currentState !== "active") {
           endImmersiveAd(flow);
           if (getPremiumSnapshot().entitlement === "free" && ad.loaded && ad.googleRewardOrderGuaranteed && !expired) {
             current.state = "loaded";
@@ -517,6 +529,7 @@ export function showRewarded() {
             return;
           }
         }
+        if (!canUseAdNetwork()) { markShowFailed(); return; }
         if (expired || !ad.loaded || !ad.googleRewardOrderGuaranteed) {
           endImmersiveAd(flow);
           disposeSlot("current");
