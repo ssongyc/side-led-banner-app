@@ -1,7 +1,7 @@
 import { PREMIUM_ANDROID_PURCHASE_OPTION_ID, PREMIUM_PRODUCT_IDS } from "@/constants/premium";
 import type { Product, Purchase } from "expo-iap";
 import { requireNativeModule } from "expo";
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import * as amplitude from "@amplitude/analytics-react-native";
 import { File } from "expo-file-system";
 
@@ -108,6 +108,19 @@ const premiumListeners = new Set<() => void>();
 let iap: typeof import("expo-iap") | null = null;
 let connection: Promise<void> | null = null;
 let refreshFlight: Promise<void> | null = null;
+let foregroundRefreshRequested = false;
+
+function drainForegroundPremiumRefresh() {
+  if (!foregroundRefreshRequested || AppState.currentState !== "active" ||
+      refreshFlight || premiumSnapshot.operation !== "idle") return;
+  foregroundRefreshRequested = false;
+  void refreshPremium();
+}
+
+export function requestForegroundPremiumRefresh() {
+  foregroundRefreshRequested = true;
+  drainForegroundPremiumRefresh();
+}
 // One native connection/listener pair for the app lifetime, independent of screens.
 let purchaseListener: { remove(): void } | null = null;
 let errorListener: { remove(): void } | null = null;
@@ -123,6 +136,9 @@ export const subscribePremium = (listener: () => void) => {
 function publishPremium(patch: Partial<PremiumSnapshot>) {
   premiumSnapshot = { ...premiumSnapshot, ...patch };
   premiumListeners.forEach((listener) => listener());
+  if (foregroundRefreshRequested && patch.operation === "idle") {
+    queueMicrotask(drainForegroundPremiumRefresh);
+  }
 }
 function premiumProductId() {
   if (Platform.OS !== "ios" && Platform.OS !== "android") {
@@ -269,7 +285,10 @@ export function refreshPremium(): Promise<void> {
       await connectPremium();
       await enqueuePurchaseWork(reconcilePremium);
     } catch (error) {
-      publishPremium({ entitlement: "unknown", product: null });
+      publishPremium({
+        entitlement: premiumSnapshot.entitlement === "owned" ? "owned" : "unknown",
+        product: null,
+      });
       reportPremiumError(error, "unavailable");
       return;
     }
@@ -305,7 +324,10 @@ export function refreshPremium(): Promise<void> {
       publishPremium({ product: null });
       reportPremiumError(error, "unavailable");
     }
-  })().finally(() => { refreshFlight = null; });
+  })().finally(() => {
+    refreshFlight = null;
+    drainForegroundPremiumRefresh();
+  });
   return refreshFlight;
 }
 

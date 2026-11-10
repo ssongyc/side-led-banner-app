@@ -1,5 +1,5 @@
 import {
-  getPremiumSnapshot, refreshPremium, subscribePremium,
+  getPremiumSnapshot, refreshPremium, requestForegroundPremiumRefresh, subscribePremium,
 } from "@/utils/ApiClient";
 import { isRewardedAdShowing } from "@/hooks/useRewardedAd";
 import React, { useEffect, useSyncExternalStore } from "react";
@@ -17,8 +17,11 @@ export function usePremium() {
 export function PremiumLifecycle({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void refreshPremium();
+    let appState = AppState.currentState;
     const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active" && !isRewardedAdShowing()) void refreshPremium();
+      const returned = state === "active" && appState !== "active";
+      appState = state;
+      if (returned && !isRewardedAdShowing()) requestForegroundPremiumRefresh();
     });
     return () => subscription.remove();
   }, []);
