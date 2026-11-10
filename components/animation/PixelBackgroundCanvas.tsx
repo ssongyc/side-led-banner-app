@@ -23,7 +23,9 @@ import {
   Fill,
   Group,
   Image,
+  ImageShader,
   Paint,
+  Rect,
   RuntimeShader,
   useImage,
 } from "@shopify/react-native-skia";
@@ -63,27 +65,28 @@ function PixelBackgroundImage({
 }) {
   const image = useImage(uri);
   if (!image) return null;
-  return (
-    <>
-      {fillViewport ? (
-        <Image
+  if (fillViewport) {
+    return (
+      <Rect x={0} y={0} width={width} height={height}>
+        <ImageShader
           image={image}
-          x={0}
-          y={0}
-          width={width}
-          height={height}
-          fit="cover"
+          fit="contain"
+          rect={{ x: 0, y: 0, width, height }}
+          tx="repeat"
+          ty="repeat"
         />
-      ) : null}
-      <Image
-        image={image}
-        x={0}
-        y={0}
-        width={width}
-        height={height}
-        fit={fillViewport ? "contain" : "cover"}
-      />
-    </>
+      </Rect>
+    );
+  }
+  return (
+    <Image
+      image={image}
+      x={0}
+      y={0}
+      width={width}
+      height={height}
+      fit="cover"
+    />
   );
 }
 

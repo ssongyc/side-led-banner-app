@@ -25,11 +25,12 @@ import {
 } from "@/utils/SystemChrome";
 import { getSizingPolicy } from "@/utils/textSizing";
 import { Canvas } from "@shopify/react-native-skia";
-import { Image } from "expo-image";
+import { Image, type ImageLoadEventData } from "expo-image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BackHandler,
   Modal,
+  PixelRatio,
   Platform,
   Pressable,
   StatusBar,
@@ -42,8 +43,6 @@ import { buildPixelBackground } from "./animation/buildPixelBackground";
 import { PixelBackgroundCanvas } from "./animation/PixelBackgroundCanvas";
 import { useMarqueeCanvasProps } from "./animation/useMarqueeCanvasProps";
 import { PlaybackTextLayer } from "./PlaybackTextLayer";
-
-const FULLSCREEN_PHOTO_FILL_BLUR = 24;
 
 interface LedBannerFullScreenProps {
   visible: boolean;
@@ -67,6 +66,37 @@ export const LedBannerFullScreen = ({
   const stageWidth = stageSize.width > 0 ? stageSize.width : windowWidth;
   const stageHeight = stageSize.height > 0 ? stageSize.height : windowHeight;
   const isPortrait = stageHeight >= stageWidth;
+  const [photoSize, setPhotoSize] = useState<{ uri: string; width: number; height: number } | null>(null);
+  const onPhotoLoad = useCallback((event: ImageLoadEventData) => {
+    if (!backgroundImageUri) return;
+    const { width, height } = event.source;
+    setPhotoSize({ uri: backgroundImageUri, width, height });
+  }, [backgroundImageUri]);
+  const photoTiles = useMemo(() => {
+    if (!photoSize || photoSize.width <= 0 || photoSize.height <= 0) return null;
+    const scale = Math.min(stageWidth / photoSize.width, stageHeight / photoSize.height);
+    const tileWidth = photoSize.width * scale;
+    const tileHeight = photoSize.height * scale;
+    const originX = (stageWidth - tileWidth) / 2;
+    const originY = (stageHeight - tileHeight) / 2;
+    const countX = Math.ceil(originX / tileWidth);
+    const countY = Math.ceil(originY / tileHeight);
+    const tiles: { key: string; left: number; top: number; width: number; height: number }[] = [];
+    for (let ix = -countX; ix <= countX; ix += 1) {
+      for (let iy = -countY; iy <= countY; iy += 1) {
+        const left = PixelRatio.roundToNearestPixel(originX + ix * tileWidth);
+        const top = PixelRatio.roundToNearestPixel(originY + iy * tileHeight);
+        tiles.push({
+          key: `${ix}:${iy}`,
+          left,
+          top,
+          width: PixelRatio.roundToNearestPixel(originX + (ix + 1) * tileWidth) - left,
+          height: PixelRatio.roundToNearestPixel(originY + (iy + 1) * tileHeight) - top,
+        });
+      }
+    }
+    return tiles;
+  }, [photoSize, stageWidth, stageHeight]);
   const readySent = useRef(false);
   useEffect(() => {
     if (!visible) readySent.current = false;
@@ -258,23 +288,31 @@ export const LedBannerFullScreen = ({
             pointerEvents="box-none"
           >
             {hasBgPhoto && !effects.isPixelEffect ? (
-              <>
-                <Image
-                  source={{ uri: backgroundImageUri }}
-                  style={StyleSheet.absoluteFill}
-                  contentFit="cover"
-                  blurRadius={Math.max(
-                    FULLSCREEN_PHOTO_FILL_BLUR,
-                    backgroundBlur / 8,
-                  )}
-                />
+              photoTiles && photoSize?.uri === backgroundImageUri ? (
+                photoTiles.map(tile => (
+                  <Image
+                    key={tile.key}
+                    source={{ uri: backgroundImageUri }}
+                    style={{
+                      position: "absolute",
+                      left: tile.left,
+                      top: tile.top,
+                      width: tile.width,
+                      height: tile.height,
+                    }}
+                    contentFit="cover"
+                    blurRadius={backgroundBlur / 8}
+                  />
+                ))
+              ) : (
                 <Image
                   source={{ uri: backgroundImageUri }}
                   style={StyleSheet.absoluteFill}
                   contentFit="contain"
                   blurRadius={backgroundBlur / 8}
+                  onLoad={onPhotoLoad}
                 />
-              </>
+              )
             ) : null}
             {effects.isPixelEffect ? (
               <PixelBackgroundCanvas {...pixelBackgroundProps} isActive={isAnimationActive} />
