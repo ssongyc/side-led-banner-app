@@ -73,7 +73,7 @@ $env:LEDPOP_STORE_PASSWORD=$key.keystorePassword
 $env:LEDPOP_KEY_PASSWORD=$key.keyPassword
 $env:LEDPOP_KEY_ALIAS=$key.keyAlias
 $env:LEDPOP_KEYSTORE=$key.keystorePath
-$env:JAVA_HOME='C:/Program Files/Android/Android Studio/jbr'
+if ([string]::IsNullOrWhiteSpace($env:JAVA_HOME) -or -not (Test-Path -LiteralPath (Join-Path $env:JAVA_HOME 'bin/java.exe') -PathType Leaf)) { throw 'Set JAVA_HOME to a valid JDK before running this build.' }
 $env:ANDROID_HOME=$androidSdkRoot
 $env:CI='1'
 try {

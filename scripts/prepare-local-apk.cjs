@@ -197,9 +197,11 @@ const sdkMetadata = ['build-tools', 'platforms', 'ndk', 'cmake'].flatMap(group =
     .filter(entry => entry.isDirectory())
     .map(entry => path.join(sdkRoot, group, entry.name, 'source.properties'))
 ).sort();
+const javaHome = process.env.JAVA_HOME;
+if (!javaHome) throw Error('Set JAVA_HOME to a valid JDK before preparing the local build.');
 const toolchainHash = hash(JSON.stringify([
   process.version,
-  ...['C:/Program Files/Android/Android Studio/jbr/release', ...sdkMetadata].map(file => {
+  ...[path.join(javaHome, 'release'), ...sdkMetadata].map(file => {
     if (!fs.existsSync(file)) throw Error('Required local toolchain metadata is missing: ' + file);
     return [file, hash(fs.readFileSync(file))];
   }),

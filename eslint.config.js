@@ -10,6 +10,6 @@ module.exports = defineConfig([
   },
   {
     // artifacts/b is the generated Android short-path build mirror.
-    ignores: ['dist/**', 'artifacts/b/**', 'artifacts/local-builds/20260908-expo57/**', '**/*.json'],
+    ignores: ['dist/**', 'artifacts/b/**', 'artifacts/local-builds/20260908-expo57/**', 'artifacts/local-builds/20261109-c-drive-before-move/**', '**/*.json'],
   },
 ]);

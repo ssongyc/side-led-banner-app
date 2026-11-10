@@ -19,10 +19,7 @@ export type TextSectionLabelKey =
   /** 배경*/
   | "backgroundColor"
   | "blur"
-  | "photoLandscape"
-  | "photoPortrait"
   | "cancel"
-  | "done"
   | "photoCropNotice"
   | "photoCropNoticeHideToday"
   | "confirm"
@@ -119,24 +116,6 @@ const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
     fr: "Flou",
     es: "Desenfoque",
   },
-  photoLandscape: {
-    ko: "가로",
-    en: "Landscape",
-    ja: "横向き",
-    zhTC: "橫向",
-    zhSC: "横向",
-    fr: "Paysage",
-    es: "Horizontal",
-  },
-  photoPortrait: {
-    ko: "세로",
-    en: "Portrait",
-    ja: "縦向き",
-    zhTC: "直向",
-    zhSC: "竖向",
-    fr: "Portrait",
-    es: "Vertical",
-  },
   cancel: {
     ko: "취소",
     en: "Cancel",
@@ -145,15 +124,6 @@ const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
     zhSC: "取消",
     fr: "Annuler",
     es: "Cancelar",
-  },
-  done: {
-    ko: "완료",
-    en: "Done",
-    ja: "完了",
-    zhTC: "完成",
-    zhSC: "完成",
-    fr: "Terminé",
-    es: "Listo",
   },
   photoCropNotice: {
     ko: "화면 비율에 맞춰 사진 일부가 잘릴 수 있습니다.",

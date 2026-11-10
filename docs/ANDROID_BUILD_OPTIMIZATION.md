@@ -4,11 +4,15 @@
 
 The initial review inspected the local release wrapper and retained build logs without running a build. A later user-authorized production build measured the applied changes; its result is recorded below. No lint, test, upload, deployment, or Play Console change was run as part of the documentation update.
 
-## Current QA and store handoff — 2026-10-20
+## Production build — 2026-11-04
+
+Run `20261104-165700-57ddd8e7` built V1.1.4 (32) from clean main `4a66b44` with production AdMob, normal Google UMP, and the standard two-hour reward. Gradle completed in 6m44s with 85 tasks executed and 1,159 up to date. The universal APK was derived from the signed AAB. Static verification passed for the two artifacts, including signing, 16 KiB alignment and embedded R8 mapping. Device QA and Play upload were unverified for this build. The local run directory contains the APK, AAB and verification report.
+
+## October QA and store handoff — 2026-10-20
 
 ### Latest main build request — 2026-10-21
 
-**Latest production completion — 90% Pixel text fill:** run `20261021-170512-4ed611b7`, clean main `c071835201bcabf38cf2deb1a89f7bedb4bc9aa6`, V1.1.3/code31, production AdMob and normal Google UMP. Includes denser text fill, preserved 80% outline/background grids, native rotation text hiding and dim photo gaps. Five changed inputs synchronized; dependency installation and native generation skipped. Existing signing/four ABIs retained; R8 **UP-TO-DATE**. **compile-ok**, Gradle **2m19s**, **1244 tasks: 72 executed / 1172 up-to-date / 0 FROM-CACHE**. Total wrapper **175.49s** (2m55s), compilation 140.21s, conversion 14.04s, artifact verification 13.79s. One AAB build; APK derived from the identical signed AAB.
+**Production completion — 90% Pixel text fill:** run `20261021-170512-4ed611b7`, clean main `c071835201bcabf38cf2deb1a89f7bedb4bc9aa6`, V1.1.3/code31, production AdMob and normal Google UMP. Includes denser text fill, preserved 80% outline/background grids, native rotation text hiding and dim photo gaps. Five changed inputs synchronized; dependency installation and native generation skipped. Existing signing/four ABIs retained; R8 **UP-TO-DATE**. **compile-ok**, Gradle **2m19s**, **1244 tasks: 72 executed / 1172 up-to-date / 0 FROM-CACHE**. Total wrapper **175.49s** (2m55s), compilation 140.21s, conversion 14.04s, artifact verification 13.79s. One AAB build; APK derived from the identical signed AAB.
 
 - APK: `artifacts/apk-runs/20261021-170512-4ed611b7/apk-deliveries/20261021-170753-38649dfc310b4758ae698f72ca0bc31c/LedPopV113.apk`; 191,798,439 bytes; SHA-256 `C50CE6F5F7D2A87535E95582C55267B65C15FFE6490EA402F99461B16549A0A1`.
 - AAB: `artifacts/apk-runs/20261021-170512-4ed611b7/aab-deliveries/20261021-170737-6e6d42b00c7d4d3f8c4a4e6ad147747e/LedPopV113.aab`; 147,307,466 bytes; SHA-256 `93A0D696D606EF94CC29678E703CD92E43E5920721D80510C4236B5943216D58`.

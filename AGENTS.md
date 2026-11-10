@@ -1,4 +1,4 @@
-# AGENTS.md instructions for C:\dev\Led Banner
+# AGENTS.md instructions for G:\dev\Led Banner
 
 These project instructions supplement the shared development policies. Preserve explicit project exceptions within their documented scope.
 
@@ -62,7 +62,7 @@ I am a solo mobile app/game and Microsoft Windows app developer.
 
 ## Incremental local APK workflow
 
-- User-approved default: keep C:/dev/Led Banner/artifacts/b as the fixed active build directory and reuse its dependencies, native output and caches. Do not create a new snapshot or clear caches for each APK.
+- User-approved default: keep G:/dev/Led Banner/artifacts/b as the fixed active build directory and reuse its dependencies, native output and caches. Do not create a new snapshot or clear caches for each APK.
 - Before every authorized build, synchronize the current main working source, including additions and deletions, into that directory. Use a source-file inventory and compare content; copy only changed files. Never mirror the whole repository into its own artifacts subfolder or overwrite generated output/credentials. Record the source revision and any uncommitted changes used.
 - Compare package.json and package-lock.json with the last build inputs. Run dependency installation only if inputs changed or the installation is missing/inconsistent. Do not routinely run npm ci for UI-only changes.
 - Compare Expo config, config plugins, native modules, toolchain and native-affecting assets/settings with the previous inputs. Reuse native output with -ResumeNative when these inputs are unchanged. Regenerate only when native inputs actually require it, using the signing-verified procedure; never resume stale native configuration merely to save time.

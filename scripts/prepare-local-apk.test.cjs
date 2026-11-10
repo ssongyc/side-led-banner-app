@@ -7,7 +7,8 @@ const crypto = require('node:crypto');
 const code = fs.readFileSync(path.join(__dirname, 'prepare-local-apk.cjs'), 'utf8');
 const root = path.resolve(__dirname, '..');
 const target = path.join(root, 'artifacts/b');
-const jdk = 'C:/Program Files/Android/Android Studio/jbr/release';
+const jdkHome = 'C:/fixture/jdk';
+const jdk = path.join(jdkHome, 'release');
 const sha = b => crypto.createHash('sha256').update(b).digest('hex');
 // The actual helper executes against an in-memory filesystem and fake Git/toolchain.
 // No active checkout, cache, credentials, package manager or compiler is accessed.
@@ -43,7 +44,7 @@ function fixture() {
   const plan=()=>JSON.parse(get(path.join(target,'.source-plan.json')));
   const run=(phase='prepare',env={})=>{
     const exit={};
-    const fakeProcess={argv:['node','prepare',phase],version:'v22.0.0',env:{LEDPOP_AD_PROFILE:'production',...env},exit:n=>{assert.equal(n,0);throw exit;}};
+    const fakeProcess={argv:['node','prepare',phase],version:'v22.0.0',env:{JAVA_HOME:jdkHome,LEDPOP_AD_PROFILE:'production',...env},exit:n=>{assert.equal(n,0);throw exit;}};
     const fakeGit=(exe,args)=>{
       assert.equal(exe,'git'); const command=args[2];
       if(command==='ls-files'||command==='ls-tree') return names.join('\0')+'\0';
