@@ -566,6 +566,15 @@ function reuseNextForRecovery() {
     return true;
 }
 
+export function prepareExpiredRewardedOnPopupOpen() {
+    const current = slots.current;
+    if (!isAdConsentAllowed() || !getCanRetryState() || isRewardedAdShowing() ||
+        !(isLoadedSlotExpired(current) || (current.state === "failed" && current.failure === "expiry"))) return;
+    if (reuseNextForRecovery()) return;
+    disposeSlot("current");
+    loadRewardedAd();
+}
+
 export function retryRewarded() {
     if (!getCanRetryState()) return;
     if (reuseNextForRecovery()) return;

@@ -57,9 +57,14 @@ export default function Index() {
     showFailed: rewardAdShowFailed,
     canRetry: rewardAdCanRetry,
     retry: retryRewardedAd,
+    prepareExpiredOnPopupOpen,
     isReady: isRewardedAdReady,
     show: showRewardedAd,
   } = useRewardedAd(activatePro);
+
+  useEffect(() => {
+    if (rewardAdVisible && !isPremium) prepareExpiredOnPopupOpen();
+  }, [rewardAdVisible, isPremium, prepareExpiredOnPopupOpen]);
 
   useEffect(() => {
     if (rewardAdShowFailed) openRewardAdModal();

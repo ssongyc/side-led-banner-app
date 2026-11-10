@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { getAdSnapshot, subscribeRewardedState, showRewarded, retryRewarded, isRewardedReady } from "@/ads/rewardedState";
+import { getAdSnapshot, subscribeRewardedState, showRewarded, retryRewarded, isRewardedReady, prepareExpiredRewardedOnPopupOpen } from "@/ads/rewardedState";
 export { isRewardedAdShowing, suspendRewardedAds, loadRewardedAd } from "@/ads/rewardedState";
 
 export function useRewardedAd(onRewardEarned: () => void) {
@@ -12,5 +12,5 @@ export function useRewardedAd(onRewardEarned: () => void) {
     sync();
     return unsubscribe;
   }, []);
-  return { ...snapshot, show: showRewarded, retry: retryRewarded, isReady: isRewardedReady };
+  return { ...snapshot, show: showRewarded, retry: retryRewarded, isReady: isRewardedReady, prepareExpiredOnPopupOpen: prepareExpiredRewardedOnPopupOpen };
 }
