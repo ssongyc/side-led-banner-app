@@ -2,8 +2,8 @@ import React, { useSyncExternalStore } from 'react';
 import { AppState, Platform, Pressable, Text, useColorScheme } from 'react-native';
 import type { BannerAdProps } from 'react-native-google-mobile-ads';
 
-type State = { allowed: boolean; required: boolean; busy: boolean; revision: number; failure: "request" | "configuration" | null };
-let state: State = { allowed: false, required: false, busy: false, revision: 0, failure: null };
+type State = { allowed: boolean; required: boolean; busy: boolean; privacyOpen: boolean; revision: number; failure: "request" | "configuration" | null };
+let state: State = { allowed: false, required: false, busy: false, privacyOpen: false, revision: 0, failure: null };
 const listeners = new Set<() => void>();
 let startup: Promise<void> | undefined;
 let qaConsentReset = false;
@@ -89,10 +89,10 @@ export async function ensureAdConsent(): Promise<void> {
   await startup;
   if (!isAdConsentAllowed()) throw new ConsentBlockedError('UMP does not permit ad requests.');
 }
-export function showAdPrivacy(): Promise<void> {
+function showAdPrivacy(): Promise<void> {
   if (privacy) return privacy;
   if (!state.required || state.busy || [...privacyGuards].some(guard => !guard()) || AppState.currentState !== 'active') return Promise.resolve();
-  publish({ busy: true, revision: state.revision + 1, failure: null });
+  publish({ busy: true, privacyOpen: true, revision: state.revision + 1, failure: null });
   privacy = (async () => {
     // Give subscribed banner views time to detach before presenting the native form.
     try {
@@ -104,7 +104,7 @@ export function showAdPrivacy(): Promise<void> {
     finally {
       try { await refresh(); }
       catch (error) { publish({ allowed: false, failure: state.failure === 'configuration' ? 'configuration' : 'request' }); console.warn('[UMP] Consent status failed', error); }
-      publish({ busy: false });
+      publish({ busy: false, privacyOpen: false });
     }
   })().finally(() => { privacy = undefined; });
   return privacy;
@@ -141,7 +141,7 @@ const aliases: Record<string, string> = { 'zh-CN': 'zh-Hans', 'zh-TW': 'zh-Hant'
 export function AdPrivacyOptions({ language, color }: { language: string; color?: string }) {
   const consent = useAdConsent();
   const dark = useColorScheme() === 'dark';
-  if (!consent.required || Platform.OS === 'web') return null;
+  if ((!consent.required && !consent.privacyOpen) || Platform.OS === 'web') return null;
   const label = labels[aliases[language] ?? language];
   if (!label) { console.warn('[UMP] Missing approved privacy label', language); return null; }
   return <Pressable accessibilityRole="button" accessibilityLabel={label} disabled={consent.busy}

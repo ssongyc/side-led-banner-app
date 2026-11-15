@@ -6,7 +6,10 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.View
 import android.view.ViewTreeObserver
+import expo.modules.kotlin.AppContext
+import expo.modules.kotlin.views.ExpoView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -19,6 +22,13 @@ class LedPopAdImmersiveModule : Module(), Application.ActivityLifecycleCallbacks
   @Volatile private var active = false
   private var flow = 0
   private var application: Application? = null
+  private val popupObservers = mutableMapOf<Int, Pair<View, View.OnAttachStateChangeListener>>()
+
+  private fun cancelPopupObservation(token: Int) {
+    val (view, listener) = popupObservers.remove(token) ?: return
+    view.removeOnAttachStateChangeListener(listener)
+  }
+
   private val focusListeners = WeakHashMap<Activity, ViewTreeObserver.OnWindowFocusChangeListener>()
   private fun hide(activity: Activity) {
     if (activity.isFinishing || activity.isDestroyed) return
@@ -42,6 +52,24 @@ class LedPopAdImmersiveModule : Module(), Application.ActivityLifecycleCallbacks
   }
   override fun definition() = ModuleDefinition {
     Name("LedPopAdImmersive")
+    View(RewardPopupSurface::class) {}
+    Events("rewardPopupDismissed")
+    AsyncFunction("observeRewardPopupDismissal") { viewTag: Int, token: Int ->
+      val view = requireNotNull(appContext.findView<RewardPopupSurface>(viewTag))
+      check(view.isAttachedToWindow) { "Reward popup is not attached" }
+      val listener = object : View.OnAttachStateChangeListener {
+        override fun onViewAttachedToWindow(view: View) {}
+        override fun onViewDetachedFromWindow(view: View) {
+          cancelPopupObservation(token)
+          sendEvent("rewardPopupDismissed", mapOf("token" to token))
+        }
+      }
+      popupObservers[token] = view to listener
+      view.addOnAttachStateChangeListener(listener)
+    }.runOnQueue(Queues.MAIN)
+    AsyncFunction("cancelRewardPopupObservation") { token: Int ->
+      cancelPopupObservation(token)
+    }.runOnQueue(Queues.MAIN)
     Function("getAppId") {
       val context = requireNotNull(appContext.reactContext)
       val info = context.packageManager.getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
@@ -66,7 +94,10 @@ class LedPopAdImmersiveModule : Module(), Application.ActivityLifecycleCallbacks
     OnDestroy {
       active = false
       application?.unregisterActivityLifecycleCallbacks(this@LedPopAdImmersiveModule)
-      Handler(Looper.getMainLooper()).post { focusListeners.keys.toList().forEach { detach(it) } }
+      Handler(Looper.getMainLooper()).post {
+        focusListeners.keys.toList().forEach { detach(it) }
+        popupObservers.keys.toList().forEach { cancelPopupObservation(it) }
+      }
       application = null
     }
   }
@@ -79,3 +110,5 @@ class LedPopAdImmersiveModule : Module(), Application.ActivityLifecycleCallbacks
   override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
   override fun onActivityDestroyed(activity: Activity) = detach(activity)
 }
+
+class RewardPopupSurface(context: android.content.Context, appContext: AppContext) : ExpoView(context, appContext)

@@ -18,7 +18,6 @@ export interface MarqueeCanvasProps {
   isPixelEffect: boolean;
   /** false면 Pixel이어도 글자는 도트 셰이더 없이 벡터 */
   isPixelTextDots: boolean;
-  isPixelColorMix: boolean;
   pixelShaderSize: number;
   pixelTextShaderUniforms: {
     textThreshold: number;
@@ -28,19 +27,9 @@ export interface MarqueeCanvasProps {
     sampleReachYScale: number;
     dotMaskAaScale: number;
   };
-  pixelMaskDilateRadius: number;
-  pixelMaskErodeRadius: number;
-  pixelGlyphPadCells: number;
-  pixelContentUpscaleFactor: number;
-  hasBgPhoto: boolean;
   blinkOpacity: number | SharedValue<number>;
-  spacer: number;
   isGlowEffect: boolean;
-  glowBlurRadius: number;
-  glowLayerColor: string;
-  skiaStrokeWidthPx: number;
   pixelOutlineRings: number;
-  dropShadow: number;
   previewTextColor: string;
   backgroundColor: string;
 }

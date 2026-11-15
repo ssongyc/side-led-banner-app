@@ -1,14 +1,14 @@
+import { ReservedText } from "@/components/ReservedText";
 import { usePremium } from "@/contexts/premiumContext";
 import { premiumLabel } from "@/language/premiumLabels";
 import { buyPremium, restorePremium, refreshPremium } from "@/utils/ApiClient";
-import { moderateScale } from "@/constants/scale";
 import { settingsStyles } from "@/constants/settingsStyles";
 import { settingsFooterStyles, styles as base } from "@/constants/styles";
-import { useSettingsRest } from "@/contexts/settingsContext";
+import { useSettingsLocalizationContext } from "@/contexts/settingsContext";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
-import { Image, Linking, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect } from "react";
+import { Image, Linking, Platform, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SUNNY_LINKS = {
@@ -21,11 +21,9 @@ const SUNNY_LINKS = {
 
 export default function PremiumScreen() {
   const router = useRouter();
-  const [pageHeight, setPageHeight] = useState(0);
-  const [headerHeight, setHeaderHeight] = useState(0);
-  const [cardHeight, setCardHeight] = useState(0);
+  const { height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const { textSectionLabel, resolvedAppLocale } = useSettingsRest();
+  const { textSectionLabel, resolvedAppLocale } = useSettingsLocalizationContext();
   const premium = usePremium();
   const label = (key: Parameters<typeof premiumLabel>[0]) => premiumLabel(key, resolvedAppLocale);
   const busy = premium.operation !== "idle";
@@ -38,10 +36,17 @@ export default function PremiumScreen() {
     busy ? label(premium.operation === "idle" ? "loading" : premium.operation) :
     premium.notice === "pending" ? label("pending") :
     premium.product?.displayPrice ?? label("unavailable");
-  const cardTopSpacing = Math.max(
-    0,
-    pageHeight / 2 - rootPaddingTop - headerHeight - cardHeight + moderateScale(50) / 2,
-  );
+  const cardTopSpacing = Math.min(48, Math.max(16, windowHeight * 0.05));
+  const priceVariants = [
+    label("owned"), label("loading"), label("purchasing"), label("restoring"),
+    label("pending"), label("unavailable"), premium.product?.displayPrice ?? "",
+  ];
+  const noticeVariants = [
+    label("unavailable"), label("error"), label("cancelled"), label("pending"),
+    label("purchased"), label("restored"), label("nothingToRestore"), label("verificationFailed"),
+  ];
+  const canRetry = premium.notice === "unavailable" || premium.notice === "error" ||
+    premium.notice === "verificationFailed" || premium.notice === "pending";
 
   const openUrl = async (url: string) => {
     try {
@@ -54,13 +59,11 @@ export default function PremiumScreen() {
   return (
     <View
       style={[base.container, { backgroundColor: "#000000", paddingTop: rootPaddingTop }]}
-      onLayout={({ nativeEvent }) => setPageHeight(nativeEvent.layout.height)}
     >
       {Platform.OS === "ios" ? <StatusBar style="light" /> : null}
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <View
           style={settingsStyles.premiumHeader}
-          onLayout={({ nativeEvent }) => setHeaderHeight(nativeEvent.layout.height)}
         >
           <TouchableOpacity
             onPress={() => router.back()}
@@ -87,7 +90,6 @@ export default function PremiumScreen() {
         <View style={[settingsStyles.premiumContent, { paddingTop: cardTopSpacing, paddingBottom: 24 }]}>
           <View
             style={settingsStyles.premiumCard}
-            onLayout={({ nativeEvent }) => setCardHeight(nativeEvent.layout.height)}
           >
             <View style={settingsStyles.premiumCardBody}>
               <View style={settingsStyles.premiumIconPane}>
@@ -113,27 +115,23 @@ export default function PremiumScreen() {
               accessibilityRole="button"
               accessibilityState={{ disabled: !canBuy, busy }}
             >
-              <Text style={[settingsStyles.premiumPriceText, { textAlign: "center", paddingHorizontal: 12 }]} allowFontScaling={false}>
-                {displayedPrice}
-              </Text>
+              <ReservedText text={displayedPrice} variants={priceVariants}
+                textStyle={[settingsStyles.premiumPriceText, { textAlign: "center", paddingHorizontal: 12 }]} />
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={settingsStyles.premiumRestoreArea}>
-          {premium.notice && (
-            <Text allowFontScaling={false} accessibilityLiveRegion="polite"
-              style={{ color: "#ffffff", textAlign: "center", marginBottom: 18, paddingHorizontal: 20 }}>
-              {label(premium.notice)}
-            </Text>
-          )}
-          {(premium.notice === "unavailable" || premium.notice === "error" ||
-            premium.notice === "verificationFailed" || premium.notice === "pending") && (
-            <TouchableOpacity onPress={() => { void refreshPremium(); }} disabled={busy}
-              accessibilityRole="button" style={{ padding: 12, opacity: busy ? 0.5 : 1 }}>
-              <Text allowFontScaling={false} style={{ color: "#ffffff", textAlign: "center" }}>{label("retry")}</Text>
-            </TouchableOpacity>
-          )}
+          <View style={{ alignSelf: "stretch", marginBottom: 18 }}>
+            <ReservedText text={premium.notice ? label(premium.notice) : ""} variants={noticeVariants}
+              textStyle={{ color: "#ffffff", textAlign: "center", paddingHorizontal: 20 }} />
+          </View>
+          <TouchableOpacity onPress={() => { void refreshPremium(); }} disabled={busy || !canRetry}
+            accessibilityRole="button" accessibilityElementsHidden={!canRetry}
+            importantForAccessibility={canRetry ? "auto" : "no-hide-descendants"}
+            style={{ padding: 12, opacity: !canRetry ? 0 : busy ? 0.5 : 1 }}>
+            <Text allowFontScaling={false} style={{ color: "#ffffff", textAlign: "center" }}>{label("retry")}</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => { void restorePremium(); }} disabled={busy || Platform.OS === "web"}
             accessibilityRole="button" accessibilityState={{ disabled: busy || Platform.OS === "web", busy }}
             style={{ paddingVertical: 12, opacity: busy ? 0.5 : 1 }}>

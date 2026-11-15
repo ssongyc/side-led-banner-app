@@ -195,7 +195,6 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
     blinkOpacity,
     spacer: SPACER,
     previewTextColor: textSelectedColor,
-    hasBgPhoto,
     dropShadow,
     backgroundColor,
   });

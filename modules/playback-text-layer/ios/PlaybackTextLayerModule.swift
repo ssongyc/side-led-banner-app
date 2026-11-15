@@ -5,6 +5,10 @@ public class PlaybackTextLayerModule: Module {
   public func definition() -> ModuleDefinition {
     Name("PlaybackTextLayer")
     View(PlaybackTextLayerView.self) {
+      Events("onDeviceRotation")
+      Prop("rotationMode") { (view: PlaybackTextLayerView, mode: String) in
+        view.setObservesDeviceRotation(mode == "device")
+      }
       Prop("layoutRevision") { (view: PlaybackTextLayerView, _: String) in
         view.sceneCommitted()
       }
@@ -29,6 +33,10 @@ final class PlaybackTextLayerView: ExpoView {
   private var rotating = false
   private var revealLink: CADisplayLink?
   private var settledFrames = 0
+  let onDeviceRotation = EventDispatcher()
+  private var observesDeviceRotation = false
+  private var isObservingDevice = false
+  private var reportedRotation: Int?
 
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
@@ -37,6 +45,7 @@ final class PlaybackTextLayerView: ExpoView {
 
   override func didMoveToWindow() {
     super.didMoveToWindow()
+    updateDeviceObservation()
     if window == nil {
       observer.willMove(toParent: nil)
       observer.view.removeFromSuperview()
@@ -60,6 +69,55 @@ final class PlaybackTextLayerView: ExpoView {
       }
       responder = current.next
     }
+  }
+
+  func setObservesDeviceRotation(_ active: Bool) {
+    observesDeviceRotation = active
+    updateDeviceObservation()
+  }
+
+  private func updateDeviceObservation() {
+    let shouldObserve = observesDeviceRotation && window != nil
+    guard shouldObserve != isObservingDevice else { return }
+    isObservingDevice = shouldObserve
+    if shouldObserve {
+      NotificationCenter.default.addObserver(
+        self, selector: #selector(deviceOrientationChanged),
+        name: UIDevice.orientationDidChangeNotification, object: UIDevice.current
+      )
+      UIDevice.current.beginGeneratingDeviceOrientationNotifications()
+      // Let the view's event handler finish mounting before reporting the initial pose.
+      DispatchQueue.main.async { [weak self] in self?.deviceOrientationChanged() }
+    } else {
+      stopDeviceObservation()
+    }
+  }
+
+  private func stopDeviceObservation() {
+    NotificationCenter.default.removeObserver(
+      self, name: UIDevice.orientationDidChangeNotification, object: UIDevice.current
+    )
+    UIDevice.current.endGeneratingDeviceOrientationNotifications()
+    reportedRotation = nil
+  }
+
+  deinit {
+    if isObservingDevice { stopDeviceObservation() }
+  }
+
+  @objc private func deviceOrientationChanged() {
+    guard isObservingDevice else { return }
+    let rotation: Int
+    switch UIDevice.current.orientation {
+    case .portrait: rotation = 0
+    case .landscapeLeft: rotation = 90
+    case .portraitUpsideDown: rotation = 180
+    case .landscapeRight: rotation = 270
+    default: return
+    }
+    guard rotation != reportedRotation else { return }
+    reportedRotation = rotation
+    onDeviceRotation(["degrees": rotation])
   }
 
   func beginRotation() {

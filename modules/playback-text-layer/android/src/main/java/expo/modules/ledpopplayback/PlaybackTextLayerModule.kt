@@ -6,6 +6,7 @@ import android.view.OrientationEventListener
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import expo.modules.kotlin.viewevent.EventDispatcher
 import expo.modules.kotlin.views.ExpoView
 import kotlin.math.abs
 
@@ -13,6 +14,10 @@ class PlaybackTextLayerModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("PlaybackTextLayer")
     View(PlaybackTextLayerView::class) {
+      Events("onDeviceRotation")
+      Prop("rotationMode") { view: PlaybackTextLayerView, mode: String ->
+        view.updateRotationMode(mode)
+      }
       Prop("layoutRevision") { view: PlaybackTextLayerView, _: String ->
         view.sceneCommitted()
       }
@@ -26,6 +31,9 @@ class PlaybackTextLayerView(context: Context, appContext: AppContext) : ExpoView
   private var generation = 0
   private var rotationArmed = true
   private var orientationReady = false
+  private val onDeviceRotation by EventDispatcher<Map<String, Any>>()
+  private var rotationMode = "paused"
+  private var reportedRotation: Int? = null
   private val reveal = Runnable {
     val ticket = generation
     // Wait for the native layout and the latest committed text scene to draw.
@@ -41,9 +49,21 @@ class PlaybackTextLayerView(context: Context, appContext: AppContext) : ExpoView
       }
     }
   }
-  private val orientation = object : OrientationEventListener(context) {
+  private fun createOrientationListener() = object : OrientationEventListener(context) {
     override fun onOrientationChanged(degrees: Int) {
       if (degrees == ORIENTATION_UNKNOWN || !isShown) return
+      if (rotationMode == "device") {
+        val cardinal = ((degrees + 45) / 90 * 90) % 360
+        val distance = abs(degrees - cardinal).let { minOf(it, 360 - it) }
+        // Ignore diagonal positions so hand movement does not cause rapid flips.
+        // The device's left edge is up at 90°; place the content's top on that edge.
+        val rotation = (360 - cardinal) % 360
+        if (distance <= 25 && rotation != reportedRotation) {
+          reportedRotation = rotation
+          onDeviceRotation(mapOf("degrees" to rotation))
+        }
+        return
+      }
       val rotation = display?.rotation ?: return
       val currentDegrees = (360 - rotation * 90) % 360
       val distance = abs(degrees - currentDegrees).let { minOf(it, 360 - it) }
@@ -61,8 +81,25 @@ class PlaybackTextLayerView(context: Context, appContext: AppContext) : ExpoView
     }
   }
 
+  private var orientation = createOrientationListener()
+
   init {
     orientationReady = true
+  }
+
+  fun updateRotationMode(mode: String) {
+    if (rotationMode == mode) return
+    rotationMode = mode
+    updateOrientationListener()
+  }
+
+  private fun updateOrientationListener() {
+    orientation.disable()
+    if (rotationMode == "paused" || !isAttachedToWindow || windowVisibility != VISIBLE) return
+
+    // A fresh listener reports the initial angle even when the phone hasn't moved.
+    orientation = createOrientationListener()
+    if (orientation.canDetectOrientation()) orientation.enable()
   }
 
   private fun hideForRotation() {
@@ -90,23 +127,20 @@ class PlaybackTextLayerView(context: Context, appContext: AppContext) : ExpoView
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
-    if (oldw > 0 && oldh > 0 && (w != oldw || h != oldh)) hideForRotation()
+    if (rotationMode == "window" && oldw > 0 && oldh > 0 && (w != oldw || h != oldh)) {
+      hideForRotation()
+    }
   }
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    if (orientation.canDetectOrientation()) orientation.enable()
+    updateOrientationListener()
   }
 
   override fun onWindowVisibilityChanged(visibility: Int) {
     super.onWindowVisibilityChanged(visibility)
     if (!orientationReady) return
-    // Do not keep orientation sensors running behind another app.
-    if (visibility == VISIBLE && isAttachedToWindow) {
-      if (orientation.canDetectOrientation()) orientation.enable()
-    } else {
-      orientation.disable()
-    }
+    updateOrientationListener()
   }
 
   override fun onDetachedFromWindow() {
@@ -115,6 +149,7 @@ class PlaybackTextLayerView(context: Context, appContext: AppContext) : ExpoView
     generation += 1
     hiddenForRotation = false
     lastDegrees = -1
+    reportedRotation = null
     rotationArmed = true
     alpha = 1f
     super.onDetachedFromWindow()

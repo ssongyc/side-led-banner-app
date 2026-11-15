@@ -134,6 +134,10 @@ Apple 구매가 Google 계정에 자동 이전되거나 그 반대로 이전되�
 - [Play Billing 릴리스 노트](https://developer.android.com/google/play/billing/release-notes)
 - [사용 SDK의 공개 Maven 의존성](https://repo.maven.apache.org/maven2/io/github/hyochan/openiap/openiap-google/3.5.0/openiap-google-3.5.0.pom)
 
+## 보관 Shop 화면의 배치
+
+`disabled-features/premium/PremiumScreen.tsx`는 가격, 구매·복원 결과, 재시도 버튼에 필요한 높이를 첫 배치에서 확보합니다. 화면 높이에 맞춰 카드 위치를 계산하고 짧은 화면에서는 스크롤로 하단 버튼에 접근할 수 있습니다. 보관 소스에 적용했으며 Shop 진입 상태는 아래 기록을 따릅니다.
+
 ## Upgrade to Pro 노출 중단 (2026-09-08)
 
 사용자 요청으로 설정의 Upgrade to Pro 항목과 `/premium` 라우트를 제거했습니다. 화면 구현은 `disabled-features/premium/PremiumScreen.tsx`에 보관하며 앱에서 import하지 않아 번들 진입 경로에서 제외합니다. 사용자가 명시적으로 다시 넣어 달라고 요청하기 전까지 모든 빌드에서 이 상태를 유지합니다. 일반 빌드·SDK 업데이트·출시 요청은 재활성화 승인이 아닙니다. 기존 구매 권한 확인과 광고 면제 처리는 유지합니다. 이번 변경으로 APK를 새로 만들거나 번들을 검사하지는 않았습니다.

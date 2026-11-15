@@ -25,13 +25,18 @@ import { Image } from "expo-image";
 import { type Href, useRouter } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAvoidingView, KeyboardToolbar } from "react-native-keyboard-controller";
 import { initialWindowMetrics, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 
 // iOS applies changing system insets in native layout, without a JS padding pass.
 const MainScreen = Platform.OS === "ios" ? SafeAreaView : View;
+const { width: screenWidth, height: screenHeight } = Dimensions.get("screen");
+const usesSensorRotation =
+  Platform.OS === "ios"
+    ? !Platform.isPad
+    : Platform.OS === "android" && Math.min(screenWidth, screenHeight) < 600;
 
 function DismissLabel() {
   return (
@@ -86,13 +91,19 @@ export default function Index() {
     [playBarScale],
   );
 
+  const playOrientationRequest = useRef<Promise<void> | null>(null);
+  const isStoppingPlay = useRef(false);
+
   useEffect(() => {
     if (!isPlaying) {
-      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      void ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.PORTRAIT_UP,
+      ).catch((error) => console.warn("Could not set editor orientation:", error));
     }
   }, [isPlaying]);
 
   const handlePlay = () => {
+    isStoppingPlay.current = false;
     trackAnalyticsEvent("Play_clicked", {
       play_mode: playOption,
       font: config.appearance.font,
@@ -112,18 +123,33 @@ export default function Index() {
     updateUI({ isPlaying: true });
   };
 
-  // The editor must already be covered before native rotation is unlocked.
+  // Keep the editor covered before requesting the Play orientation.
   const handlePlayReady = useCallback(() => {
-    void ScreenOrientation.unlockAsync();
+    if (isStoppingPlay.current || usesSensorRotation) return;
+    const request = Platform.OS === "web"
+      ? ScreenOrientation.unlockAsync()
+      : ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+    playOrientationRequest.current = request.catch((error) =>
+      console.warn("Could not set Play orientation:", error),
+    );
   }, []);
 
   const handleStop = async () => {
-    // Restore system chrome while Play still covers the main screen.
-    if (Platform.OS === "ios") StatusBar.setHidden(false, "none");
-    await ScreenOrientation.lockAsync(
-      ScreenOrientation.OrientationLock.PORTRAIT_UP,
-    );
-    updateUI({ isPlaying: false });
+    if (isStoppingPlay.current) return;
+    isStoppingPlay.current = true;
+    try {
+      // Finish the Play request before restoring portrait.
+      await playOrientationRequest.current;
+      if (Platform.OS === "ios") StatusBar.setHidden(false, "none");
+      await ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.PORTRAIT_UP,
+      );
+    } catch (error) {
+      console.warn("Could not restore editor orientation:", error);
+    } finally {
+      playOrientationRequest.current = null;
+      updateUI({ isPlaying: false });
+    }
   };
 
   const handleTabPress = (tab: TabType) => {
@@ -342,6 +368,7 @@ export default function Index() {
     </MainScreen>
     <LedBannerFullScreen
       visible={isPlaying}
+      usesSensorRotation={usesSensorRotation}
       onReady={handlePlayReady}
       onClose={handleStop}
     />

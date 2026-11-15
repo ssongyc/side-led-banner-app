@@ -33,7 +33,7 @@ function harness() {
 function props() {
   return { canvas: { skiaTextBlob: {}, skiaTextBlobs: [{}], skiaTextWidth: 400, skiaCanvasLayout: { width: 360, height: 700 }, skiaGlyphPositions: [], skiaFont: {} },
     effects: { isPixelEffect: false, isPixelTextDots: false, isPixelColorMix: false, pixelShaderSize: 5, pixelTextShaderUniforms: {}, pixelMaskDilateRadius: 1, pixelMaskErodeRadius: 0, pixelGlyphPadCells: 1, pixelContentUpscaleFactor: 2, isGlowEffect: false, glowBlurRadius: 3, glowLayerColor: '#fff', skiaStrokeWidthPx: 2, pixelOutlineRings: 0 },
-    blinkOpacity: 1, spacer: 20, previewTextColor: '#000', hasBgPhoto: false, dropShadow: 20, backgroundColor: '#fff' };
+    blinkOpacity: 1, spacer: 20, previewTextColor: '#000', dropShadow: 20, backgroundColor: '#fff' };
 }
 test('screen-owned resources survive unchanged layout objects and repeated renders', () => {
   const h = harness(), p = props(), first = h.render(p);
@@ -55,9 +55,18 @@ test('pixel and glow preserve separate layers, upscale and shadow parameters', (
   const result = h.render(p).tilePaints;
   assert.equal(result.stripPaint.picture.args.layerMode, 'textOnly');
   assert.equal(result.stripPaint.picture.args.upscaleFactor, 2);
-  assert.equal(result.stripPaint.picture.args.dropShadowBlur, 1);
+  assert.equal(result.stripPaint.picture.args.dropShadowBlur, 4);
   assert.equal(result.glowStripPaint.picture.args.layerMode, 'glowOnly');
   assert.equal(h.counts().recordings, 2);
+});
+test('shadow is off at zero and reverses blur across the enabled range', () => {
+  const h = harness(), p = props();
+  for (const [level, blur] of [[0, 0], [1, 5], [100, 0]]) {
+    p.dropShadow = level;
+    const args = h.render(p).tilePaints.stripPaint.picture.args;
+    assert.equal(args.dropShadow, level);
+    assert.equal(args.dropShadowBlur, blur);
+  }
 });
 test('preview and fullscreen own independent resources', () => {
   const preview = harness(), fullscreen = harness(), p = props();

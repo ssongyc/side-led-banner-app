@@ -13,6 +13,7 @@ import { useEffects } from "@/hooks/useEffects";
 import { useHeartBackgroundScroll } from "@/hooks/useHeartBackgroundScroll";
 import { useMarqueeAnimation } from "@/hooks/useMarqueeAnimation";
 import { usePlaybackActive } from "@/hooks/usePlaybackActive";
+import { usePlayRotation } from "@/hooks/usePlayRotation";
 import { usePreviewPanelCanvas } from "@/hooks/usePreviewPanelCanvas";
 import {
   resolveSpeechCanvasFallback,
@@ -28,6 +29,7 @@ import { Canvas } from "@shopify/react-native-skia";
 import { Image, type ImageLoadEventData } from "expo-image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Animated,
   BackHandler,
   Modal,
   PixelRatio,
@@ -46,12 +48,14 @@ import { PlaybackTextLayer } from "./PlaybackTextLayer";
 
 interface LedBannerFullScreenProps {
   visible: boolean;
+  usesSensorRotation: boolean;
   onReady: () => void;
   onClose: () => void;
 }
 
 export const LedBannerFullScreen = ({
   visible,
+  usesSensorRotation,
   onReady,
   onClose,
 }: LedBannerFullScreenProps) => {
@@ -63,8 +67,29 @@ export const LedBannerFullScreen = ({
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
-  const stageWidth = stageSize.width > 0 ? stageSize.width : windowWidth;
-  const stageHeight = stageSize.height > 0 ? stageSize.height : windowHeight;
+  const viewportWidth = stageSize.width > 0 ? stageSize.width : windowWidth;
+  const viewportHeight = stageSize.height > 0 ? stageSize.height : windowHeight;
+  const [deviceRotation, setDeviceRotation] = useState(0);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!visible) setDeviceRotation(0);
+  }, [visible]);
+  const onDeviceRotation = useCallback(
+    ({ nativeEvent }: { nativeEvent: { degrees: number } }) => {
+      if (visible) setDeviceRotation(nativeEvent.degrees);
+    },
+    [visible],
+  );
+  // A window already laid out in landscape needs no extra quarter turn.
+  const rotatesContent = usesSensorRotation && viewportHeight >= viewportWidth;
+  const {
+    rotation: contentRotation,
+    opacity: rotationOpacity,
+    onLayout: onRotatedLayout,
+  } = usePlayRotation(visible && rotatesContent, deviceRotation, viewportWidth, viewportHeight);
+  const swapsAxes = contentRotation === 90 || contentRotation === 270;
+  const stageWidth = swapsAxes ? viewportHeight : viewportWidth;
+  const stageHeight = swapsAxes ? viewportWidth : viewportHeight;
   const isPortrait = stageHeight >= stageWidth;
   const [photoSize, setPhotoSize] = useState<{ uri: string; width: number; height: number } | null>(null);
   const onPhotoLoad = useCallback((event: ImageLoadEventData) => {
@@ -193,9 +218,14 @@ export const LedBannerFullScreen = ({
   });
 
   const { opacity: blinkOpacity } = useBlinkOpacityStyle(isAnimationActive);
-  //가로 모드 시, 가장자리 <-> 노치 사이의 영역에 텍스트 잘림 방지
+  // Map the window's safe-area edges to the rotated content before shifting text.
   const insets = useSafeAreaInsets();
-  const rawTextShiftX = insets.left - insets.right;
+  const rawTextShiftX = [
+    insets.left - insets.right,
+    insets.top - insets.bottom,
+    insets.right - insets.left,
+    insets.bottom - insets.top,
+  ][contentRotation / 90] ?? 0;
   const textShiftX =
     effects.isPixelEffect && effects.pixelShaderSize > 0
       ? Math.sign(rawTextShiftX) *
@@ -220,6 +250,7 @@ export const LedBannerFullScreen = ({
     appearanceFontOverride: effects.pixelSkiaFontOverride,
     lineSpacingPx: effectiveLineSpacing,
     fallbackLayout: canvasFallback,
+    fixedLayout: rotatesContent ? canvasFallback : undefined,
     lineHeightRatio: fullscreenLineHeightRatio,
     isPixelMode: effects.isPixelEffect,
     speechBubbleLayout: speechBubbleCanvasLayout,
@@ -231,7 +262,6 @@ export const LedBannerFullScreen = ({
     blinkOpacity,
     spacer: SPACER,
     previewTextColor: textSelectedColor,
-    hasBgPhoto,
     dropShadow,
     backgroundColor,
   });
@@ -273,7 +303,21 @@ export const LedBannerFullScreen = ({
         onLayout={onStageLayout}
         onTouchStart={hideAndroidNavigationBar}
       >
-        <View style={styles.layerPassThrough} pointerEvents="box-none">
+        <Animated.View
+          onLayout={rotatesContent ? onRotatedLayout : undefined}
+          style={rotatesContent
+            ? {
+                position: "absolute",
+                left: (viewportWidth - stageWidth) / 2,
+                top: (viewportHeight - stageHeight) / 2,
+                width: stageWidth,
+                height: stageHeight,
+                opacity: rotationOpacity,
+                transform: [{ rotate: `${contentRotation}deg` }],
+              }
+            : styles.layerPassThrough}
+          pointerEvents="box-none"
+        >
           <View
             collapsable={false}
             style={[
@@ -343,6 +387,10 @@ export const LedBannerFullScreen = ({
               style={StyleSheet.absoluteFill}
               pointerEvents="none"
               layoutRevision={`${stageWidth}:${stageHeight}:${canvas.skiaCanvasLayout.width}:${canvas.skiaCanvasLayout.height}`}
+              rotationMode={usesSensorRotation
+                ? (isAnimationActive ? "device" : "paused")
+                : "window"}
+              onDeviceRotation={usesSensorRotation ? onDeviceRotation : undefined}
             >
               {speechBubble.isActive ? (
                 <View
@@ -379,7 +427,7 @@ export const LedBannerFullScreen = ({
               )}
             </PlaybackTextLayer>
           </View>
-        </View>
+        </Animated.View>
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={onClose}

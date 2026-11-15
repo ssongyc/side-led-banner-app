@@ -1,3 +1,4 @@
+import { ReservedText } from "@/components/ReservedText";
 import { FireworksBurst } from "./rewardAdModal/FireworksBurst";
 import { RewardBenefits } from "./rewardAdModal/RewardBenefits";
 import { adUnavailableReason, shouldTrackAdInteraction } from "@/utils/adAvailability";
@@ -8,21 +9,24 @@ import { trackAnalyticsEvent } from "@/utils/ApiClient";
 import { REWARD_AD_STATUS_TEXTS, REWARD_AD_BUTTON_TEXTS } from "@/language/rewardAdLabels";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import React, { useCallback, useEffect, useRef } from "react";
+import { requireNativeModule, requireNativeViewManager } from "expo-modules-core";
+import React, { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import {
   AppState,
   BackHandler,
+  findNodeHandle,
   Image as NativeImage,
   Platform,
   Pressable,
   ScrollView,
-  type StyleProp,
-  type TextStyle,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  type ViewProps,
 } from "react-native";
 import Animated, {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -32,28 +36,20 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const WATCH_AD_BUTTON = require("../assets/images/Watch_Ad_Button.png");
 const PLAY_BG = require("../assets/images/Play_Bg.png");
 const PRO_BADGE = require("../assets/images/PRO_Badge.png");
+const RewardPopupSurface = Platform.OS === "web" ? View :
+  requireNativeViewManager<ViewProps & React.RefAttributes<View>>("LedPopAdImmersive");
+const popupSurfaceStyle = { ...StyleSheet.absoluteFillObject, zIndex: 10000 };
 
-// Overlapping, in-flow invisible copies reserve the tallest variant in the first
-// native layout pass. No onLayout/setState resize after the popup is displayed.
-function ReservedAdText({ text, variants, textStyle }: {
-  text: string;
-  variants: readonly string[];
-  textStyle: StyleProp<TextStyle>;
-}) {
-  return (
-    <View style={styles.reservedText}>
-      <View style={styles.reservedTextRow} pointerEvents="none"
-        accessibilityElementsHidden importantForAccessibility="no-hide-descendants" aria-hidden>
-        {[...variants, text].map((variant, index) => (
-          <Text key={index} allowFontScaling={false}
-            style={[textStyle, styles.reservedTextCopy]}>{variant}</Text>
-        ))}
-      </View>
-      <Text style={[textStyle, styles.reservedTextVisible]} allowFontScaling={false}
-        accessibilityLiveRegion="polite">{text}</Text>
-    </View>
-  );
-}
+type PopupDismissalModule = {
+  observeRewardPopupDismissal(viewTag: number, token: number): Promise<void>;
+  cancelRewardPopupObservation(token: number): Promise<void>;
+  addListener(
+    event: "rewardPopupDismissed",
+    callback: (event: { token: number }) => void,
+  ): { remove(): void };
+};
+
+let popupDismissalSequence = 0;
 
 type Props = {
   visible: boolean;
@@ -92,49 +88,52 @@ export function RewardAdModal({
       ? appFontFamilyForText("noto_sans_kr", "bold")
       : undefined;
 
-  const overlayOpacity = useSharedValue(visible ? 1 : 0);
-  const pendingAfterCloseRef = useRef<(() => void) | null>(null);
-  const frameRef = useRef<number | null>(null);
+  const overlayOpacity = useSharedValue(0);
+  const openingStarted = useRef(false);
+  const surfaceRef = useRef<View>(null);
+  const pending = useRef<{
+    controller: AbortController;
+    closing: boolean;
+    afterDismiss: () => void;
+  } | null>(null);
 
-  // `visible=false` already committed a null render. Only then may an ad open.
-  useEffect(() => {
-    if (visible || !pendingAfterCloseRef.current) return;
-    frameRef.current = requestAnimationFrame(() => {
-      frameRef.current = null;
-      const after = pendingAfterCloseRef.current;
-      pendingAfterCloseRef.current = null;
-      if (AppState.currentState === "active") after?.();
-    });
-    return () => {
-      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
-      frameRef.current = null;
-    };
-  }, [visible]);
-
-  useEffect(() => {
-    const cancelPending = () => {
-      pendingAfterCloseRef.current = null;
-      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
-      frameRef.current = null;
-    };
-    const sub = AppState.addEventListener("change", (state) => {
-      if (state !== "active") cancelPending();
-    });
-    return () => { sub.remove(); cancelPending(); };
+  const cancelPending = useCallback(() => {
+    const flow = pending.current;
+    pending.current = null;
+    flow?.controller.abort();
   }, []);
 
-  const handleCancel = useCallback(() => {
-    pendingAfterCloseRef.current = null;
-    onClose();
-  }, [onClose]);
+  useLayoutEffect(() => {
+    if (visible || !pending.current?.closing) {
+      cancelPending();
+    } else if (Platform.OS === "web") {
+      pending.current.afterDismiss();
+    }
+  }, [visible, cancelPending]);
 
   useEffect(() => {
-    if (visible) {
-      overlayOpacity.value = withTiming(1, { duration: 180 });
-    } else {
-      // Do not retain a fading card after close. Reset only for the next open.
-      overlayOpacity.value = 0;
-    }
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") cancelPending();
+    });
+    return () => { subscription.remove(); cancelPending(); };
+  }, [cancelPending]);
+
+  const handleCancel = useCallback(() => {
+    cancelPending();
+    onClose();
+  }, [cancelPending, onClose]);
+
+  useLayoutEffect(() => {
+    if (visible) return;
+    openingStarted.current = false;
+    cancelAnimation(overlayOpacity);
+    overlayOpacity.value = 0;
+  }, [visible, overlayOpacity]);
+
+  const showAfterLayout = useCallback(() => {
+    if (!visible || openingStarted.current) return;
+    openingStarted.current = true;
+    overlayOpacity.set(withTiming(1, { duration: 180 }));
   }, [visible, overlayOpacity]);
 
   //mount 시, 현재 screen의 뒤로가기 이벤트 리스너 등록
@@ -150,17 +149,63 @@ export function RewardAdModal({
 
   const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
 
-  const handleWatchAd = () => {
-    if (drag.current.moved || !visible || !adReady || !onWatchAd || pendingAfterCloseRef.current || (isAdReady && !isAdReady())) return;
-    if (shouldTrackAdInteraction()) trackAnalyticsEvent("WatchAd_clicked");
-    // 닫힘 애니메이션이 실제로 끝난 뒤(추측 딜레이 아님) 광고를 띄운다.
-    pendingAfterCloseRef.current = onWatchAd ?? null;
-    onClose();
+  const handleWatchAd = async () => {
+    if (drag.current.moved || !visible || !adReady || !onWatchAd || pending.current ||
+        AppState.currentState !== "active" || (isAdReady && !isAdReady())) return;
+    const controller = new AbortController();
+    const flow = {
+      controller,
+      closing: false,
+      afterDismiss: () => {
+        if (pending.current !== flow || !flow.closing) return;
+        const frame = requestAnimationFrame(() => {
+          if (pending.current !== flow) return;
+          cancelPending();
+          if (AppState.currentState === "active") onWatchAd();
+        });
+        controller.signal.addEventListener("abort", () => cancelAnimationFrame(frame), { once: true });
+      },
+    };
+    pending.current = flow;
+
+    try {
+      if (Platform.OS !== "web") {
+        const viewTag = findNodeHandle(surfaceRef.current);
+        if (viewTag === null) throw new Error("Reward popup surface is unavailable");
+        const native = requireNativeModule<PopupDismissalModule>("LedPopAdImmersive");
+        const token = ++popupDismissalSequence;
+        const subscription = native.addListener("rewardPopupDismissed", (event) => {
+          if (event.token !== token) return;
+          subscription.remove();
+          flow.afterDismiss();
+        });
+        controller.signal.addEventListener("abort", () => {
+          subscription.remove();
+          void native.cancelRewardPopupObservation(token).catch((error) => {
+            console.warn("[Ads] Reward popup observation cleanup failed", error);
+          });
+        }, { once: true });
+        await native.observeRewardPopupDismissal(viewTag, token);
+      }
+      if (pending.current !== flow) return;
+      if (AppState.currentState !== "active" || (isAdReady && !isAdReady())) {
+        cancelPending();
+        return;
+      }
+      if (shouldTrackAdInteraction()) trackAnalyticsEvent("WatchAd_clicked");
+      flow.closing = true;
+      onClose();
+    } catch (error) {
+      if (pending.current !== flow) return;
+      cancelPending();
+      console.warn("[Ads] Could not confirm reward popup dismissal", error);
+    }
   };
 
   if (!visible) return null;
 
   return (
+    <RewardPopupSurface ref={surfaceRef} style={popupSurfaceStyle} onLayout={showAfterLayout}>
     <Animated.View
       style={[styles.root, { paddingTop: 12 + insets.top, paddingBottom: 12 + insets.bottom, paddingLeft: 12 + insets.left, paddingRight: 12 + insets.right }, overlayStyle]}
       pointerEvents={visible ? "auto" : "none"}
@@ -210,7 +255,7 @@ export function RewardAdModal({
         </View>
 
         <View style={styles.adStatusArea}>
-          <ReservedAdText
+          <ReservedText
             text={adUnavailableReason(resolvedAppLocale) ?? (adReady || adFailure === "consent" ? "" : rewardAdLabel(adFailure === "unavailable" ? "rewardAdUnavailable" : adFailure === "initialization" ? "rewardAdInitializationFailed" : adFailure === "configuration" ? "rewardAdConfigurationFailed" : adFailure === "open-timeout" ? "rewardAdOpenUnconfirmed" : adExpired ? "rewardAdExpired" : adShowFailed ? "rewardAdShowFailed" : adFailed ? "rewardAdLoadFailed" : adDelayed ? "rewardAdDelayed" : "rewardAdPreparing"))}
             variants={REWARD_AD_STATUS_TEXTS}
             textStyle={styles.adStatusText}
@@ -259,7 +304,7 @@ export function RewardAdModal({
               contentFit="contain"
               accessibilityIgnoresInvertColors
             />
-            <ReservedAdText
+            <ReservedText
               text={rewardAdLabel(adReady ? "rewardWatchAd" : "rewardAdPreparingButton")}
               variants={REWARD_AD_BUTTON_TEXTS}
               textStyle={[
@@ -273,5 +318,6 @@ export function RewardAdModal({
         </ScrollView>
       </View>
     </Animated.View>
+    </RewardPopupSurface>
   );
 }

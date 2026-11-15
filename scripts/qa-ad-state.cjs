@@ -33,6 +33,7 @@ function rewarded() {
   const app={currentState:'active',addEventListener(_name,fn){appListeners.add(fn);return {remove(){appListeners.delete(fn);}};}};
   const api=h.load('ads/rewardedState.ts',{
     './adConsent':{isAdConsentAllowed:()=>true,canRetryAdConsent:()=>false,prepareAdConsentRetry(){},subscribeAdConsent:()=>()=>{},registerConsentLifecycle:()=>()=>{},ConsentBlockedError:class extends Error{}},
+    './adNetwork':{canUseAdNetwork:()=>true,subscribeAdNetwork:()=>()=>{}},
     './showFailure':h.load('ads/showFailure.ts'),
     './AdClient':{rewardedAdEvents:{loaded:'loaded',opened:'opened',earnedReward:'earned',closed:'closed',error:'error'},
       createNativeRewardedAd(){const handlers=new Map();const ad={loaded:false,googleRewardOrderGuaranteed:true,dispose(){handlers.clear();},load(){ad.loadTime=h.now();},addAdEventListener(name,fn){handlers.set(name,fn);return()=>handlers.delete(name);},emit(name){if(name==='loaded')ad.loaded=true;handlers.get(name)?.();},handlers};ads.push(ad);return ad;},

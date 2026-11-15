@@ -418,7 +418,7 @@ Re-ran `node --test scripts/qa-ad-state.cjs`: all 29 passed, including one-time 
 
 The settings owner now rechecks its saved wall-clock Pro deadline on foreground entry, clears only an actually expired reward and preserves a newer grant. This removes reliance on a suspended JS timer for foreground recovery. The current purchase/Pro configuration and pending unrelated background-photo work are retained.
 
-Local test-ad APKs may opt into `scripts/build-local-apk.ps1 -AdProfile test -RewardExpiryQa -Arm64Qa`: thirty seconds, separate QA expiry storage, unchanged production two-hour reward and existing UI copy. The wrapper/config reject this option for store/cloud/production-ad builds. Metro and Gradle include the flag in cache inputs; no data clearing or replacement signing is used. Do not distribute this QA APK.
+Local test-ad APKs may opt into `scripts/build-local-apk.ps1 -AdProfile test -RewardExpiryQa -Arm64Qa`: sixty seconds in current source (the initial 2026-11-03 QA used thirty seconds), separate QA expiry storage, unchanged production two-hour reward and existing UI copy. The wrapper/config reject this option for store/cloud/production-ad builds. Metro and Gradle include the flag in cache inputs; no data clearing or replacement signing is used. Do not distribute this QA APK.
 
 `node scripts/check-reward-expiry.cjs` passed the actual foreground Effect callback and storage module checks (expired/new deadlines, cleanup, unchanged unrelated state and production key). `node scripts/check-rewarded-lifecycle.cjs` passed the real rewarded controller with a mocked native boundary (overlapping show, late/double earned callback, background gating, next-slot promotion and cached-ad expiry/manual recovery). Targeted ESLint passed for settingsContext.tsx and proModeStorage.ts. These are source/mock results; Android artifact/device evidence is recorded below when completed. iOS is unverified because no test device is available.
 
@@ -442,3 +442,9 @@ The local test-ad APK profile sets the Pro reward duration to one minute and sto
 The official Publisher Test Ads form appeared. After Do not consent, Settings showed the Test Ad banner and Ad privacy choices. Reopening the form and choosing Consent succeeded. Both choices reported UMP status OBTAINED with ad requests allowed and privacy options required. The prepared rewarded ad required the existing manual Try again action after the consent change. Test playback and closure unlocked Pixel. The effect later cleared and tapping Pixel reopened the reward prompt. The exact 60-second boundary from the earned callback, production ad delivery and iOS runtime were not verified.
 
 The subsequent source cleanup removed redundant crop initialization and passed ESLint with two scoped crop lint exceptions. The QA APK predates that cleanup. No new build, lint run or test was performed for the Git delivery.
+
+## 보상 팝업과 Android 개인정보 선택창 전환
+
+- 보상 팝업은 첫 배치가 완료된 뒤 표시합니다. Watch Ad는 iOS·Android 팝업이 네이티브 창에서 분리됐다는 신호를 받은 뒤 다음 프레임에 한 번만 실행합니다. 닫기, 앱 비활성화, 팝업 재열기는 대기 중인 실행을 취소합니다.
+- Android Settings는 UMP 개인정보 선택 및 상태 재조회 중 현재 화면 너비의 안전 영역과 배너 자리 높이를 유지합니다. 화면 너비가 바뀌면 새 배치를 사용합니다.
+- 소스에 반영했습니다. 네이티브 재빌드 및 실기기 전환 확인은 남아 있습니다.

@@ -1,6 +1,6 @@
 import { useSettingsLocalizationContext } from "@/contexts/settingsContext";
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
-import { AppState, Text, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
+import { AppState, Platform, Text, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
 import { useIsFocused } from "expo-router/react-navigation";
 import { usePathname } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -33,7 +33,17 @@ export default function BannerAdComponent({ style, unavailableLabel }: Props) {
     attach(token, unavailableLabel);
     return () => detach(token);
   }, [focused, attach, detach, unavailableLabel]);
-  return <View style={[{ height: placement?.height ?? 50, flexShrink: 0 }, style]} />;
+  const { privacyOpen } = useAdConsent();
+  const { width } = useWindowDimensions();
+  const height = placement?.height ?? 50;
+  const preserveHeight = Platform.OS === "android" && privacyOpen;
+  const [lastLayout, setLastLayout] = useState({ width, height });
+  if ((!preserveHeight || lastLayout.width !== width) &&
+      (lastLayout.width !== width || lastLayout.height !== height)) {
+    setLastLayout({ width, height });
+  }
+  const reservedHeight = preserveHeight && lastLayout.width === width ? lastLayout.height : height;
+  return <View style={[{ height: reservedHeight, flexShrink: 0 }, style]} />;
 }
 
 export function BannerPlacementProvider({ children }: { children: React.ReactNode }) {

@@ -44,7 +44,7 @@ function fixture() {
   const plan=()=>JSON.parse(get(path.join(target,'.source-plan.json')));
   const run=(phase='prepare',env={})=>{
     const exit={};
-    const fakeProcess={argv:['node','prepare',phase],version:'v22.0.0',env:{JAVA_HOME:jdkHome,LEDPOP_AD_PROFILE:'production',...env},exit:n=>{assert.equal(n,0);throw exit;}};
+    const fakeProcess={argv:['node','prepare',phase],version:'v22.0.0',env:{ANDROID_HOME:'C:/fixture/android-sdk',JAVA_HOME:jdkHome,LEDPOP_AD_PROFILE:'production',...env},exit:n=>{assert.equal(n,0);throw exit;}};
     const fakeGit=(exe,args)=>{
       assert.equal(exe,'git'); const command=args[2];
       if(command==='ls-files'||command==='ls-tree') return names.join('\0')+'\0';

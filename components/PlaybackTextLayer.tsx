@@ -4,6 +4,8 @@ import type { ViewProps } from "react-native";
 
 type PlaybackTextLayerProps = PropsWithChildren<ViewProps & {
   layoutRevision: string;
+  rotationMode: "device" | "paused" | "window";
+  onDeviceRotation?: (event: { nativeEvent: { degrees: number } }) => void;
 }>;
 
 // A native boundary is required to hide text before the OS rotation snapshot.

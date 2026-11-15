@@ -94,6 +94,7 @@ interface UsePreviewPanelCanvasParams {
   appearanceFontOverride?: string | null;
   lineSpacingPx?: number;
   fallbackLayout?: { width: number; height: number };
+  fixedLayout?: { width: number; height: number };
   lineHeightRatio?: number;
   speechBubbleLayout?: BubbleCanvasOpts | null;
   isPixelMode?: boolean;
@@ -149,6 +150,7 @@ export function usePreviewPanelCanvas({
   appearanceFontOverride,
   lineSpacingPx,
   fallbackLayout,
+  fixedLayout,
   lineHeightRatio = 1.2,
   speechBubbleLayout = null,
   isPixelMode = false,
@@ -261,12 +263,12 @@ export function usePreviewPanelCanvas({
     setSkiaCanvasLayout({ width: 0, height: 0 });
   }
 
-  const hasCanvasLayout =
-    skiaCanvasLayout.width > 0 && skiaCanvasLayout.height > 0;
+  const canvasLayout = fixedLayout ?? skiaCanvasLayout;
+  const hasCanvasLayout = canvasLayout.width > 0 && canvasLayout.height > 0;
   const fbW = fallbackLayout?.width ?? 0;
   const fbH = fallbackLayout?.height ?? 0;
-  const drawW = hasCanvasLayout ? skiaCanvasLayout.width : fbW;
-  const drawH = hasCanvasLayout ? skiaCanvasLayout.height : fbH;
+  const drawW = hasCanvasLayout ? canvasLayout.width : fbW;
+  const drawH = hasCanvasLayout ? canvasLayout.height : fbH;
 
   const useBubbleLayout =
     speechBubbleLayout != null && hasCanvasLayout;
