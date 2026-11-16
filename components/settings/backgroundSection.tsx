@@ -73,6 +73,7 @@ export const BackgroundSection = () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: false,
+      quality: 0.95,
     });
     if (result.canceled || !result.assets[0]) return;
     const uri = result.assets[0].uri;
