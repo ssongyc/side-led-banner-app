@@ -27,7 +27,7 @@ export default function PremiumScreen() {
   const premium = usePremium();
   const label = (key: Parameters<typeof premiumLabel>[0]) => premiumLabel(key, resolvedAppLocale);
   const busy = premium.operation !== "idle";
-  const canBuy = !busy && premium.entitlement === "free" && premium.product !== null && premium.notice !== "pending";
+  const canBuy = !premium.paymentPending && !busy && premium.entitlement === "free" && premium.product !== null && premium.notice !== "pending";
   useEffect(() => { void refreshPremium(); }, []);
   const rootPaddingTop = Platform.OS === "web" ? 0 : insets.top;
   const footerPaddingBottom = Platform.OS === "ios" ? Math.max(14, insets.bottom + 8) : 14;

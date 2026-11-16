@@ -8,10 +8,13 @@ let revision = 0;
 let started = false;
 const listeners = new Set<() => void>();
 export const canUseAdNetwork = () => checked && !offline;
+function isOffline(value: NetworkState | null) {
+  return !!value && !!value.type && value.type !== 'UNKNOWN' &&
+    (value.type === 'NONE' || value.isConnected === false || value.isInternetReachable === false);
+}
 function publish(value: NetworkState | null) {
   checked = true;
-  offline = !!value && !!value.type && value.type !== 'UNKNOWN' &&
-    (value.type === 'NONE' || value.isConnected === false || value.isInternetReachable === false);
+  if (value?.type && value.type !== 'UNKNOWN') offline = isOffline(value);
   listeners.forEach(listener => listener());
 }
 async function refresh() {
@@ -28,7 +31,17 @@ export function subscribeAdNetwork(listener: () => void) {
   listeners.add(listener);
   if (!started) {
     started = true;
-    addNetworkStateListener(value => { revision++; publish(value); });
+    addNetworkStateListener(value => {
+      revision++;
+      // A disconnect event can still describe the previous active transport.
+      // Suspend dispatch until the new transport is confirmed.
+      if (isOffline(value)) publish(value);
+      else {
+        checked = false;
+        listeners.forEach(listener => listener());
+      }
+      void refresh();
+    });
     AppState.addEventListener('change', state => { if (state === 'active') void refresh(); });
     void refresh();
   }

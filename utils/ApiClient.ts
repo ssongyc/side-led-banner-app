@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PREMIUM_ANDROID_PURCHASE_OPTION_ID, PREMIUM_PRODUCT_IDS } from "@/constants/premium";
 import type { Product, Purchase } from "expo-iap";
 import { requireNativeModule } from "expo";
@@ -96,16 +97,16 @@ type PremiumSnapshot = {
   entitlement: "unknown" | "free" | "owned";
   operation: "idle" | "loading" | "purchasing" | "restoring";
   product: Product | null;
-  offerTokenAndroid: string | null;
+  paymentPending: boolean;
   notice: PremiumNotice | null;
-  connected: boolean;
 };
 
 let premiumSnapshot: PremiumSnapshot = {
-  entitlement: "unknown", operation: "loading", product: null, offerTokenAndroid: null, notice: null, connected: false,
+  entitlement: "unknown", operation: "loading", product: null, paymentPending: false, notice: null,
 };
 const premiumListeners = new Set<() => void>();
 let iap: typeof import("expo-iap") | null = null;
+let premiumConnected = false;
 let connection: Promise<void> | null = null;
 let refreshFlight: Promise<void> | null = null;
 let foregroundRefreshRequested = false;
@@ -126,7 +127,19 @@ let purchaseListener: { remove(): void } | null = null;
 let errorListener: { remove(): void } | null = null;
 let purchaseQueue: Promise<void> = Promise.resolve();
 const finishedTransactions = new Set<string>();
-let paymentPending = false;
+// A persisted store-pending marker blocks a duplicate purchase; it grants no access.
+const pendingPurchaseKey = "@led_banner_pending_premium_sku_v1";
+let pendingHydrated = false;
+let pendingWriteNeeded = false;
+
+type PremiumQuote = {
+  product: Product;
+  storefront: string;
+  currency: string;
+  option: string | null;
+  offerTokenAndroid: string | null;
+};
+let displayedQuote: PremiumQuote | null = null;
 
 export const getPremiumSnapshot = () => premiumSnapshot;
 export const subscribePremium = (listener: () => void) => {
@@ -149,14 +162,75 @@ function premiumProductId() {
 function reportPremiumError(error: unknown, notice: PremiumNotice = "error") {
   // Never log signed purchase data, tokens, or full SDK error objects.
   console.warn("[IAP]", notice, error instanceof Error ? error.name : "StoreError");
-  if (notice === "pending") paymentPending = true;
-  if (notice === "cancelled") paymentPending = false;
   publishPremium({ notice, operation: "idle" });
 }
 function enqueuePurchaseWork(work: () => Promise<void>) {
   const next = purchaseQueue.then(work);
   purchaseQueue = next.catch(() => {}); // Caller reports failure; later explicit work can proceed.
   return next;
+}
+
+// Read and write pending state through the existing serialized purchase queue.
+async function hydratePendingPurchase() {
+  if (pendingHydrated) return;
+  const savedSku = await AsyncStorage.getItem(pendingPurchaseKey);
+  if (savedSku !== null && savedSku !== premiumProductId()) {
+    throw new Error("Unexpected pending Premium product.");
+  }
+  publishPremium({ paymentPending: savedSku !== null });
+  pendingHydrated = true;
+}
+
+async function setPaymentPending(pending: boolean) {
+  await hydratePendingPurchase();
+  if (premiumSnapshot.paymentPending !== pending) {
+    pendingWriteNeeded = true;
+    publishPremium({ paymentPending: pending });
+  }
+  if (!pendingWriteNeeded) return;
+  if (pending) await AsyncStorage.setItem(pendingPurchaseKey, premiumProductId());
+  else await AsyncStorage.removeItem(pendingPurchaseKey);
+  pendingWriteNeeded = false;
+}
+
+async function readPremiumQuote(): Promise<PremiumQuote | null> {
+  if (!iap) throw new Error("Store is not connected.");
+  const storefront = await iap.getStorefront();
+  const products = await iap.fetchProducts({ skus: [premiumProductId()], type: "in-app" });
+  if (!storefront || storefront !== await iap.getStorefront()) return null;
+  const product = products?.find((item) => item.id === premiumProductId() && item.type === "in-app");
+  if (product?.type !== "in-app") return null;
+  if (Platform.OS === "ios" && product.platform === "ios" && product.typeIOS === "non-consumable" &&
+      product.displayPrice && product.currency && Number.isFinite(product.price) && Number(product.price) > 0) {
+    return { product, storefront, currency: product.currency, option: null, offerTokenAndroid: null };
+  }
+  if (Platform.OS !== "android" || product.platform !== "android" ||
+      !process.env.EXPO_PUBLIC_GOOGLE_PLAY_LICENSE_KEY?.trim()) return null;
+  const offer = product.discountOffers?.find((item) =>
+    item.purchaseOptionIdAndroid === PREMIUM_ANDROID_PURCHASE_OPTION_ID &&
+    !item.id && !item.rentalDetailsAndroid && !item.preorderDetailsAndroid);
+  if (!offer?.offerTokenAndroid || !offer.displayPrice || !offer.currency ||
+      !Number.isFinite(offer.price) || offer.price <= 0) return null;
+  return {
+    product: { ...product, displayPrice: offer.displayPrice, price: offer.price },
+    storefront, currency: offer.currency, option: PREMIUM_ANDROID_PURCHASE_OPTION_ID,
+    offerTokenAndroid: offer.offerTokenAndroid,
+  };
+}
+
+function publishQuote(quote: PremiumQuote | null) {
+  displayedQuote = quote;
+  publishPremium({ product: quote?.product ?? null });
+}
+
+function sameQuote(shown: PremiumQuote, fresh: PremiumQuote) {
+  return shown.product.id === fresh.product.id && shown.product.price === fresh.product.price &&
+    shown.product.displayPrice === fresh.product.displayPrice && shown.currency === fresh.currency &&
+    shown.storefront === fresh.storefront && shown.option === fresh.option;
+}
+
+function purchaseIdentity(purchase: Purchase) {
+  return purchase.store + ":" + (purchase.purchaseToken ?? purchase.id);
 }
 
 async function verifyAndFinish(purchase: Purchase) {
@@ -185,7 +259,7 @@ async function verifyAndFinish(purchase: Purchase) {
     );
     if (!verified) throw new Error("Google Play purchase verification failed.");
   }
-  const identity = `${purchase.store}:${purchase.purchaseToken ?? purchase.id}`;
+  const identity = purchaseIdentity(purchase);
   if (finishedTransactions.has(identity)) return;
   // Non-consumable: acknowledge on Google Play, finish on StoreKit. Never consume.
   if (!("isAcknowledgedAndroid" in purchase && purchase.isAcknowledgedAndroid === true)) {
@@ -196,31 +270,42 @@ async function verifyAndFinish(purchase: Purchase) {
 
 async function reconcilePremium() {
   if (!iap) throw new Error("Store is not connected.");
+  await hydratePendingPurchase();
+  // OpenIAP Google 3.5.0 rejects a non-OK BillingClient ownership query.
   const purchases = await iap.getAvailablePurchases({
     onlyIncludeActiveItemsIOS: true, alsoPublishToEventListenerIOS: false,
   });
   const matching = purchases.filter((p) => p.productId === premiumProductId());
-  const completed = matching.filter((p) => p.purchaseState === "purchased");
+  if (matching.some((p) => p.store !== (Platform.OS === "ios" ? "apple" : "google") ||
+      (p.purchaseState !== "purchased" && p.purchaseState !== "pending"))) {
+    throw new Error("Incomplete Premium ownership result.");
+  }
+  const completed = matching.filter((p) => p.purchaseState === "purchased" &&
+    !("revocationDateIOS" in p && p.revocationDateIOS != null));
   for (const purchase of completed) await verifyAndFinish(purchase);
-  if (completed.length > 0) paymentPending = false;
-  if (matching.some((p) => p.purchaseState === "pending")) paymentPending = true;
+  const storePending = matching.some((p) => p.purchaseState === "pending");
+  // StoreKit current entitlements do not include an outstanding approval request.
+  await setPaymentPending(completed.length === 0 && (storePending ||
+    (Platform.OS === "ios" && premiumSnapshot.paymentPending)));
   publishPremium({
     entitlement: completed.length > 0 ? "owned" : "free",
-    notice: paymentPending ? "pending" : null,
+    notice: premiumSnapshot.paymentPending ? "pending" : null,
   });
 }
 
 async function onPremiumPurchase(purchase: Purchase) {
   if (purchase.productId !== premiumProductId()) return;
-  if (purchase.purchaseState === "pending") {
-    paymentPending = true;
-    publishPremium({ operation: "idle", notice: "pending" });
-    return;
-  }
   await enqueuePurchaseWork(async () => {
+    if (purchase.purchaseState === "pending") {
+      if (premiumSnapshot.entitlement === "owned") return;
+      await setPaymentPending(true);
+      publishPremium({ notice: "pending" });
+      return;
+    }
     if ("revocationDateIOS" in purchase && purchase.revocationDateIOS != null) {
       await reconcilePremium();
     } else {
+      if (premiumSnapshot.entitlement === "owned" && finishedTransactions.has(purchaseIdentity(purchase))) return;
       // A signed Android receipt alone does not prove it is still owned.
       if (Platform.OS === "android") {
         const owned = await iap!.getAvailablePurchases();
@@ -230,18 +315,17 @@ async function onPremiumPurchase(purchase: Purchase) {
         }
       }
       await verifyAndFinish(purchase);
-      paymentPending = false;
+      await setPaymentPending(false);
       publishPremium({ entitlement: "owned", notice: "purchased" });
     }
-    publishPremium({ operation: "idle" });
   }).catch((error) => {
-    publishPremium({ entitlement: "unknown" });
-    reportPremiumError(error, "verificationFailed");
+    console.warn("[IAP]", "verificationFailed", error instanceof Error ? error.name : "StoreError");
+    publishPremium({ notice: "verificationFailed" });
   });
 }
 
 async function connectPremium() {
-  if (premiumSnapshot.connected) return;
+  if (premiumConnected) return;
   if (connection) return connection;
   connection = (async () => {
     premiumProductId();
@@ -249,20 +333,20 @@ async function connectPremium() {
     purchaseListener = iap.purchaseUpdatedListener((purchase) => { void onPremiumPurchase(purchase); });
     errorListener = iap.purchaseErrorListener((error) => {
       // Query/restore rejections are reported by their awaiting caller.
-      if (premiumSnapshot.operation !== "purchasing") return;
-      if (error.productId && error.productId !== premiumProductId()) return;
-      if (error.code === iap!.ErrorCode.AlreadyOwned) {
-        void enqueuePurchaseWork(reconcilePremium)
-          .then(() => publishPremium({ operation: "idle" }))
-          .catch((cause) => reportPremiumError(cause));
-        return;
+      if (error.productId !== premiumProductId()) return;
+      if (error.code === iap!.ErrorCode.DeferredPayment || error.code === iap!.ErrorCode.Pending) {
+        void enqueuePurchaseWork(async () => {
+          if (premiumSnapshot.entitlement === "owned") return;
+          await setPaymentPending(true);
+          publishPremium({ notice: "pending" });
+        }).catch((cause) => {
+          console.warn("[IAP]", "pendingWriteFailed", cause instanceof Error ? cause.name : "StoreError");
+          publishPremium({ notice: "error" });
+        });
       }
-      const notice = error.code === iap!.ErrorCode.UserCancelled ? "cancelled" :
-        error.code === iap!.ErrorCode.DeferredPayment || error.code === iap!.ErrorCode.Pending ? "pending" : "error";
-      reportPremiumError(error, notice);
     });
     if (!(await iap.initConnection())) throw new Error("Store connection failed.");
-    publishPremium({ connected: true });
+    premiumConnected = true;
   })();
   try { await connection; }
   catch (error) {
@@ -285,43 +369,18 @@ export function refreshPremium(): Promise<void> {
       await connectPremium();
       await enqueuePurchaseWork(reconcilePremium);
     } catch (error) {
-      publishPremium({
-        entitlement: premiumSnapshot.entitlement === "owned" ? "owned" : "unknown",
-        product: null,
-      });
+      publishQuote(null);
       reportPremiumError(error, "unavailable");
       return;
     }
     try {
-      const products = await iap!.fetchProducts({ skus: [premiumProductId()], type: "in-app" });
-      const fetchedProduct = products?.find((item) =>
-        item.id === premiumProductId() && item.type === "in-app");
-      let product: Product | undefined = fetchedProduct?.type === "in-app"
-        ? fetchedProduct
-        : undefined;
-      let offerTokenAndroid: string | null = null;
-      if (product?.platform === "ios" && product.typeIOS !== "non-consumable") {
-        product = undefined;
-      }
-      if (product?.platform === "android") {
-        const offer = product.discountOffers?.find((item) =>
-          item.purchaseOptionIdAndroid === PREMIUM_ANDROID_PURCHASE_OPTION_ID &&
-          !item.id && !item.rentalDetailsAndroid && !item.preorderDetailsAndroid);
-        if (!offer?.offerTokenAndroid || !offer.displayPrice) {
-          product = undefined;
-        } else {
-          offerTokenAndroid = offer.offerTokenAndroid;
-          product = { ...product, displayPrice: offer.displayPrice, price: offer.price };
-        }
-      }
-      if (!product?.displayPrice ||
-          (Platform.OS === "android" && !process.env.EXPO_PUBLIC_GOOGLE_PLAY_LICENSE_KEY?.trim())) {
-        publishPremium({ product: null, notice: "unavailable", operation: "idle" });
-        return;
-      }
-      publishPremium({ product, offerTokenAndroid, operation: "idle" });
+      const quote = await readPremiumQuote();
+      publishQuote(quote);
+      publishPremium({
+        operation: "idle", notice: premiumSnapshot.paymentPending ? "pending" : quote ? null : "unavailable",
+      });
     } catch (error) {
-      publishPremium({ product: null });
+      publishQuote(null);
       reportPremiumError(error, "unavailable");
     }
   })().finally(() => {
@@ -332,25 +391,60 @@ export function refreshPremium(): Promise<void> {
 }
 
 export async function buyPremium() {
+  const shown = displayedQuote;
   if (premiumSnapshot.operation !== "idle" || premiumSnapshot.entitlement !== "free" ||
-      paymentPending || refreshFlight || !premiumSnapshot.product || !iap) return;
+      premiumSnapshot.paymentPending || refreshFlight || !shown || !iap) return;
   publishPremium({ operation: "purchasing", notice: null });
   try {
-    await iap.requestPurchase({ type: "in-app", request: {
+    let fresh: PremiumQuote | null;
+    try {
+      await enqueuePurchaseWork(reconcilePremium);
+      if (getPremiumSnapshot().entitlement !== "free" || premiumSnapshot.paymentPending) return;
+      fresh = await readPremiumQuote();
+    } catch (error) {
+      publishQuote(null);
+      reportPremiumError(error, "unavailable");
+      return;
+    }
+    publishQuote(fresh);
+    if (!fresh) {
+      publishPremium({ notice: "unavailable" });
+      return;
+    }
+    // Publish a changed quote and require a fresh tap before contacting the payment sheet.
+    await purchaseQueue;
+    if (!sameQuote(shown, fresh) || getPremiumSnapshot().entitlement !== "free" || premiumSnapshot.paymentPending ||
+        AppState.currentState !== "active") return;
+    const result = await iap.requestPurchase({ type: "in-app", request: {
       apple: { sku: premiumProductId(), andDangerouslyFinishTransactionAutomatically: false },
-      google: { skus: [premiumProductId()], offerToken: premiumSnapshot.offerTokenAndroid },
+      google: { skus: [premiumProductId()], offerToken: fresh.offerTokenAndroid },
     } });
-    // The listener owns completion. A resolved request is not purchase success.
+    // Only process actual purchase records. Expo IAP may also send the matching listener event.
+    for (const purchase of Array.isArray(result) ? result : result ? [result] : []) {
+      await onPremiumPurchase(purchase);
+    }
+    await purchaseQueue;
   } catch (error) {
     const code = (error as { code?: string })?.code;
-    if (code === iap.ErrorCode.AlreadyOwned) {
-      await enqueuePurchaseWork(reconcilePremium)
-        .then(() => publishPremium({ operation: "idle" }))
-        .catch((cause) => reportPremiumError(cause));
-    } else {
-      reportPremiumError(error, code === iap.ErrorCode.UserCancelled ? "cancelled" :
-        code === iap.ErrorCode.DeferredPayment || code === iap.ErrorCode.Pending ? "pending" : "error");
+    try {
+      if (code === iap.ErrorCode.AlreadyOwned) {
+        await enqueuePurchaseWork(reconcilePremium);
+      } else if (code === iap.ErrorCode.DeferredPayment || code === iap.ErrorCode.Pending) {
+        await enqueuePurchaseWork(async () => {
+          if (getPremiumSnapshot().entitlement !== "owned") {
+            await setPaymentPending(true);
+            publishPremium({ notice: "pending" });
+          }
+        });
+      } else if (getPremiumSnapshot().entitlement !== "owned") {
+        reportPremiumError(error, premiumSnapshot.paymentPending ? "pending" :
+          code === iap.ErrorCode.UserCancelled ? "cancelled" : "error");
+      }
+    } catch (reconciliationError) {
+      reportPremiumError(reconciliationError);
     }
+  } finally {
+    publishPremium({ operation: "idle" });
   }
 }
 
@@ -367,7 +461,6 @@ export async function restorePremium() {
         premiumSnapshot.notice === "pending" ? "pending" : "nothingToRestore" });
     });
   } catch (error) {
-    publishPremium({ entitlement: "unknown" });
     reportPremiumError(error);
   }
 }

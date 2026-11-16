@@ -27,6 +27,49 @@ function harness() {
   };
 }
 const flush = async () => { for (let n=0;n<12;n++) await Promise.resolve(); };
+
+test("rewarded network: transition waits for a fresh result and ignores stale queries", async () => {
+  const h = harness();
+  const queries = [];
+  let networkEvent;
+  let foregroundEvent;
+  const online = {type: "WIFI", isConnected: true, isInternetReachable: true};
+  const offline = {type: "NONE", isConnected: false, isInternetReachable: false};
+  const api = h.load("ads/adNetwork.ts", {
+    "react-native": {AppState: {addEventListener(_name, listener) { foregroundEvent = listener; }}},
+    "expo-network": {
+      addNetworkStateListener(listener) { networkEvent = listener; },
+      getNetworkStateAsync() { return new Promise(resolve => queries.push(resolve)); },
+    },
+  });
+  api.subscribeAdNetwork(() => {});
+  assert.equal(api.canUseAdNetwork(), false);
+  queries.shift()(online);
+  await flush();
+  assert.equal(api.canUseAdNetwork(), true);
+
+  networkEvent(online); // Android may report the transport it has just lost.
+  assert.equal(api.canUseAdNetwork(), false);
+  foregroundEvent("active");
+  const staleQuery = queries.shift();
+  queries.shift()(offline);
+  await flush();
+  staleQuery(online);
+  await flush();
+  assert.equal(api.canUseAdNetwork(), false);
+
+  networkEvent({type: "CELLULAR", isConnected: true});
+  assert.equal(api.canUseAdNetwork(), false);
+  queries.shift()({type: "UNKNOWN"});
+  await flush();
+  assert.equal(api.canUseAdNetwork(), false);
+
+  networkEvent({type: "CELLULAR", isConnected: true});
+  queries.shift()({type: "CELLULAR", isConnected: true, isInternetReachable: true});
+  await flush();
+  assert.equal(api.canUseAdNetwork(), true);
+});
+
 function banner() { const h=harness(); return { ...h, api:h.load('ads/bannerState.ts').getBannerPlacement('settings'), token:Symbol('owner') }; }
 function rewarded() {
   const h=harness(), ads=[], appListeners=new Set(); let rewards=0, shows=0, premium='free', prepare=async()=>{}, show=async()=>{};

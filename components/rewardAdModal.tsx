@@ -19,7 +19,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -36,9 +35,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const WATCH_AD_BUTTON = require("../assets/images/Watch_Ad_Button.png");
 const PLAY_BG = require("../assets/images/Play_Bg.png");
 const PRO_BADGE = require("../assets/images/PRO_Badge.png");
-const RewardPopupSurface = Platform.OS === "web" ? View :
+const RewardPopupSurface = Platform.OS === "web" ? null :
   requireNativeViewManager<ViewProps & React.RefAttributes<View>>("LedPopAdImmersive");
-const popupSurfaceStyle = { ...StyleSheet.absoluteFillObject, zIndex: 10000 };
+const popupSurfaceStyle = { position: "absolute", top: 0, left: 0, width: 1, height: 1 } as const;
 
 type PopupDismissalModule = {
   observeRewardPopupDismissal(viewTag: number, token: number): Promise<void>;
@@ -205,13 +204,18 @@ export function RewardAdModal({
   if (!visible) return null;
 
   return (
-    <RewardPopupSurface ref={surfaceRef} style={popupSurfaceStyle} onLayout={showAfterLayout}>
     <Animated.View
-      style={[styles.root, { paddingTop: 12 + insets.top, paddingBottom: 12 + insets.bottom, paddingLeft: 12 + insets.left, paddingRight: 12 + insets.right }, overlayStyle]}
+      onLayout={showAfterLayout}
+      style={[styles.root, { zIndex: 10000, paddingTop: 12 + insets.top, paddingBottom: 12 + insets.bottom, paddingLeft: 12 + insets.left, paddingRight: 12 + insets.right }, overlayStyle]}
       pointerEvents={visible ? "auto" : "none"}
       accessibilityViewIsModal={visible}
       importantForAccessibility={visible ? "yes" : "no-hide-descendants"}
     >
+      {/* Keep native detachment tied to the overlay without hosting its visual children. */}
+      {RewardPopupSurface && (
+        <RewardPopupSurface ref={surfaceRef} style={popupSurfaceStyle} pointerEvents="none"
+          importantForAccessibility="no-hide-descendants" accessibilityElementsHidden />
+      )}
       <Pressable
         style={[styles.dim, { backgroundColor: "rgba(0,0,0,0.45)" }]}
         onPress={handleCancel}
@@ -318,6 +322,5 @@ export function RewardAdModal({
         </ScrollView>
       </View>
     </Animated.View>
-    </RewardPopupSurface>
   );
 }
