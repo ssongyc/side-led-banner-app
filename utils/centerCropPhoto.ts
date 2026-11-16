@@ -7,7 +7,7 @@ import {
 import { File, Paths } from "expo-file-system";
 import { Dimensions, PixelRatio } from "react-native";
 
-const OUTPUT_JPEG_QUALITY = 85;
+const OUTPUT_JPEG_QUALITY = 95;
 
 export async function centerCropPhoto(sourceUri: string): Promise<string> {
   const data = await Skia.Data.fromURI(sourceUri);
