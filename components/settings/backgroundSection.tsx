@@ -3,10 +3,6 @@ import { backgroundColorPalette } from "@/constants/colorPalette";
 import { styles as base, colorPickerLockStyles as bgLock, colorPickerStyles as chip } from "@/constants/styles";
 import { persistBackgroundPhoto } from "@/utils/backgroundPhotoStorage";
 import { centerCropPhoto } from "@/utils/centerCropPhoto";
-import {
-  hidePhotoCropNoticeToday,
-  isPhotoCropNoticeHiddenToday,
-} from "@/utils/photoCropNoticeStorage";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -26,7 +22,6 @@ import {
   useSettingsLocalizationContext,
   useSettingsUI,
 } from "../../contexts/settingsContext";
-import { PhotoCropNoticeModal } from "./photoCropNoticeModal";
 import { SettingsSliderBlock } from "./settingsSliderBlock";
 
 const LOCK_ICON = require("@/assets/images/icon_lock_type2.png");
@@ -56,7 +51,6 @@ export const BackgroundSection = () => {
   const { backgroundColor, backgroundBlur, backgroundImageUri, backgroundPhotoViewMode } = background;
   const [photoPickerCoverVisible, setPhotoPickerCoverVisible] = useState(false);
   const photoPickerLaunchPendingRef = useRef(false);
-  const [pendingPhotoUri, setPendingPhotoUri] = useState<string | null>(null);
 
   const setBackgroundBlur = (value: number) =>
     updateConfig("background", { backgroundBlur: value });
@@ -80,34 +74,8 @@ export const BackgroundSection = () => {
       quality: 0.95,
     });
     if (result.canceled || !result.assets[0]) return;
-    const uri = result.assets[0].uri;
-    if (await isPhotoCropNoticeHiddenToday()) {
-      await applyPhoto(uri);
-      return;
-    }
-    setPendingPhotoUri(uri);
+    await applyPhoto(result.assets[0].uri);
   }, [applyPhoto]);
-
-  const cancelPhotoCropNotice = useCallback(() => {
-    setPendingPhotoUri(null);
-  }, []);
-
-  const confirmPhotoCropNotice = useCallback(
-    (hideToday: boolean) => {
-      if (!pendingPhotoUri) return;
-      const uri = pendingPhotoUri;
-      setPendingPhotoUri(null);
-      if (hideToday) {
-        void hidePhotoCropNoticeToday().catch(error => {
-          console.error("[background] Photo crop notice preference save failed", error);
-        });
-      }
-      void applyPhoto(uri).catch(error => {
-        console.error("[background] Photo crop or permanent save failed", error);
-      });
-    },
-    [applyPhoto, pendingPhotoUri],
-  );
 
   const launchAndroidAlbumFromCover = useCallback(() => {
     if (!photoPickerLaunchPendingRef.current) return;
@@ -297,12 +265,6 @@ export const BackgroundSection = () => {
       >
         <View style={{ flex: 1, backgroundColor: "#000000" }} />
       </Modal>
-      {pendingPhotoUri && (
-        <PhotoCropNoticeModal
-          onCancel={cancelPhotoCropNotice}
-          onConfirm={confirmPhotoCropNotice}
-        />
-      )}
     </>
   );
 };

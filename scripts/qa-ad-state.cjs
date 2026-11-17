@@ -245,15 +245,57 @@ test('consent: failure shared until explicit retry; requests deduplicated and QA
  h.online();a.prepareAdConsentRetry();await Promise.all([a.ensureAdConsent(),a.ensureAdConsent()]);
  assert.equal(h.requests(),2);assert.equal(h.resets(),1);assert.equal(h.forms(),1);assert.equal(a.isAdConsentAllowed(),true);
 });
-test('banner: consent cancellation preserves attempts and rejects old callbacks',()=>{
- const {api:a,token:t}=banner();a.claimBanner(t);a.requestBanner(t);const first=a.getBannerState().requestId;
- a.invalidateConsent(t);assert.equal(a.getBannerState().phase,'cancelled');assert.equal(a.getBannerState().attempt,1);assert.equal(a.bannerLoaded(t,first),false);
- a.resumeConsent(t);a.requestBanner(t);assert.equal(a.getBannerState().attempt,2);
- a.invalidateConsent(t);a.resumeConsent(t);a.requestBanner(t);assert.equal(a.getBannerState().attempt,3);
- a.invalidateConsent(t);a.resumeConsent(t);a.requestBanner(t);assert.equal(a.getBannerState().phase,'stopped');assert.equal(a.getBannerState().attempt,3);assert.equal(a.getBannerState().extraUsed,false);
+test('banner: consent waits for the real callback without refunding attempts',()=>{
+ const {api:a,token:t}=banner();a.claimBanner(t);
+ for(let attempt=1;attempt<=3;attempt++){
+   a.requestBanner(t);const id=a.getBannerState().requestId;
+   assert.equal(a.getBannerState().attempt,attempt);
+   a.invalidateConsent(t);assert.equal(a.getBannerState().phase,'retiring');
+   a.resumeConsent(t);a.requestBanner(t);a.initializationFailed(t);
+   assert.equal(a.getBannerState().requestId,id);assert.equal(a.getBannerState().phase,'retiring');
+   assert.equal(a.bannerLoaded(t,id),false);
+   a.consentRequestFinished(t,id);a.resumeConsent(t);
+ }
+ a.requestBanner(t);assert.equal(a.getBannerState().phase,'stopped');
+ assert.equal(a.getBannerState().attempt,3);assert.equal(a.getBannerState().extraUsed,false);
+});
+test('banner: genuine failure during privacy retains its retry deadline',()=>{
+ const {api:a,token:t,advance}=banner();a.claimBanner(t);a.requestBanner(t);
+ const id=a.getBannerState().requestId;a.invalidateConsent(t);
+ assert.equal(a.bannerFailed(t,id),true);const due=a.getBannerState().dueAt;
+ a.consentRequestFinished(t,id);a.resumeConsent(t);
+ assert.equal(a.getBannerState().dueAt,due);a.requestBanner(t);
+ assert.equal(a.getBannerState().attempt,1);advance(6000);a.requestBanner(t);
+ assert.equal(a.getBannerState().attempt,2);
+ assert.equal(a.bannerLoaded(t,id),false);
 });
 test('banner: privacy preserves genuine deadline and retires loaded inventory',()=>{
  const {api:a,token:t,advance}=banner();a.claimBanner(t);a.requestBanner(t);a.bannerFailed(t,a.getBannerState().requestId);const due=a.getBannerState().dueAt;
  a.invalidateConsent(t);a.resumeConsent(t);assert.equal(a.getBannerState().dueAt,due);advance(6000);a.requestBanner(t);a.bannerLoaded(t,a.getBannerState().requestId);
  a.invalidateConsent(t);assert.equal(a.getBannerState().phase,'idle');a.requestBanner(t);assert.equal(a.getBannerState().attempt,1);
+});
+
+for (const outcome of ['loaded','failed']) test(`consent banner: issued view survives privacy until real ${outcome} callback`,async()=>{
+ const h=harness();let completePrivacy;
+ h.env.process={env:{}};h.env.requestAnimationFrame=fn=>{fn();return 1;};
+ class Component { constructor(props){this.props=props;} setState(patch){this.state={...this.state,...patch};} }
+ const react={Component,createElement:(type,props,...children)=>({type,props:{...props,children}}),useSyncExternalStore:(_subscribe,get)=>get()};
+ const sdk={BannerAd:'Banner',AdsConsentPrivacyOptionsRequirementStatus:{REQUIRED:'required'},AdsConsent:{
+   requestInfoUpdate:async()=>{},loadAndShowConsentFormIfRequired:async()=>{},
+   getConsentInfo:async()=>({canRequestAds:true,privacyOptionsRequirementStatus:'required'}),
+   showPrivacyOptionsForm:()=>new Promise(resolve=>{completePrivacy=resolve;}),
+ }};
+ const a=h.load('ads/adConsent.tsx',{'react':react,'react-native':{AppState:{currentState:'active'},Platform:{OS:'android'},View:'View',Text:'Text',Pressable:'Pressable',useColorScheme:()=>null},'react-native-google-mobile-ads':sdk});
+ await a.ensureAdConsent();let retired=0,loaded=0,failed=0;
+ const instance=new a.ConsentBannerAd({unitId:'test',onConsentRequestFinished:()=>retired++,onAdLoaded:()=>loaded++,onAdFailedToLoad:()=>failed++});
+ instance.render();instance.componentDidMount();
+ const action=a.AdPrivacyOptions({language:'en'});action.props.onPress();await flush();
+ const hidden=instance.render();assert.notEqual(hidden,null);assert.equal(hidden.props.style.opacity,0);
+ assert.equal(hidden.props.children[0].type,'Banner');
+ completePrivacy();await flush();assert.notEqual(instance.render(),null);assert.equal(retired,0);
+ const callback=instance.render().props.children[0].props;
+ if(outcome==='loaded')callback.onAdLoaded({width:320,height:50});else callback.onAdFailedToLoad(Error('network'));
+ instance.componentDidUpdate();assert.equal(instance.render(),null);assert.equal(retired,1);
+ assert.equal(loaded,0);assert.equal(failed,outcome==='failed'?1:0);
+ instance.componentDidUpdate();assert.equal(retired,1);instance.componentWillUnmount();
 });

@@ -28,6 +28,6 @@ export async function endRewardedPresentation(token: number) {
   if (Platform.OS === "android") await requireNativeModule("LedPopAdImmersive").end(token);
 }
 export const showRewardedAd = (ad: RewardedAdHandle) => ad.show({ immersiveModeEnabled: Platform.OS === "android" });
-export function AdaptiveBannerAd(props: Omit<BannerAdProps, "size"> & { width: number }) {
+export function AdaptiveBannerAd(props: Omit<BannerAdProps, "size"> & { width: number; onConsentRequestFinished: () => void }) {
   return <BannerAd {...props} size={BannerAdSize.LARGE_ANCHORED_ADAPTIVE_BANNER} />;
 }

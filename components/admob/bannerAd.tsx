@@ -94,7 +94,7 @@ function PersistentBanner({ placementId, adaptiveWidth, availableWidth, resizeSe
   visible: boolean; delayedLabel: string; unavailableLabel: string; onHeight: (height: number) => void;
   bottom: number; left: number; right: number;
 }) {
-  const { invalidateConsent, resumeConsent, discardLoadedBanner, initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, releaseBanner, requestBanner, bannerLoaded, bannerFailed } = getBannerPlacement(placementId);
+  const { invalidateConsent, consentRequestFinished, resumeConsent, discardLoadedBanner, initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, releaseBanner, requestBanner, bannerLoaded, bannerFailed } = getBannerPlacement(placementId);
   const sdkState = useMobileAdsState();
   const sdkDelayed = useMobileAdsLoadDelayed();
   const [foreground, setForeground] = useState(AppState.currentState === "active");
@@ -121,13 +121,13 @@ function PersistentBanner({ placementId, adaptiveWidth, availableWidth, resizeSe
   const sizeChanged = width > adaptiveWidth;
   const fitsViewport = width <= availableWidth;
   // Retire loaded inventory first; synchronize width once that external store is idle.
-  if (sizeChanged && state.phase !== "loading" && state.phase !== "loaded" &&
+  if (sizeChanged && state.phase !== "loading" && state.phase !== "retiring" && state.phase !== "loaded" &&
       (!adsAllowed || (visible && resizeSettled))) setWidth(adaptiveWidth);
   const traceBanner = useCallback((stage: string, detail: Record<string, unknown> = {}, error?: unknown) => {
     recordAdEvent("banner", stage, { ...detail, placementId, requestId: state.requestId, state: state.phase }, error);
   }, [placementId, state.requestId, state.phase]);
   useEffect(() => {
-    if (state.phase === "loading") return;
+    if (state.phase === "loading" || state.phase === "retiring") return;
     if (adsAllowed && (!visible || !resizeSettled)) return;
     if (!adsAllowed || sizeChanged) {
       if (state.phase === "loaded") recordAdEvent("banner", "inventory_retired", {
@@ -155,7 +155,7 @@ function PersistentBanner({ placementId, adaptiveWidth, availableWidth, resizeSe
   useEffect(() => registerConsentLifecycle(() => true, () => invalidateConsent(token.current)), [invalidateConsent]);
   useEffect(() => {
     if (owned && consent.allowed && !consent.busy) resumeConsent(token.current);
-  }, [owned, consent.allowed, consent.busy, resumeConsent]);
+  }, [owned, consent.allowed, consent.busy, state.phase, resumeConsent]);
   useEffect(() => {
     if (owned && sdkState === "failed") initializationFailed(token.current);
   }, [owned, sdkState, state.phase, initializationFailed]);
@@ -234,8 +234,9 @@ function PersistentBanner({ placementId, adaptiveWidth, availableWidth, resizeSe
     onLayout={event => {
       onHeight(Math.max(50, event.nativeEvent.layout.height));
     }}>
-    {owned && config && requestSize.width > 0 && (state.phase === "loading" || (adsAllowed && !sizeChanged && state.phase === "loaded")) ?
+    {owned && config && requestSize.width > 0 && (state.phase === "loading" || state.phase === "retiring" || (adsAllowed && !sizeChanged && state.phase === "loaded")) ?
       <AdaptiveBannerAd key={requestId} unitId={config.banner} width={requestSize.width}
+        onConsentRequestFinished={() => consentRequestFinished(token.current, requestId)}
         onSizeChange={size => traceBanner("size_changed", { ...size, attempt: state.attempt })}
         onAdImpression={() => {
           if (getBannerState().requestId !== requestId) return;

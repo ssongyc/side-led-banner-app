@@ -327,6 +327,9 @@ export default function Index() {
           onRetry={retryRewardedAd}
           isAdReady={isRewardedAdReady}
           onWatchAd={showRewardedAd}
+          onOpenShop={Platform.OS === "android" || Platform.OS === "ios"
+            ? () => router.push("/shop" as Href)
+            : undefined}
         />}
         <FontDownloadModal />
         {__DEV__ ? (

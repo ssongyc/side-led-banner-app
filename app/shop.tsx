@@ -4,7 +4,7 @@ import { settingsStyles } from "@/constants/settingsStyles";
 import { usePremium } from "@/contexts/premiumContext";
 import { useSettingsLocalizationContext } from "@/contexts/settingsContext";
 import { premiumLabel } from "@/language/premiumLabels";
-import { buyPremium, refreshPremium, restorePremium } from "@/utils/ApiClient";
+import { buyPremium, refreshPremium, restorePremium, setPremiumShopVisible } from "@/utils/ApiClient";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback } from "react";
 import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -53,7 +53,10 @@ export default function ShopScreen() {
     notice ? label(notice) : operation === "loading" ? label("loading") : "";
 
   useFocusEffect(useCallback(() => {
-    if (isNativeStore) void refreshPremium();
+    if (!isNativeStore) return;
+    setPremiumShopVisible(true);
+    void refreshPremium();
+    return () => setPremiumShopVisible(false);
   }, [isNativeStore]));
 
   function goBack() {
@@ -90,6 +93,9 @@ export default function ShopScreen() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
+          <Text allowFontScaling={false} accessibilityRole="header" style={styles.title}>
+            LED POP PRO
+          </Text>
           <Text allowFontScaling={false} style={styles.title}>
             {textSectionLabel("premiumProductTitle")}
           </Text>

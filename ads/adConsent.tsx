@@ -1,5 +1,5 @@
 import React, { useSyncExternalStore } from 'react';
-import { AppState, Platform, Pressable, Text, useColorScheme } from 'react-native';
+import { AppState, Platform, Pressable, Text, View, useColorScheme } from 'react-native';
 import type { BannerAdProps } from 'react-native-google-mobile-ads';
 
 type State = { allowed: boolean; required: boolean; busy: boolean; privacyOpen: boolean; revision: number; failure: "request" | "configuration" | null };
@@ -94,7 +94,7 @@ function showAdPrivacy(): Promise<void> {
   if (!state.required || state.busy || [...privacyGuards].some(guard => !guard()) || AppState.currentState !== 'active') return Promise.resolve();
   publish({ busy: true, privacyOpen: true, revision: state.revision + 1, failure: null });
   privacy = (async () => {
-    // Give subscribed banner views time to detach before presenting the native form.
+    // Give subscribed banner views time to hide before presenting the native form.
     try {
       invalidators.forEach(invalidate => invalidate());
       await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
@@ -109,28 +109,62 @@ function showAdPrivacy(): Promise<void> {
   })().finally(() => { privacy = undefined; });
   return privacy;
 }
-export class ConsentBannerAd extends React.Component<BannerAdProps, { consent: State }> {
-  state = { consent: getAdConsent() };
+export class ConsentBannerAd extends React.Component<BannerAdProps & {
+  onConsentRequestFinished: () => void;
+}, { consent: State; retired: boolean; settled: boolean }> {
+  state = { consent: getAdConsent(), retired: false, settled: false };
   private unsubscribe?: () => void;
-  private syncConsent = () => this.setState({ consent: getAdConsent() });
+  private issued = false;
+  private loaded = false;
+  private retirementReported = false;
+  private syncConsent = () => {
+    const consent = getAdConsent();
+    const retired = this.state.retired || (this.issued && (!consent.allowed || consent.busy));
+    this.setState({ consent, retired, settled: this.state.settled || (retired && this.loaded) });
+  };
+  private markIssued() {
+    if (this.state.consent.allowed && !this.state.consent.busy && !this.state.retired) this.issued = true;
+  }
   componentDidMount() {
+    this.markIssued();
     this.unsubscribe = subscribeAdConsent(this.syncConsent);
     if (this.state.consent !== getAdConsent()) this.syncConsent();
   }
+  componentDidUpdate() {
+    this.markIssued();
+    if (this.state.retired && this.state.settled && !this.retirementReported) {
+      this.retirementReported = true;
+      this.props.onConsentRequestFinished();
+    }
+  }
   componentWillUnmount() { this.unsubscribe?.(); }
   render() {
-    const { consent } = this.state;
-    // Placement state owns cancellation and the remaining request budget.
-    if (!consent.allowed || consent.busy) return null;
+    const { consent, retired, settled } = this.state;
+    const blocked = !consent.allowed || consent.busy;
+    if ((!this.issued && blocked) || (retired && settled)) return null;
     const revision = consent.revision;
     const Banner = nativeSdk().BannerAd;
-    return <Banner {...this.props} onAdLoaded={size => {
-      if (!isAdConsentAllowed() || getAdConsent().revision !== revision) return;
-      this.props.onAdLoaded?.(size);
-    }} onAdFailedToLoad={error => {
-      if (!isAdConsentAllowed() || getAdConsent().revision !== revision) return;
-      this.props.onAdFailedToLoad?.(error);
-    }} />;
+    const { onConsentRequestFinished: _onConsentRequestFinished, ...bannerProps } = this.props;
+    return <View collapsable={false} removeClippedSubviews={false}
+      pointerEvents={blocked || retired ? 'none' : 'auto'}
+      accessibilityElementsHidden={blocked || retired}
+      importantForAccessibility={blocked || retired ? 'no-hide-descendants' : 'auto'}
+      style={blocked || retired ? { opacity: 0 } : undefined}>
+      <Banner {...bannerProps} onAdLoaded={size => {
+        if (this.state.retired || !isAdConsentAllowed() || getAdConsent().revision !== revision) {
+          this.setState({ retired: true, settled: true });
+          return;
+        }
+        this.loaded = true;
+        this.props.onAdLoaded?.(size);
+      }} onAdFailedToLoad={error => {
+        if (this.state.retired || !isAdConsentAllowed() || getAdConsent().revision !== revision) {
+          this.setState({ retired: true, settled: true });
+        }
+        // A real failure consumes its original attempt and retains its deadline.
+        this.props.onAdFailedToLoad?.(error);
+      }} />
+    </View>;
   }
 }
 const labels: Record<string, string> = {

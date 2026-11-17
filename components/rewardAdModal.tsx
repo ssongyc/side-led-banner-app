@@ -60,6 +60,7 @@ type Props = {
   adDelayed?: boolean;
   adExpired?: boolean;
   onWatchAd?: () => void;
+  onOpenShop?: () => void;
   canRetry?: boolean;
   onRetry?: () => void;
   isAdReady?: () => boolean;
@@ -75,6 +76,7 @@ export function RewardAdModal({
   adDelayed = false,
   adExpired = false,
   onWatchAd,
+  onOpenShop,
   canRetry = false,
   onRetry,
   isAdReady,
@@ -89,6 +91,7 @@ export function RewardAdModal({
 
   const overlayOpacity = useSharedValue(0);
   const openingStarted = useRef(false);
+  const openingShop = useRef(false);
   const surfaceRef = useRef<View>(null);
   const pending = useRef<{
     controller: AbortController;
@@ -125,6 +128,7 @@ export function RewardAdModal({
   useLayoutEffect(() => {
     if (visible) return;
     openingStarted.current = false;
+    openingShop.current = false;
     cancelAnimation(overlayOpacity);
     overlayOpacity.value = 0;
   }, [visible, overlayOpacity]);
@@ -148,8 +152,16 @@ export function RewardAdModal({
 
   const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
 
+  const handleOpenShop = () => {
+    if (drag.current.moved || !visible || !onOpenShop || openingShop.current ||
+        pending.current || AppState.currentState !== "active") return;
+    openingShop.current = true;
+    onClose();
+    onOpenShop();
+  };
+
   const handleWatchAd = async () => {
-    if (drag.current.moved || !visible || !adReady || !onWatchAd || pending.current ||
+    if (drag.current.moved || !visible || !adReady || !onWatchAd || openingShop.current || pending.current ||
         AppState.currentState !== "active" || (isAdReady && !isAdReady())) return;
     const controller = new AbortController();
     const flow = {
@@ -318,6 +330,18 @@ export function RewardAdModal({
             />
           </View>
         </TouchableOpacity>
+        {onOpenShop && (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handleOpenShop}
+            accessibilityRole="button"
+            style={styles.shopButton}
+          >
+            <Text style={styles.shopButtonText} allowFontScaling={false}>
+              {rewardAdLabel("rewardBuyPro")}
+            </Text>
+          </TouchableOpacity>
+        )}
         </View>
         </ScrollView>
       </View>

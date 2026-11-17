@@ -17,6 +17,7 @@ export type RewardAdLabelKey =
   | "rewardBenefitOutlineShadow"
   | "rewardDescription"
   | "rewardWatchAd"
+  | "rewardBuyPro"
   | "rewardAdDelayed"
   | "rewardAdUnavailable"
   | "rewardAdExpired"
@@ -202,6 +203,15 @@ const LABELS: Record<RewardAdLabelKey, Record<AppLocaleKey, string>> = {
     fr: "Regarder la pub",
     es: "Ver anuncio",
   },
+  rewardBuyPro: {
+    ko: "LED POP Pro 구매",
+    en: "Buy Led Pop Pro",
+    ja: "LED POP Proを購入",
+    zhTC: "購買 LED POP Pro",
+    zhSC: "购买 LED POP Pro",
+    fr: "Acheter LED POP Pro",
+    es: "Comprar LED POP Pro",
+  },
   bannerAdUnavailable: {
     ko: "광고 사용 불가",
     en: "Ad Unavailable",
@@ -263,8 +273,8 @@ export function tRewardAdLabel(
   sheetRows?: GoogleSheetLocaleRow[] | null,
 ): string {
   const fb = LABELS[key];
-  // Authored modal status copy must not be replaced by a remotely matched Sheet row.
-  if (key === "bannerAdUnavailable" || key === "rewardAdUnavailable" || key === "rewardAdInitializationFailed" || key === "rewardAdConfigurationFailed" || key === "rewardAdOpenUnconfirmed" || key === "rewardAdDelayed" || key === "rewardAdExpired" || key === "rewardAdPreparing" || key === "rewardAdPreparingButton" ||
+  // Authored modal actions and status copy must keep their local wording.
+  if (key === "rewardBuyPro" || key === "bannerAdUnavailable" || key === "rewardAdUnavailable" || key === "rewardAdInitializationFailed" || key === "rewardAdConfigurationFailed" || key === "rewardAdOpenUnconfirmed" || key === "rewardAdDelayed" || key === "rewardAdExpired" || key === "rewardAdPreparing" || key === "rewardAdPreparingButton" ||
       key === "rewardAdLoadFailed" || key === "rewardAdShowFailed" || key === "rewardAdRetry") return fb[locale];
   const opts = REWARD_SHEET_PICK[key];
 
