@@ -4,6 +4,13 @@
 
 The initial review inspected the local release wrapper and retained build logs without running a build. A later user-authorized production build measured the applied changes; its result is recorded below. No lint, test, upload, deployment, or Play Console change was run as part of the documentation update.
 
+## Production build and Play draft — 2026-11-17
+
+- Run `20261117-102122-40e5e984` built V1.1.4 (32) from `b5b03fe` plus the local Shop changes present at build time. It predates the cleanup of the two unused PNGs. The existing wrapper built the signed AAB once, then generated the four-ABI universal APK with bundletool 1.18.3. It reused the G: dependency cache and regenerated the native configuration for the production profile.
+- The verification report (`artifacts/apk-runs/20261117-102122-40e5e984/release-verification/6b32b43088d644a6b8e937fdecf3a2c4/verification.json`) records 479 passing static checks for the signed files, including API 36, Billing 9.1.0, 16 KiB alignment and matching embedded R8 mapping. Additional inspection verified the bundled Shop and public licensing key, production AdMob IDs, native Google UMP and the two-hour reward. Production ad delivery and consent-form display remain device-unverified for these files.
+- AAB SHA-256 `205D5BCC85D0A90A3FB274132E2DB6B8A12A8FB2B903FBD1D1E59737F5689520`. APK SHA-256 `8500A0BD3FCE34AA8AA98A73323E9C2913FC661649B5D8A61753A2C2846882E3`. The file paths and hashes are in the local build result (`artifacts/apk-runs/20261117-102122-40e5e984/build-result.json`).
+- Play Console accepted and processed version 32 and showed the ReTrace mapping and native debug symbols. The [production release](https://play.google.com/console/u/0/developers/4821943543257074458/app/4975144280076706829/tracks/4698187213056404510/releases/13/prepare) was saved as a draft before review submission.
+
 ## Production build — 2026-11-04
 
 Run `20261104-165700-57ddd8e7` built V1.1.4 (32) from clean main `4a66b44` with production AdMob, normal Google UMP, and the standard two-hour reward. Gradle completed in 6m44s with 85 tasks executed and 1,159 up to date. The universal APK was derived from the signed AAB. Static verification passed for the two artifacts, including signing, 16 KiB alignment and embedded R8 mapping. Device QA and Play upload were unverified for this build. The local run directory contains the APK, AAB and verification report.

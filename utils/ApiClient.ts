@@ -93,16 +93,18 @@ export async function fetchText(url: string): Promise<string> {
 
 export type PremiumNotice = "unavailable" | "error" | "cancelled" | "pending" |
   "purchased" | "restored" | "nothingToRestore" | "verificationFailed";
+type PremiumPrice = Readonly<{ displayPrice: string; currency: string }>;
+
 type PremiumSnapshot = {
   entitlement: "unknown" | "free" | "owned";
   operation: "idle" | "loading" | "purchasing" | "restoring";
-  product: Product | null;
+  price: PremiumPrice | null;
   paymentPending: boolean;
   notice: PremiumNotice | null;
 };
 
 let premiumSnapshot: PremiumSnapshot = {
-  entitlement: "unknown", operation: "loading", product: null, paymentPending: false, notice: null,
+  entitlement: "unknown", operation: "loading", price: null, paymentPending: false, notice: null,
 };
 const premiumListeners = new Set<() => void>();
 let iap: typeof import("expo-iap") | null = null;
@@ -115,7 +117,7 @@ function drainForegroundPremiumRefresh() {
   if (!foregroundRefreshRequested || AppState.currentState !== "active" ||
       refreshFlight || premiumSnapshot.operation !== "idle") return;
   foregroundRefreshRequested = false;
-  void refreshPremium();
+  void refreshPremium({ preserveNotice: true });
 }
 
 export function requestForegroundPremiumRefresh() {
@@ -208,7 +210,7 @@ async function readPremiumQuote(): Promise<PremiumQuote | null> {
       !process.env.EXPO_PUBLIC_GOOGLE_PLAY_LICENSE_KEY?.trim()) return null;
   const offer = product.discountOffers?.find((item) =>
     item.purchaseOptionIdAndroid === PREMIUM_ANDROID_PURCHASE_OPTION_ID &&
-    !item.id && !item.rentalDetailsAndroid && !item.preorderDetailsAndroid);
+    !item.id && !item.limitedQuantityInfoAndroid && !item.rentalDetailsAndroid && !item.preorderDetailsAndroid);
   if (!offer?.offerTokenAndroid || !offer.displayPrice || !offer.currency ||
       !Number.isFinite(offer.price) || offer.price <= 0) return null;
   return {
@@ -220,7 +222,7 @@ async function readPremiumQuote(): Promise<PremiumQuote | null> {
 
 function publishQuote(quote: PremiumQuote | null) {
   displayedQuote = quote;
-  publishPremium({ product: quote?.product ?? null });
+  publishPremium({ price: quote ? { displayPrice: quote.product.displayPrice, currency: quote.currency } : null });
 }
 
 function sameQuote(shown: PremiumQuote, fresh: PremiumQuote) {
@@ -268,7 +270,7 @@ async function verifyAndFinish(purchase: Purchase) {
   finishedTransactions.add(identity);
 }
 
-async function reconcilePremium() {
+async function reconcilePremium(preserveNotice = false) {
   if (!iap) throw new Error("Store is not connected.");
   await hydratePendingPurchase();
   // OpenIAP Google 3.5.0 rejects a non-OK BillingClient ownership query.
@@ -287,10 +289,10 @@ async function reconcilePremium() {
   // StoreKit current entitlements do not include an outstanding approval request.
   await setPaymentPending(completed.length === 0 && (storePending ||
     (Platform.OS === "ios" && premiumSnapshot.paymentPending)));
-  publishPremium({
-    entitlement: completed.length > 0 ? "owned" : "free",
-    notice: premiumSnapshot.paymentPending ? "pending" : null,
-  });
+  const entitlement = completed.length > 0 ? "owned" : "free";
+  const notice = preserveNotice && entitlement === premiumSnapshot.entitlement && premiumSnapshot.notice !== "pending"
+    ? premiumSnapshot.notice : null;
+  publishPremium({ entitlement, notice: premiumSnapshot.paymentPending ? "pending" : notice });
 }
 
 async function onPremiumPurchase(purchase: Purchase) {
@@ -358,16 +360,17 @@ async function connectPremium() {
   } finally { connection = null; }
 }
 
-export function refreshPremium(): Promise<void> {
+export function refreshPremium({ preserveNotice = false } = {}): Promise<void> {
   if (refreshFlight) return refreshFlight;
   if (premiumSnapshot.operation === "purchasing" || premiumSnapshot.operation === "restoring") {
     return Promise.resolve();
   }
-  publishPremium({ operation: "loading", notice: null });
+  const notice = preserveNotice && premiumSnapshot.notice !== "unavailable" ? premiumSnapshot.notice : null;
+  publishPremium({ operation: "loading", notice });
   refreshFlight = (async () => {
     try {
       await connectPremium();
-      await enqueuePurchaseWork(reconcilePremium);
+      await enqueuePurchaseWork(() => reconcilePremium(preserveNotice));
     } catch (error) {
       publishQuote(null);
       reportPremiumError(error, "unavailable");
@@ -377,7 +380,9 @@ export function refreshPremium(): Promise<void> {
       const quote = await readPremiumQuote();
       publishQuote(quote);
       publishPremium({
-        operation: "idle", notice: premiumSnapshot.paymentPending ? "pending" : quote ? null : "unavailable",
+        operation: "idle",
+        notice: premiumSnapshot.paymentPending ? "pending" :
+          premiumSnapshot.notice ?? (quote || premiumSnapshot.entitlement === "owned" ? null : "unavailable"),
       });
     } catch (error) {
       publishQuote(null);
@@ -390,7 +395,8 @@ export function refreshPremium(): Promise<void> {
   return refreshFlight;
 }
 
-export async function buyPremium() {
+export async function buyPremium(shownPrice: PremiumPrice) {
+  if (shownPrice !== premiumSnapshot.price) return;
   const shown = displayedQuote;
   if (premiumSnapshot.operation !== "idle" || premiumSnapshot.entitlement !== "free" ||
       premiumSnapshot.paymentPending || refreshFlight || !shown || !iap) return;

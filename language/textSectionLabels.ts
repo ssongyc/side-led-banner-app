@@ -39,10 +39,10 @@ export type TextSectionLabelKey =
   | "tabEffects"
   /** 설정*/
   | "settingsTitle"
-  | "upgradeToPremium"
+  | "shop"
+  | "shopBuy"
   | "premiumProductTitle"
   | "premiumProductDescription"
-  | "premiumPrice"
   | "restorePreviousPurchase"
   | "sunnyGames"
   | "instagram"
@@ -290,23 +290,32 @@ const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
     fr: "Paramètres",
     es: "Ajustes",
   },
-  upgradeToPremium: {
-    ko: "Pro로 업그레이드",
-    en: "Upgrade to Pro",
-    ja: "Pro にアップグレード",
-    zhTC: "升級至 Pro",
-    zhSC: "升级到 Pro",
-    fr: "Passer à Pro",
-    es: "Actualizar a Pro",
+  shop: {
+    ko: "상점",
+    en: "Shop",
+    ja: "ショップ",
+    zhTC: "商店",
+    zhSC: "商店",
+    fr: "Boutique",
+    es: "Tienda",
+  },
+  shopBuy: {
+    ko: "구매",
+    en: "Buy",
+    ja: "購入",
+    zhTC: "購買",
+    zhSC: "购买",
+    fr: "Acheter",
+    es: "Comprar",
   },
   premiumProductTitle: {
-    ko: "LED POP Premium",
-    en: "LED POP Premium",
-    ja: "LED POP Premium",
-    zhTC: "LED POP Premium",
-    zhSC: "LED POP Premium",
-    fr: "LED POP Premium",
-    es: "LED POP Premium",
+    ko: "광고 영구 제거",
+    en: "Remove Ads Permanently",
+    ja: "広告を永久に削除",
+    zhTC: "永久移除廣告",
+    zhSC: "永久移除广告",
+    fr: "Supprimer définitivement les publicités",
+    es: "Eliminar anuncios para siempre",
   },
   premiumProductDescription: {
     ko: "광고 없이 LED POP 전체 버전을 즐기세요.",
@@ -316,15 +325,6 @@ const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
     zhSC: "享受没有广告的 LED POP 完整版。",
     fr: "Profitez de la version complète de LED POP sans publicités.",
     es: "Disfruta la versión completa de LED POP sin anuncios.",
-  },
-  premiumPrice: {
-    ko: "$6.99 CAD",
-    en: "$6.99 CAD",
-    ja: "$6.99 CAD",
-    zhTC: "$6.99 CAD",
-    zhSC: "$6.99 CAD",
-    fr: "$6.99 CAD",
-    es: "$6.99 CAD",
   },
   restorePreviousPurchase: {
     ko: "이전 구매 복원",

@@ -11,7 +11,7 @@
 
 - **Play 방향 전환:** iPhone과 Android 폰에서 Play 중에만 센서 방향에 따라 콘텐츠가 자동 회전합니다. OS의 세로 잠금이 켜져 있어도 적용되며, 전환 중에는 재생 장면을 숨기고 새 레이아웃이 안정된 뒤 표시합니다. [현재 방향 정책](docs/EDITOR_LAYOUT_ORIENTATION_20260911.md#현재-play-방향-정책)
 - **Drop Shadow:** 0은 끄기, 1은 가장 부드러운 그림자, 100은 가장 선명한 그림자입니다. 미리보기와 Play에 같은 계산을 적용합니다.
-- **광고와 Shop:** 보상 팝업은 배치 후 표시되고, 닫힌 뒤 광고가 준비된 경우에만 재생합니다. Android 개인정보 설정 양식을 열 때 설정 화면의 여백과 배너 자리를 유지합니다. 보상 광고는 네트워크가 바뀌면 연결을 재확인한 뒤 보류된 요청을 이어갑니다. Shop은 비활성 상태입니다. 보관된 구매 흐름은 결제 대기를 저장하고 결제 직전에 가격과 구매 옵션을 다시 확인합니다. [광고 동작](docs/ADVERTISING.md), [구매 설정](IAP_SETUP.md)
+- **광고와 Shop:** 보상 팝업은 배치 후 표시되고, 닫힌 뒤 광고가 준비된 경우에만 재생합니다. Android 개인정보 설정 양식을 열 때 설정 화면의 여백과 배너 자리를 유지합니다. 보상 광고는 네트워크가 바뀌면 연결을 재확인한 뒤 보류된 요청을 이어갑니다. 설정의 Shop에서 광고를 영구 제거하고 구매를 복원할 수 있습니다. 구매 흐름은 결제 대기를 저장하고 결제 직전에 가격과 구매 옵션을 다시 확인합니다. [광고 동작](docs/ADVERTISING.md), [구매 설정](IAP_SETUP.md)
 
 11월 16일 Galaxy QA에서 Android 보상 팝업과 UMP 복귀, 자동 회전을 끈 상태의 Play 가로·세로 전환을 확인했습니다. 확대·반복 보기 모드와 iOS 팝업 전환은 실기기 확인 전입니다.
 
@@ -33,9 +33,9 @@
 
 현재 소스 버전은 **1.1.4 (app.json의 Android versionCode 32, iOS buildNumber 3)**이며 Settings는 Expo 버전을 읽어 **V1.1.4**를 표시합니다. 2026-10-22 사용자 요청으로 Android 코드만 31→32로 변경했습니다. 아래 정식·QA 산출물에 코드 32가 적용됐습니다. 소스 설정, 로컬 빌드의 버전 코드, 실제 스토어 배포 버전은 별개입니다.
 
-**2026-10-20 도구 체인 업그레이드:** Expo 58.0.16 / React Native 0.88.0 / AGP 9.2.1, compileSdk 37 / targetSdk 36, AGP 내장 R8 9.2.14를 적용했습니다. Windows CMake 경로 길이 오류와 R8이 Room 생성자를 제거해 발생한 시작 충돌을 수정했습니다. 수정 QA APK는 `compile-ok`이며 Galaxy에서 재시작, 테스트 UMP 거부·동의·개인정보 재변경, 테스트 배너·보상 광고 및 보상 후 잠금 해제를 확인했습니다. 당시 수정 QA 재빌드는 Gradle 6분 50초(72 executed / 1138 up-to-date)였습니다. 최신 production 빌드 기록은 아래에서 구분합니다. 구매 화면은 승인된 비활성 상태를 유지하며 결제·복원과 iOS는 미검증입니다. 이 APK는 테스트 광고·EEA QA 설정이 포함되어 스토어 제출용이 아닙니다. [빌드 기록](docs/SIGNING_POLICY.md#combined-exporn-upgrade-assessment--2026-10-20)과 [광고 QA 범위](docs/ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20)를 참고하세요.
+**2026-10-20 도구 체인 업그레이드:** Expo 58.0.16 / React Native 0.88.0 / AGP 9.2.1, compileSdk 37 / targetSdk 36, AGP 내장 R8 9.2.14를 적용했습니다. Windows CMake 경로 길이 오류와 R8이 Room 생성자를 제거해 발생한 시작 충돌을 수정했습니다. 수정 QA APK는 `compile-ok`이며 Galaxy에서 재시작, 테스트 UMP 거부·동의·개인정보 재변경, 테스트 배너·보상 광고 및 보상 후 잠금 해제를 확인했습니다. 당시 수정 QA 재빌드는 Gradle 6분 50초(72 executed / 1138 up-to-date)였습니다. 최신 production 빌드 기록은 아래에서 구분합니다. 당시 구매 화면은 비활성 상태였으며 결제·복원과 iOS는 검증 범위 밖이었습니다. 이 APK는 테스트 광고·EEA QA 설정이 포함되어 스토어 제출용이 아닙니다. [빌드 기록](docs/SIGNING_POLICY.md#combined-exporn-upgrade-assessment--2026-10-20)과 [광고 QA 범위](docs/ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20)를 참고하세요.
 
-- **최신 확인된 정식 APK/AAB**는 2026-11-04의 V1.1.4 (32)입니다. 실행 ID는 `20261104-165700-57ddd8e7`, 소스 커밋은 `4a66b44`입니다. 실제 AdMob과 일반 Google UMP로 빌드했고, 서명·16 KiB 정렬·R8 매핑 등 산출물 검증을 통과했습니다. 이 빌드의 실기기 QA와 Play 업로드는 미확인입니다. 사진 자동 자르기와 여백 타일화는 이후 소스에 반영됐습니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build--2026-11-04)
+- **최신 정식 APK/AAB — 2026-11-17:** V1.1.4 (32), 실행 ID `20261117-102122-40e5e984`. 최신 Shop, Play 공개키, 실제 AdMob, 일반 Google UMP와 2시간 보상을 포함합니다. 기존 서명, Billing 9.1.0, 4개 ABI, 16 KiB 정렬, 동일 빌드 R8 매핑을 포함해 정적 검사 479개를 통과했습니다. AAB는 Play Console 프로덕션 초안에 저장됐으며, 당시 배포 중인 버전은 1.1.3 (31)이었습니다. 이 출시 APK의 실제 광고 노출과 UMP 양식은 실기기 검증 전입니다. [출시 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-and-play-draft--2026-11-17), [구매 검증 범위](IAP_SETUP.md#현재-구현과-상태)
 - **테스트 광고·UMP 상세 실기기 QA:** 2026-11-16, V1.1.4 (32), ARM64 실행 `20261116-150954-919122fc`. Galaxy SM-M336K에서 강제 EEA UMP 거부 후 설정에서 동의로 변경했고, 테스트 배너 복귀, 1분 QA 보상 재잠금 및 두 번째 테스트 광고 재생·보상 지급을 확인했습니다. 두 재생 전 각각 기존 수동 재시도를 한 번 사용했습니다. 최종 빌드는 G: 캐시를 재사용해 1분 44초였습니다. [상세 기록](docs/ADVERTISING.md#android-ump-복귀와-보상-만료-후-재시청--2026-11-16)
 - **이전 로컬 테스트 광고 APK 시간 기준:** 2026-11-10, V1.1.4 (32), 실행 `20261110-000523-5e27c761`, 소스 `6a41336`. 공식 테스트 광고, 일반 Google UMP, 1분 QA 보상을 포함합니다. 4개 ABI로 빌드했고, 전체 1시간 29분 59초 중 Gradle 단계는 1시간 27분 16초였습니다. 실기기에서는 확인하지 않았습니다. 다음 ARM64 실기기용 테스트 빌드는 G:의 기존 캐시를 재사용하고 `scripts/build-local-apk.ps1 -AdProfile test -RewardExpiryQa -Arm64Qa`로 실행합니다. 전체 시간과 Gradle 단계를 각각 같은 기준으로 비교합니다.
 - **이전 테스트 광고 실기기 QA:** 2026-11-04, V1.1.4 (32), 실행 `20261104-162020-9b473f7a`. Background 탭 충돌 수정, 공식 테스트 광고, 강제 EEA UMP, 1분 QA 보상을 포함합니다. Galaxy SM-M336K에서 UMP 거부 후 설정에서 동의로 변경했고, 테스트 광고 보상 지급과 만료 후 재잠금을 확인했습니다. 광고 준비에는 수동 재시도가 필요했고, 콜백 기준 정확한 60초 경계는 측정하지 않았습니다. Gradle 2분 39초. 출시용 보상은 2시간입니다. [상세 광고 QA 기록](docs/ADVERTISING.md#one-minute-reward-and-ump-android-qa--2026-11-04)
@@ -124,9 +124,9 @@ SM-M336K(Android 16)에서 미리보기·전체 화면 성능 및 주요 기능 
 
 ## Pro 화면과 구매 권한
 
-Upgrade to Pro 설정 항목과 `/premium` 라우트는 제외했습니다. 구현은 [보관 화면](disabled-features/premium/PremiumScreen.tsx)에 남겨 두고 앱에서 import하지 않습니다. **사용자가 명시적으로 다시 넣어 달라고 요청하기 전까지 모든 빌드에서 제외합니다.** 일반 빌드·SDK 업데이트·출시 요청은 재활성화 승인이 아닙니다.
+Android와 iOS의 설정에서 [Shop](app/shop.tsx)을 열 수 있습니다. 위즈덤 큐클락의 단일 상품 카드와 구매 복원 배치를 참고했고, 심플리 멀티 타이머처럼 결제 직전에 표시 가격을 스토어에서 다시 확인합니다. 미국 기준가는 양쪽 스토어에서 US$4.99로 설정했으며 앱은 스토어가 반환하는 현지 가격과 통화를 표시합니다.
 
-기존 구매 권한 확인과 영구 구매자의 광고 면제 코드는 유지합니다. IAP 모듈까지 제거한 상태는 아닙니다. Apple StoreKit과 Google Play 직접 IAP 구현 및 설정 절차는 [IAP_SETUP.md](IAP_SETUP.md)를 참고하세요. 상품 등록·Google Play 공개키 설정과 실제 결제·복원 검증은 미완료입니다. 광고 보상의 2시간 Pro는 영구 구매 권한과 별개입니다.
+비소모성 상품은 광고 영구 제거와 Pro 기능을 함께 제공합니다. 광고 보상의 2시간 Pro는 별도로 작동합니다. Android 라이선스 테스터로 현지 가격 CA$6.99, 청구 없는 구매, 수동 복원과 재실행 후 Pro 유지를 확인했습니다. iOS 상품은 App Store Connect에서 제출 준비 상태이며 iOS 구매·복원은 실기기 검증 전입니다. [구매 설정](IAP_SETUP.md)
 
 ## 광고 동작 — 현재 소스
 
@@ -218,7 +218,7 @@ npm ci
 
 3. 환경 설정
 
-`.env.example`을 참고해 로컬 `.env`에 `EXPO_PUBLIC_AMPLITUDE_API_KEY`를 설정합니다. 예시 문자열은 실제 키가 아닙니다. EAS 빌드는 선택한 프로필의 원격 환경 설정을 사용합니다. `EXPO_PUBLIC_*` 값은 앱 번들에 포함되므로 비밀 키를 넣지 않습니다.
+`.env.example`을 참고해 로컬 `.env`에 `EXPO_PUBLIC_AMPLITUDE_API_KEY`를 설정합니다. 예시 문자열은 실제 키가 아닙니다. EAS 빌드는 선택한 프로필의 원격 환경 설정을 사용합니다. `EXPO_PUBLIC_*` 값은 앱 번들에 포함되므로 비밀 키를 넣지 않습니다. Android Shop의 공개키 설정은 [구매 설정](IAP_SETUP.md#2-google-play-console)을 참고하세요.
 
 4. 개발 서버 실행
 
@@ -228,7 +228,21 @@ npm start
 
 AdMob 등 네이티브 모듈이 있어 Expo Go만으로 전체 기능을 검증할 수 없습니다. 해당 모듈이 포함된 개발 빌드를 사용합니다. 웹 미리보기 역시 실기기 광고·노치·시스템 UI 검증을 대신하지 않습니다.
 
-실제 앱 진입점은 `package.json`의 `expo-router/entry`와 `app/_layout.tsx`입니다. 루트 `index.js`는 사용하지 않습니다. `development` APK는 Metro에서 개발 코드를 받으며 `preview` APK와 `production` AAB는 코드를 내장합니다. EAS 환경 변수는 로컬 Metro에 자동 전달되지 않으므로 로컬 환경 설정도 필요합니다.
+실제 앱 진입점은 `package.json`의 `expo-router/entry`와 `app/_layout.tsx`입니다. `development` APK는 Metro에서 개발 코드를 받으며 `preview` APK와 `production` AAB는 코드를 내장합니다. EAS 환경 변수는 로컬 Metro에 자동 전달되지 않으므로 로컬 환경 설정도 필요합니다.
+
+## 린트와 자동 테스트
+
+저장소 루트에서 다음 명령을 실행합니다.
+
+```powershell
+npm run lint
+node --test --test-concurrency=1 scripts/prepare-local-apk.test.cjs scripts/qa-ad-state.cjs scripts/qa-marquee-resources.cjs
+pwsh -NoProfile -File scripts/android-build-observability.test.ps1
+node scripts/check-reward-expiry.cjs
+node scripts/check-rewarded-lifecycle.cjs
+```
+
+2026-11-17 정리에서 설정의 미사용 흰색 로고와 기부 아이콘을 제거했습니다. ESLint 오류·경고 0개, Node 테스트 61개, PowerShell 검사 20개와 보상 만료·수명 주기 검사 2개가 통과했습니다.
 
 ## iOS 시작 충돌 수정 적용 및 확인
 
@@ -257,6 +271,7 @@ side-led-banner-app/
 │   ├── _layout.tsx              # 플랫폼별 루트 진입점 연결
 │   ├── index.tsx                # 메인 화면 (배너 편집기)
 │   ├── settings.tsx             # 앱 설정 화면
+│   ├── shop.tsx                 # 광고 영구 제거와 구매 복원
 │   ├── credits.tsx              # 크레딧 화면
 │   ├── sunnyList.tsx            # Sunny 앱/게임 목록 화면
 │   └── openSourceInfo.tsx       # 오픈소스 정보 화면
@@ -359,8 +374,6 @@ side-led-banner-app/
 │       ├── playOptionButton.tsx   # 한줄/여러줄 재생 버튼 SVG
 │       ├── playResumeButton.tsx   # 재생/정지 버튼 SVG
 │       └── sliderButtons.tsx      # 슬라이더 버튼 SVG
-├── disabled-features/premium/
-│   └── PremiumScreen.tsx          # Pro 화면 보관본, 앱에서 import하지 않음
 ├── docs/
 │   ├── SIGNING_POLICY.md          # 서명·증분 APK 절차
 │   └── BUILD_HISTORY.md           # 이전 변경·빌드 기록

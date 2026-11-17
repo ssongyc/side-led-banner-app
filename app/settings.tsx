@@ -241,6 +241,10 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {(Platform.OS === "android" || Platform.OS === "ios") && (
+          <NavigationRow label={textSectionLabel("shop")} onPress={() => router.push("/shop" as Href)} />
+        )}
+
         <NavigationRow
           label={textSectionLabel("sunnyGames")}
           onPress={() => router.push("/sunnyList" as Href)}
