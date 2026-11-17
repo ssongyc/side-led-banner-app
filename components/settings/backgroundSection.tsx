@@ -1,3 +1,4 @@
+import { btnStyles } from "@/constants/btnStyles";
 import { backgroundColorPalette } from "@/constants/colorPalette";
 import { styles as base, colorPickerLockStyles as bgLock, colorPickerStyles as chip } from "@/constants/styles";
 import { persistBackgroundPhoto } from "@/utils/backgroundPhotoStorage";
@@ -31,6 +32,10 @@ import { SettingsSliderBlock } from "./settingsSliderBlock";
 const LOCK_ICON = require("@/assets/images/icon_lock_type2.png");
 const COLS = 9;
 const ROW1_SWATCHES = COLS - 1;
+const PHOTO_VIEW_OPTIONS = [
+  { mode: "zoom", label: "backgroundPhotoZoom" },
+  { mode: "repeat", label: "backgroundPhotoRepeat" },
+] as const;
 const PHOTO_BUTTON_HIT_SLOP = { top: 6, right: 6, bottom: 6, left: 6 } as const;
 
 // The palette is fixed; build its display rows once per module load.
@@ -48,8 +53,7 @@ export const BackgroundSection = () => {
   const { background, updateConfig } = useSettingsBackground();
   const { textSectionLabel } = useSettingsLocalizationContext();
   const { isProActive, openRewardAdModal } = useSettingsUI();
-  const { backgroundColor, backgroundBlur, backgroundImageUri } =
-    background;
+  const { backgroundColor, backgroundBlur, backgroundImageUri, backgroundPhotoViewMode } = background;
   const [photoPickerCoverVisible, setPhotoPickerCoverVisible] = useState(false);
   const photoPickerLaunchPendingRef = useRef(false);
   const [pendingPhotoUri, setPendingPhotoUri] = useState<string | null>(null);
@@ -236,6 +240,40 @@ export const BackgroundSection = () => {
               })}
             </View>
           ))}
+        </View>
+
+        <View style={[base.settingsRow, { flexWrap: "wrap" }]}>
+          <Text style={base.settingsRowLabel} allowFontScaling={false}>
+            {textSectionLabel("viewMode")}
+          </Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-end" }}>
+            {PHOTO_VIEW_OPTIONS.map(({ mode, label }) => {
+              const selected = mode === backgroundPhotoViewMode;
+              return (
+                <TouchableOpacity
+                  key={mode}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  onPress={() => updateConfig("background", { backgroundPhotoViewMode: mode })}
+                  style={[
+                    btnStyles.effectItemButton,
+                    { minHeight: 48 },
+                    selected && btnStyles.effectItemButtonActive,
+                  ]}
+                >
+                  <Text
+                    allowFontScaling={false}
+                    style={[
+                      btnStyles.effectItemButtonText,
+                      selected && btnStyles.effectItemButtonTextActive,
+                    ]}
+                  >
+                    {textSectionLabel(label)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
         <SettingsSliderBlock

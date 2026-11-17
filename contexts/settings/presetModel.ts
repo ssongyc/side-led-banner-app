@@ -1,3 +1,4 @@
+import type { BackgroundPhotoViewMode } from "@/utils/backgroundPhotoLayout";
 import type { AppLocaleKey } from "@/constants/language";
 import type { SpeechBubblePresetId } from "@/constants/speechBubblePresets";
 import { backgroundColorPalette, textColorPalette } from "@/constants/colorPalette";
@@ -43,6 +44,7 @@ export interface BannerConfig {
     /** 사진 배경 uri · 없으면 단색만 */
     backgroundImageUri: string | null;
     backgroundBlur: number;
+    backgroundPhotoViewMode: BackgroundPhotoViewMode;
   };
   motion: {
     textMoveSpeed: number;
@@ -191,6 +193,7 @@ export const DEFAULT_BANNER_CONFIG: BannerConfig = {
     backgroundColor: "#FFFFFF",
     backgroundImageUri: null,
     backgroundBlur: 0,
+    backgroundPhotoViewMode: "zoom",
   },
   motion: {
     textMoveSpeed: 30,
@@ -273,7 +276,12 @@ export function normalizePresetSlot(raw: unknown): PresetSnapshot {
     ...base,
     content: { ...base.content, ...pct },
     appearance,
-    background: { ...base.background, ...bgPartial },
+    background: {
+      ...base.background,
+      ...bgPartial,
+      backgroundPhotoViewMode:
+        bgPartial.backgroundPhotoViewMode === "repeat" ? "repeat" : base.background.backgroundPhotoViewMode,
+    },
     motion: { ...base.motion, ...motionPartial },
   });
 }

@@ -1,6 +1,7 @@
 const profiles = require('./advertising.config.json');
 module.exports = ({ config }) => {
   require('./plugins/patchRewardedCleanup.cjs')();
+  require('./plugins/patchAndroidHeicPicker.cjs')();
   const profile = process.env.LEDPOP_AD_PROFILE ?? 'production';
   if (!Object.hasOwn(profiles, profile)) throw new Error('Invalid LEDPOP_AD_PROFILE');
   if (process.env.EXPO_PUBLIC_REWARD_EXPIRY_QA === 'true' && (profile !== 'test' || process.env.EAS_BUILD_PLATFORM)) throw new Error('Short reward expiry is restricted to local test-ad builds');

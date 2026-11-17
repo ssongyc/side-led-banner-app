@@ -64,6 +64,11 @@
   },
   "expo": {
     "autolinking": {
+      "android": {
+        "buildFromSource": [
+          "expo-image-picker"
+        ]
+      },
       "ios": {
         "buildFromSource": [
           ".*"

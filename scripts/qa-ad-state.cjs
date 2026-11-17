@@ -184,6 +184,11 @@ test('preset model: text spacing, deep copies, migration and non-Pro cleanup pre
  const a=h.load('contexts/settings/presetModel.ts',deps);const original=JSON.parse(JSON.stringify(a.DEFAULT_BANNER_CONFIG));original.content.previewText='  라라라  하늘\n A  B ';original.appearance.letterSpacing=24;original.appearance.effectSelectedItems=['Blink','Glow'];original.appearance.fontByLocale.ko='noto_sans_kr';
  const before=JSON.stringify(original),snap=a.presetFromConfig(original);snap.appearance.effectParamValues.Glow=99;snap.appearance.fontByLocale.ko='changed';assert.equal(JSON.stringify(original),before);const restored=a.configFromPreset(a.presetFromConfig(original),'one');assert.equal(restored.content.previewText,original.content.previewText);assert.equal(restored.appearance.letterSpacing,24);
  const cleaned=a.nonProSanitize(original);assert.equal(cleaned.content.previewText,original.content.previewText);assert.equal(cleaned.appearance.letterSpacing,24);assert.equal(JSON.stringify(original),before);assert.equal(cleaned.appearance.effectSelectedItems.includes('Glow'),false);assert.equal(cleaned.appearance.effectSelectedItems.includes('Blink'),true);
+ const legacyPhoto = a.normalizePresetSlot({background:{backgroundImageUri:'file:///saved.jpg'}});
+ assert.equal(legacyPhoto.background.backgroundPhotoViewMode,'zoom');
+ assert.equal(legacyPhoto.background.backgroundImageUri,'file:///saved.jpg');
+ const repeatedPhoto = a.normalizePresetSlot({background:{...legacyPhoto.background,backgroundPhotoViewMode:'repeat'}});
+ assert.equal(a.configFromPreset(repeatedPhoto,'one').background.backgroundPhotoViewMode,'repeat');
  assert.equal(a.normalizePreviewTextMaxLines(' A  B\r\n라라라 하늘'),' A  B\n라라라 하늘');assert.equal(a.normalizePreviewTextMaxLines('1\n2\n3\n4'),null);
  const old=a.normalizePresetSlot({content:{previewText:'  X  Y '},appearance:{letterSpacing:17}});assert.equal(old.content.previewText,'  X  Y ');assert.equal(old.appearance.letterSpacing,17);
 });

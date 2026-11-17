@@ -1,3 +1,8 @@
+import {
+  BACKGROUND_PHOTO_MARGIN_BLUR,
+  getBackgroundPhotoZoomFrame,
+  type BackgroundPhotoViewMode,
+} from "@/utils/backgroundPhotoLayout";
 import { isSignBoardPreset } from "@/constants/signBoardPresets";
 import {
   DOT_MATRIX_BACKGROUND_SKSL,
@@ -19,6 +24,7 @@ import {
 } from "@/constants/speechBubblePresets";
 import type { BackgroundEffectAnimationResult } from "@/hooks/useBackgroundAnimation";
 import {
+  Blur,
   Canvas,
   Fill,
   Group,
@@ -43,9 +49,9 @@ export type PixelBackgroundCanvasProps = {
   pixelShaderSize: number;
   showGradientBackdrop: boolean;
   gradientBackgroundPreset: string;
-  hasBgPhoto: boolean;
   backgroundColor: string;
-  backgroundImageUri?: string | null;
+  backgroundImageUri: string | null;
+  backgroundPhotoViewMode: BackgroundPhotoViewMode;
   backgroundEffect: BackgroundEffectAnimationResult;
   translateX: SharedValue<number>;
   isPortrait: boolean;
@@ -56,16 +62,16 @@ function PixelBackgroundImage({
   uri,
   width,
   height,
-  fillViewport,
+  viewMode,
 }: {
   uri: string;
   width: number;
   height: number;
-  fillViewport: boolean;
+  viewMode: BackgroundPhotoViewMode;
 }) {
   const image = useImage(uri);
   if (!image) return null;
-  if (fillViewport) {
+  if (viewMode === "repeat") {
     return (
       <Rect x={0} y={0} width={width} height={height}>
         <ImageShader
@@ -78,15 +84,22 @@ function PixelBackgroundImage({
       </Rect>
     );
   }
+  const frame = getBackgroundPhotoZoomFrame(width, height, image.width(), image.height());
   return (
-    <Image
-      image={image}
-      x={0}
-      y={0}
-      width={width}
-      height={height}
-      fit="cover"
-    />
+    <>
+      {frame ? (
+        <Group
+          layer={(
+            <Paint>
+              <Blur blur={BACKGROUND_PHOTO_MARGIN_BLUR} mode="clamp" />
+            </Paint>
+          )}
+        >
+          <Image image={image} x={0} y={0} width={width} height={height} fit="cover" />
+        </Group>
+      ) : null}
+      <Image image={image} {...(frame ?? { x: 0, y: 0, width, height })} fit="cover" />
+    </>
   );
 }
 
@@ -98,9 +111,9 @@ export function PixelBackgroundCanvas({
   pixelShaderSize,
   showGradientBackdrop,
   gradientBackgroundPreset,
-  hasBgPhoto,
   backgroundColor,
   backgroundImageUri,
+  backgroundPhotoViewMode,
   backgroundEffect,
   translateX,
   isPortrait,
@@ -123,7 +136,6 @@ export function PixelBackgroundCanvas({
   const isEffect1 = effectId === "effect1";
   const isSpeechBg = isSpeechBubblePreset(effectId);
   const isPixelManagedSpeechBg = isSpeechBg && !isSignBoardPreset(effectId);
-  const hasPhoto = hasBgPhoto && backgroundImageUri;
   const { backgroundShaderLayer, photoBackgroundShaderLayer } =
     usePixelDotShaderLayers(pixelShaderSize);
 
@@ -159,13 +171,13 @@ export function PixelBackgroundCanvas({
         <Group transform={surfaceTransform}>
 
         {/* Layer 1: 배경 사진 (있을 때만, pixel shader 적용) */}
-        {hasPhoto ? (
+        {backgroundImageUri ? (
           <Group layer={photoBackgroundShaderLayer}>
             <PixelBackgroundImage
-              uri={backgroundImageUri!}
+              uri={backgroundImageUri}
               width={width}
               height={height}
-              fillViewport={isFullscreen}
+              viewMode={backgroundPhotoViewMode}
             />
             {showGradientBackdrop ? (
               <GradientBackdrop

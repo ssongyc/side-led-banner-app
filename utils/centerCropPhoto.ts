@@ -50,7 +50,7 @@ export async function centerCropPhoto(sourceUri: string): Promise<string> {
       if (bytes.length === 0) throw new Error("Failed to encode cropped image");
 
       const file = new File(Paths.cache, `background-${Date.now()}.jpg`);
-      file.write(bytes);
+      await file.write(bytes);
       return file.uri;
     } finally {
       surface.dispose();

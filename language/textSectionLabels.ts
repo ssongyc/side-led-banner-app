@@ -18,6 +18,8 @@ export type TextSectionLabelKey =
   | "color"
   /** 배경*/
   | "backgroundColor"
+  | "backgroundPhotoZoom"
+  | "backgroundPhotoRepeat"
   | "blur"
   | "cancel"
   | "photoCropNotice"
@@ -106,6 +108,24 @@ const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
     zhSC: "颜色",
     fr: "Couleur",
     es: "Color",
+  },
+  backgroundPhotoZoom: {
+    ko: "확대",
+    en: "Zoom",
+    ja: "拡大",
+    zhTC: "放大",
+    zhSC: "放大",
+    fr: "Zoom",
+    es: "Ampliar",
+  },
+  backgroundPhotoRepeat: {
+    ko: "반복",
+    en: "Repeat",
+    ja: "繰り返し",
+    zhTC: "重複",
+    zhSC: "重复",
+    fr: "Répéter",
+    es: "Repetir",
   },
   blur: {
     ko: "흐림",
