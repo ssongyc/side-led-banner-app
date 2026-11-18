@@ -1,6 +1,5 @@
 export class ConsentBlockedError extends Error {}
 const state = { allowed: false, required: false, busy: false, privacyOpen: false, revision: 0, failure: null };
-export const getAdConsent = () => state;
 export const isAdConsentAllowed = () => false;
 export const canRetryAdConsent = () => false;
 export function prepareAdConsentRetry() {}

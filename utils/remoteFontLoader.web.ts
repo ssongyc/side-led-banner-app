@@ -10,7 +10,7 @@ export type { RemoteFontDownloadOptions } from "@/utils/remoteFontFlight";
 
 const downloadedFonts = new Map<string, string>();
 
-export function isRemoteFontDownloaded(source: RemoteFontSource): boolean {
+function isRemoteFontDownloaded(source: RemoteFontSource): boolean {
   return downloadedFonts.has(source.fileName);
 }
 

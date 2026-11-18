@@ -22,7 +22,7 @@ const nativeSdk = () => {
   return require('react-native-google-mobile-ads') as typeof import('react-native-google-mobile-ads');
 };
 export class ConsentBlockedError extends Error {}
-export const getAdConsent = () => state;
+const getAdConsent = () => state;
 export const isAdConsentAllowed = () => state.allowed && !state.busy;
 export const canRetryAdConsent = () => !state.busy && !state.allowed && state.failure === 'request';
 // Called only by an existing explicit retry/Settings recovery action.
