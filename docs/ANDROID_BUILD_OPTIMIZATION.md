@@ -4,6 +4,19 @@
 
 The initial review inspected the local release wrapper and retained build logs without running a build. A later user-authorized production build measured the applied changes; its result is recorded below. No lint, test, upload, deployment, or Play Console change was run as part of the documentation update.
 
+## Production build V1.1.4 (33) — 2026-11-17
+
+후속 태블릿 검증에서는 별도 기기 전용 QA APK로 실제 LED POP EEA 메시지와 테스트 광고 경로를 확인한 뒤 원래 출시 APK로 복원했습니다. 출시 AAB/APK 바이트는 변경하지 않았습니다. [상세 범위](ADVERTISING.md#android-태블릿의-실제-led-pop-eea-메시지와-광고--2026-11-17)
+
+- Run `20261117-161101-575b889f` built from clean `dbb1f2b59b56865435c0e64a2af34eda8c8cb75e` with the approved build-only version-code override 33. The canonical Android default was updated to 33 afterward; marketing version 1.1.4 and iOS build number were unchanged. The source includes the Shop entry below Watch Ad, LED POP PRO title, crop-notice removal and consent/purchase lifecycle improvements.
+- Command: `./scripts/build-local-apk.ps1 -AdProfile production -IncludeBundle -VersionCode 33`. The existing G: build snapshot, Gradle/npm caches and original signing identity were reused. Dependencies were not reinstalled; native generation restored `.gradle`, `build` and `app/build`. No clean, QA reward override, forced EEA device or ARM64-only option was used.
+- compile-ok: the complete 1,945-line Gradle log was reviewed; `BUILD SUCCESSFUL in 15m 14s`, 1,279 tasks: 90 executed and 1,189 up-to-date. Total wrapper time was 1,297.94 seconds (21m38s), including native preparation, AAB compilation, universal APK conversion and artifact verification. Source/profile/version inputs differ from earlier runs, so no isolated speedup percentage is claimed. Reviewed notices concern the installed Expo/RN plugins' legacy AGP/Kotlin DSL, deprecated activity delegate, output colors and the Expo-plugin-compatible AdMob app.json warning; the effective release manifest passed.
+- All 479 release static checks passed: original signer, V1.1.4 (33), API 36, Billing 9.1.0, four ABIs, 16 KiB alignment, production AdMob, same AAB/APK payload and embedded same-build R8 mapping. Twelve additional checks matched the bundled Shop, purchase, consent and reward source, embedded public licensing key/SKU and production profile. These are artifact checks, not proof of live advertising inventory or EEA form delivery.
+- AAB: `artifacts/apk-runs/20261117-161101-575b889f/aab-deliveries/20261117-163058-13a79a4d89534ceb9739927dfced58d7/LedPopV114.aab`; SHA-256 `A350463DD170ACB8B31325B125F3E94E4B93082E65B266A13C9394332E1F414A`.
+- APK: `artifacts/apk-runs/20261117-161101-575b889f/apk-deliveries/20261117-163204-cbc3bd4077854202ad134e7b03e838c2/LedPopV114.apk`; SHA-256 `463C529F39F1E70A0B24AAC953C1707BB4F13FD96172FB92DA3ADD601465F2F0`. The installed Galaxy APK hash matched. Mapping SHA-256: `0288FC2FF25777D5A5BBC26EF6C0F9EC34C411BCFE6AE7FF9E043AEF4E9B49BF`.
+- On Galaxy SM-M336K / Android 16, Shop displayed LED POP PRO and KRW 7,500. Cancelling the store sheet restored Buy; reentry succeeded. Google Play explicitly marked the order as a non-charged test order using Test card, always approves. Payment successful led to app Purchase complete / Pro active, manual restore succeeded, and Pro remained active after force-stop/cold launch. Settings displayed without a visible ad WebView. No fatal exception or IAP warning was observed in the current process. See local `commerce-verification.json` and `device-qa.json` in the run folder.
+- Read-only Play Console inspection showed latest upload 32, still a production draft, and released version 31. Code 33 was absent from the latest bundles listing at that time. No upload, draft replacement or review submission was performed. The initial attempt stopped before compilation because a JAVA_TOOL_OPTIONS diagnostic polluted the strict bundletool version output; removing that added environment option allowed the single compilation above. No signing or verification gate was weakened.
+
 ## Production build and Play draft — 2026-11-17
 
 - Run `20261117-102122-40e5e984` built V1.1.4 (32) from `b5b03fe` plus the local Shop changes present at build time. It predates the cleanup of the two unused PNGs. The existing wrapper built the signed AAB once, then generated the four-ABI universal APK with bundletool 1.18.3. It reused the G: dependency cache and regenerated the native configuration for the production profile.
@@ -377,3 +390,12 @@ Dependency schema 2 and native schema 4 now remove only the root `package.json.v
 ## 테스트 APK 실행 차단 — 2026-10-19
 
 현재 변경분을 포함한 `-AdProfile test -MeasureBuild` APK 생성을 요청받았으나 명령 실행 전 자동 승인 검토 서비스가 `Selected model is at capacity`로 실패했습니다. 빌드 명령은 실행되지 않았으며 새 APK는 생성되지 않았습니다. 이는 코드 컴파일 오류·호스트 메모리 부족·안전성 거부를 의미하지 않습니다. 승인 절차를 우회하지 않았으며, 최신 검증된 QA APK는 여전히 10월 16일 산출물입니다.
+
+
+## 구매 연결 복구 APK — 2026-11-17
+
+- 실행 `20261117-194130-f9692cbb`, V1.1.4 (33), dirty main `dbb1f2b59b56865435c0e64a2af34eda8c8cb75e`의 승인된 구매 연결 복구·이전 Back 수정 포함 QA용 APK입니다. 기존 서명·4개 ABI·실제 AdMob·일반 UMP·정상 보상 시간을 유지했습니다. AAB는 생성하지 않았습니다.
+- 기존 G: Gradle·npm·네이티브 출력을 유지하고 `-AdProfile production -ResumeNative -VersionCode 33`으로 실행했습니다. 설치와 네이티브 생성은 생략됐습니다. Gradle 11분 6초, 전체 730.36초; 1,280개 작업 중 70개 실행, 1,210개 up-to-date. 이전 Back APK의 Gradle 12분 14초보다 68초 짧았지만 반복 측정한 성능 개선 수치로 보지 않습니다.
+- 전체 로그 1,921줄 검토, BUILD SUCCESSFUL, 기존 서명·패키지·target SDK 36·ZIP 정렬과 R8 설정 확인. 동일 빌드 매핑 SHA-256 `0288FC2FF25777D5A5BBC26EF6C0F9EC34C411BCFE6AE7FF9E043AEF4E9B49BF` 보관. 기존 AGP/Gradle/Kotlin 폐기 예정 API 경고가 있습니다. AAB 지표 검증은 APK-only이므로 해당하지 않습니다.
+- APK: `artifacts/apk-runs/20261117-194130-f9692cbb/apk-deliveries/20261117-195338-e24ae110b6a1464d983fcdba94fe3fc1/LedPopV114.apk`, SHA-256 `BDD078B374B0B768CE035A9465DA34D248ADB4EFC6D50524DF1FD76D7948CF5D`; export `2026-11-18T00:53:40.4581732Z` (Toronto 11월 17일 19:53).
+- Galaxy 덮어 설치 후 설치 해시·번들 소스 일치와 구매 복원·연결 끊김 복구를 확인했습니다. 신규 거래와 환불 원인의 구분은 [IAP_SETUP](../IAP_SETUP.md#구매-없음-원인-및-연결-복구-후속-확인--2026-11-17)에 기록했습니다. Play 업로드·iOS 검증·Git 전달은 수행하지 않았습니다.

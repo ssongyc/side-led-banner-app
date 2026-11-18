@@ -3,6 +3,7 @@ import { usePremium } from "@/contexts/premiumContext";
 import BannerAdComponent from "@/components/admob/bannerAd";
 import type { AppLocaleKey } from "@/constants/language";
 import { settingsStyles } from "@/constants/settingsStyles";
+import { SUNNY_LINKS } from "@/constants/sunnyLinks";
 import {
   styles as base,
   resolveDropdownMaxHeight,
@@ -19,6 +20,7 @@ import * as ScreenOrientation from "expo-screen-orientation";
 import { loadRewardedAd } from "@/hooks/useRewardedAd";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  BackHandler,
   Image,
   Linking,
   Platform,
@@ -30,16 +32,6 @@ import {
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-const SUNNY_LINKS = {
-  homepage: "https://sunnyinnolab.com",
-  instagram: "https://www.instagram.com/sunnyinnolab/",
-  twitter: "https://x.com/Sunnyinnolab",
-  terms:
-    "https://marmalade-neptune-dbe.notion.site/Terms-Conditions-c18656ce6c6045e590f652bf8291f28b?pvs=74",
-  privacy:
-    "https://marmalade-neptune-dbe.notion.site/Privacy-Policy-ced8ead72ced4d8791ca4a71a289dd6b",
-} as const;
 
 export default function SettingsScreen() {
   const { adsAllowed } = usePremium();
@@ -131,6 +123,22 @@ export default function SettingsScreen() {
     if (adsAllowed) loadRewardedAd({ restartFailed: true });
   }, [adsAllowed]));
 
+  const goBack = useCallback(() => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/");
+  }, [router]);
+
+  useFocusEffect(useCallback(() => {
+    if (Platform.OS !== "android") return;
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      // Leave normal stack/modal back handling intact; anchor a standalone Settings entry.
+      if (router.canGoBack()) return false;
+      goBack();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [router, goBack]));
+
   const openUrl = (url: string) => {
     void Linking.openURL(url).catch((error) => {
       if (__DEV__) console.error("External link open failed", error);
@@ -151,7 +159,7 @@ export default function SettingsScreen() {
     <View style={[base.container, { backgroundColor: "#FFFFFF", paddingTop: rootPaddingTop, paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right }]}>
       <View style={settingsStyles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={goBack}
           style={settingsStyles.backButton}
           accessibilityLabel="Back"
           hitSlop={10}

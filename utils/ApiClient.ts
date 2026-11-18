@@ -109,6 +109,7 @@ let premiumSnapshot: PremiumSnapshot = {
 const premiumListeners = new Set<() => void>();
 let iap: typeof import("expo-iap") | null = null;
 let premiumConnected = false;
+let premiumConnectionNeedsReset = false;
 let connection: Promise<void> | null = null;
 let refreshFlight: Promise<void> | null = null;
 let foregroundRefreshRequested = false;
@@ -170,7 +171,17 @@ function premiumProductId() {
   }
   return PREMIUM_PRODUCT_IDS[Platform.OS];
 }
+function invalidateDisconnectedPremiumConnection(error: unknown) {
+  if (Platform.OS !== "android" || !iap || !error || typeof error !== "object") return;
+  const { code, message } = error as { code?: string; message?: string };
+  if (code === iap.ErrorCode.ServiceDisconnected || code === iap.ErrorCode.ConnectionClosed ||
+      code === iap.ErrorCode.NotPrepared || message === "Billing client not ready") {
+    premiumConnected = false;
+    premiumConnectionNeedsReset = true;
+  }
+}
 function reportPremiumError(error: unknown, notice: PremiumNotice = "error") {
+  invalidateDisconnectedPremiumConnection(error);
   // Never log signed purchase data, tokens, or full SDK error objects.
   console.warn("[IAP]", notice, error instanceof Error ? error.name : "StoreError");
   publishPremium({ notice });
@@ -330,8 +341,7 @@ async function onPremiumPurchase(purchase: Purchase) {
       publishPremium({ entitlement: "owned", notice: "purchased" });
     }
   }).catch((error) => {
-    console.warn("[IAP]", "verificationFailed", error instanceof Error ? error.name : "StoreError");
-    publishPremium({ notice: "verificationFailed" });
+    reportPremiumError(error, "verificationFailed");
   });
 }
 
@@ -341,8 +351,14 @@ async function connectPremium() {
   connection = (async () => {
     premiumProductId();
     iap = await import("expo-iap");
-    purchaseListener = iap.purchaseUpdatedListener((purchase) => { void onPremiumPurchase(purchase); });
-    errorListener = iap.purchaseErrorListener((error) => {
+    // Retry only through the existing refresh/restore entry points. The native
+    // SDK also caches connectionReady, so initConnection alone cannot recover.
+    if (premiumConnectionNeedsReset) {
+      await iap.endConnection();
+      premiumConnectionNeedsReset = false;
+    }
+    if (!purchaseListener) purchaseListener = iap.purchaseUpdatedListener((purchase) => { void onPremiumPurchase(purchase); });
+    if (!errorListener) errorListener = iap.purchaseErrorListener((error) => {
       // Some purchase errors omit productId. Correlate those only while this
       // app's single purchase request is actually dispatched, not during queries.
       if (error.productId ? error.productId !== premiumProductId() : !purchaseDispatched) return;

@@ -24,7 +24,7 @@ $PSNativeCommandUseErrorActionPreference=$false
 $timingState=New-AndroidBuildTiming
 if($UmpEeaTestDevice -and $IncludeBundle){throw 'Forced UMP is restricted to an APK-only QA build'}
 if($RewardExpiryQa -and ($IncludeBundle -or $AdProfile -ne 'test')){throw 'Short reward expiry requires an APK-only test-ad build'}
-if($Arm64Qa -and ($IncludeBundle -or $AdProfile -ne 'test')){throw 'ARM64 QA requires an APK-only test-ad build'}
+if($Arm64Qa -and ($IncludeBundle -or ($AdProfile -ne 'test' -and -not $UmpEeaTestDevice))){throw 'ARM64 QA requires an APK-only test-ad or device-scoped consent/ad QA build'}
 $previousRewardExpiry=$env:EXPO_PUBLIC_REWARD_EXPIRY_QA
 $previousUmpDevice=$env:EXPO_PUBLIC_UMP_EEA_TEST_DEVICE
 $timingStatus='failed'

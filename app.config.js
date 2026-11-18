@@ -3,6 +3,10 @@ module.exports = ({ config }) => {
   require('./plugins/patchRewardedCleanup.cjs')();
   require('./plugins/patchAndroidHeicPicker.cjs')();
   const profile = process.env.LEDPOP_AD_PROFILE ?? 'production';
+  const qaDevice = process.env.EXPO_PUBLIC_UMP_EEA_TEST_DEVICE;
+  if (qaDevice && qaDevice !== 'disabled' && process.env.EAS_BUILD_PLATFORM) {
+    throw new Error('Device-scoped consent/ad QA is restricted to local Android APK builds');
+  }
   if (!Object.hasOwn(profiles, profile)) throw new Error('Invalid LEDPOP_AD_PROFILE');
   if (process.env.EXPO_PUBLIC_REWARD_EXPIRY_QA === 'true' && (profile !== 'test' || process.env.EAS_BUILD_PLATFORM)) throw new Error('Short reward expiry is restricted to local test-ad builds');
   const buildProfile = process.env.EAS_BUILD_PROFILE;

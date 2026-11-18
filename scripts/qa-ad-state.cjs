@@ -299,3 +299,28 @@ for (const outcome of ['loaded','failed']) test(`consent banner: issued view sur
  assert.equal(loaded,0);assert.equal(failed,outcome==='failed'?1:0);
  instance.componentDidUpdate();assert.equal(retired,1);instance.componentWillUnmount();
 });
+
+function nativeSdkHarness(device, rejectConfiguration = false) {
+ const h=harness(), calls=[];
+ h.env.process={env:{EXPO_PUBLIC_UMP_EEA_TEST_DEVICE:device}};
+ const api=h.load('ads/AdClient.tsx',{
+  './adConsent':{ConsentBannerAd:class{}},'expo-modules-core':{},react:{},
+  'react-native':{Platform:{OS:'android'}},
+  'react-native-google-mobile-ads':{__esModule:true,default:()=>({
+   async setRequestConfiguration(config){calls.push(['configuration',config]);if(rejectConfiguration)throw Error('SDK rejected configuration');},
+   async initialize(){calls.push(['initialize']);},
+  }),AdEventType:{},RewardedAdEventType:{},RewardedAd:{},BannerAdSize:{}},
+ });
+ return {api,calls};
+}
+test('native SDK: normal release initialization never configures test devices',async()=>{
+ const h=nativeSdkHarness('');await h.api.initializeAdSdk();assert.deepEqual(h.calls,[['initialize']]);
+});
+test('native SDK: APK-only QA configures the specific device before initialization',async()=>{
+ const id='0123456789ABCDEF0123456789ABCDEF',h=nativeSdkHarness(id);await h.api.initializeAdSdk();
+ assert.equal(h.calls[0][0],'configuration');assert.equal(h.calls[0][1].testDeviceIdentifiers[0],id);assert.equal(h.calls[1][0],'initialize');
+});
+test('native SDK: invalid or rejected QA configuration never initializes',async()=>{
+ const invalid=nativeSdkHarness('invalid');await assert.rejects(invalid.api.initializeAdSdk());assert.equal(invalid.calls.length,0);
+ const rejected=nativeSdkHarness('0123456789ABCDEF0123456789ABCDEF',true);await assert.rejects(rejected.api.initializeAdSdk());assert.equal(rejected.calls.length,1);
+});
