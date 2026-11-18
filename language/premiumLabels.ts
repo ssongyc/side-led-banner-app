@@ -1,7 +1,7 @@
 import type { AppLocaleKey } from "@/constants/language";
 import type { PremiumNotice } from "@/utils/ApiClient";
 
-type PremiumLabelKey = PremiumNotice | "loading" | "purchasing" | "restoring" | "owned" | "retry";
+type PremiumLabelKey = PremiumNotice | "loading" | "purchasing" | "restoring" | "owned" | "ownedDescription" | "retry";
 const labels: Record<PremiumLabelKey, Record<AppLocaleKey, string>> = {
   "loading": {
     "ko": "스토어 확인 중…",
@@ -31,13 +31,22 @@ const labels: Record<PremiumLabelKey, Record<AppLocaleKey, string>> = {
     "es": "Restaurando compras…"
   },
   "owned": {
-    "ko": "Pro 사용 중",
-    "en": "Pro active",
-    "ja": "Pro 有効",
-    "zhTC": "Pro 已啟用",
-    "zhSC": "Pro 已启用",
-    "fr": "Pro activé",
-    "es": "Pro activado"
+    "ko": "구매 완료",
+    "en": "Purchased",
+    "ja": "購入済み",
+    "zhTC": "已購買",
+    "zhSC": "已购买",
+    "fr": "Acheté",
+    "es": "Comprado"
+  },
+  "ownedDescription": {
+    "ko": "Pro 구매가 완료되었습니다. 모든 기능을 광고 없이 즐기세요.",
+    "en": "Pro is yours. Enjoy all features without ads.",
+    "ja": "Pro をご購入いただきました。すべての機能を広告なしでお楽しみください。",
+    "zhTC": "您已購買 Pro。盡情享用所有功能，免受廣告打擾。",
+    "zhSC": "您已购买 Pro。尽情使用所有功能，不受广告打扰。",
+    "fr": "Vous avez acheté Pro. Profitez de toutes les fonctionnalités sans publicité.",
+    "es": "Ya tienes Pro. Disfruta de todas las funciones sin anuncios."
   },
   "unavailable": {
     "ko": "현재 스토어 상품을 이용할 수 없습니다.",

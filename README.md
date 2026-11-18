@@ -9,9 +9,15 @@
 
 ## 현재 문서의 기준
 
-- **Android 버전 확인 — 2026-11-17:** Play Console의 마지막 프로덕션 출시는 Version Name `1.1.3`, Version Code `31`입니다. 업로드된 `1.1.4 (32)`는 초안(Draft)이고, 현재 소스의 다음 빌드 설정은 `1.1.4 (33)`입니다. 최신 Shop 디자인을 포함한 새 APK/AAB는 아직 생성하지 않았습니다.
+- **11월 18일 UI 변경:** Shop의 복원 버튼을 Buy 아래 한 곳에 배치했습니다. 영구 구매가 확인되면 가격과 Buy 대신 **구매 완료 (Purchased)**가 표시됩니다. 보상 팝업 제목 아래에는 광고 1회 시청 시 2시간 동안 Pro를 이용할 수 있다는 안내가 표시되며, Watch Ad 문구를 버튼 가운데에 맞췄습니다. 이 변경은 소스에 반영됐으며 11월 17일 APK/AAB 이후 작업입니다. [구매 화면](IAP_SETUP.md#구매-확인-후-shop-화면--2026-11-18), [광고 팝업](docs/ADVERTISING.md#보상-팝업의-2시간-안내--2026-11-18)
 
-- **Shop 디자인(소스 반영):** 기존 문구를 사용한 체크 목록, 상단 복원, 하단 현지 가격·주황색 구매 버튼과 브랜드 푸터로 재배치했습니다. 짧은 화면에서는 구매 영역도 스크롤됩니다. 현재 설치 APK·기존 AAB에는 아직 포함되지 않았습니다. [변경 범위](IAP_SETUP.md#참고-이미지-기반-shop-디자인--2026-11-17)
+- **최신 ARM64 테스트 APK — 2026-11-17:** V1.1.4 (33), 실행 `20261117-212140-85edd896`, 소스 `d31d31c`를 빌드했습니다. 최신 Shop 디자인·Back·구매 연결 복구, 공식 AdMob 테스트 광고·일반 UMP·1분 QA 보상을 포함하고 보상 팝업 문구는 유지합니다. 산출물 검사 174개 통과, 실기기 실행은 미검증입니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#shop-디자인-포함-arm64-테스트-apk--2026-11-17)
+
+- **Android 버전 확인 — 2026-11-18:** Play Console의 마지막 프로덕션 출시는 Version Name `1.1.3`, Version Code `31`입니다. 업로드된 `1.1.4 (32)`는 초안(Draft)이고, 현재 소스의 다음 빌드 설정은 `1.1.4 (33)`입니다. 11월 17일 Shop 디자인은 위 ARM64 테스트 APK에 포함됐습니다. 11월 18일 UI 변경은 소스에 반영된 상태입니다.
+
+- **11월 17일 Shop 디자인:** 체크 목록, 현지 가격, 주황색 구매 버튼과 브랜드 푸터를 추가했으며 짧은 화면에서는 구매 영역도 스크롤됩니다. 위 ARM64 테스트 APK에서 이 첫 디자인을 확인할 수 있습니다. [변경 범위](IAP_SETUP.md#참고-이미지-기반-shop-디자인--2026-11-17)
+
+- **11월 18일 정리 및 검증:** 참조가 없는 보상 배지·설정 푸터 스타일 5개를 제거했습니다. 앞선 검증에서 린트, Node 자동 테스트 87개, PowerShell 검사 20개와 보상 만료·광고 수명 주기 검사가 통과했습니다. 새 UI의 실기기 화면은 검증하지 않았습니다.
 
 - **구매 연결 복구 APK:** Android 결제 서비스가 끊긴 뒤 기존 Check again·복원으로 재연결하도록 수정했습니다. Galaxy에서 앱 재시작 없이 두 경로의 복구, Pro 유지·복원·재실행을 확인했습니다. 실행 `20261117-194130-f9692cbb`, V1.1.4 (33) APK에 포함되며 기존 AAB에는 포함되지 않았습니다. 이전 테스트 구매가 조회되지 않던 직접 원인은 Play Console의 환불 상태였습니다. [원인과 검증 범위](IAP_SETUP.md#구매-없음-원인-및-연결-복구-후속-확인--2026-11-17)
 
@@ -41,7 +47,7 @@
 
 > **TestFlight 1.1.3 (1) 시작 충돌 확인:** 사용자 제공 iPhone 로그는 `ExpoModulesWorklets`가 참조하는 `React.framework` 누락으로 앱 코드 실행 전에 종료됨을 보여줍니다. Apple 경고에는 `ReactNativeDependencies.framework`도 포함됩니다. 이후 제공된 Mac 설정에서는 소스 방식 React Native와 사전 컴파일 Expo 프레임워크의 혼합이 확인되어, package.json에서 iOS autolinking 모듈의 소스 빌드를 명시했습니다. Mac에서 pod install·새 Archive·실기기 실행 확인은 아직 필요합니다. Mac용 읽기 전용 검사와 개발자 전달 사항은 [충돌 기록](docs/SIGNING_POLICY.md#ios-launch-crash--2026-09-22)을 참고하세요.
 
-현재 소스 버전은 **1.1.4 (app.json의 Android versionCode 32, iOS buildNumber 3)**이며 Settings는 Expo 버전을 읽어 **V1.1.4**를 표시합니다. 2026-10-22 사용자 요청으로 Android 코드만 31→32로 변경했습니다. 아래 정식·QA 산출물에 코드 32가 적용됐습니다. 소스 설정, 로컬 빌드의 버전 코드, 실제 스토어 배포 버전은 별개입니다.
+현재 소스 버전은 **1.1.4 (Android versionCode 33, iOS buildNumber 3)**이며 Settings에는 **V1.1.4**가 표시됩니다. 개별 산출물의 버전과 확인 범위는 아래 기록을 따릅니다.
 
 **2026-10-20 도구 체인 업그레이드:** Expo 58.0.16 / React Native 0.88.0 / AGP 9.2.1, compileSdk 37 / targetSdk 36, AGP 내장 R8 9.2.14를 적용했습니다. Windows CMake 경로 길이 오류와 R8이 Room 생성자를 제거해 발생한 시작 충돌을 수정했습니다. 수정 QA APK는 `compile-ok`이며 Galaxy에서 재시작, 테스트 UMP 거부·동의·개인정보 재변경, 테스트 배너·보상 광고 및 보상 후 잠금 해제를 확인했습니다. 당시 수정 QA 재빌드는 Gradle 6분 50초(72 executed / 1138 up-to-date)였습니다. 최신 production 빌드 기록은 아래에서 구분합니다. 당시 구매 화면은 비활성 상태였으며 결제·복원과 iOS는 검증 범위 밖이었습니다. 이 APK는 테스트 광고·EEA QA 설정이 포함되어 스토어 제출용이 아닙니다. [빌드 기록](docs/SIGNING_POLICY.md#combined-exporn-upgrade-assessment--2026-10-20)과 [광고 QA 범위](docs/ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20)를 참고하세요.
 
@@ -460,7 +466,7 @@ side-led-banner-app/
 
 ## 스토어 버전과 제출 상태
 
-현재 소스는 1.1.4 (Android 32, iOS 3)입니다. 최신 확인된 정식 Android APK/AAB는 위 11월 4일 빌드이며, 최신 Android 실기기 QA는 위 11월 16일 ARM64 테스트 APK 기록을 따릅니다. Play Console의 출시 버전과 코드 32 사용 가능 여부는 별도 확인이 필요합니다.
+11월 18일 Play Console에서 Android 프로덕션 출시 **1.1.3 (31)**과 프로덕션 초안 **1.1.4 (32)**를 확인했습니다. 로컬 Android 빌드 기본값은 **1.1.4 (33)**입니다. [현재 문서의 기준](#현재-문서의-기준)에 최신 산출물과 검증 범위를 정리했습니다.
 
 TypeScript 검증은 node_modules와 생성 산출물 artifacts를 제외합니다. 과거 빌드 복사본을 현재 소스로 중복 검사하지 않도록 범위를 고정했습니다.
 

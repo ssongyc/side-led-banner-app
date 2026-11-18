@@ -47,14 +47,14 @@ export default function ShopScreen() {
     notice === "verificationFailed" || paymentPending
   );
   const displayedPrice = price ? formatShopPrice(price.displayPrice, price.currency) : "";
-  const actionText = isPremium ? label("owned") :
-    operation === "purchasing" || operation === "restoring" ? label(operation) :
+  const actionText = operation === "purchasing" || operation === "restoring" ? label(operation) :
       textSectionLabel("shopBuy");
   const notices = [
     label("loading"), label("unavailable"), label("error"), label("cancelled"),
     label("pending"), label("purchased"), label("restored"), label("nothingToRestore"), label("verificationFailed"),
   ];
-  const statusText = paymentPending && !isPremium ? label("pending") :
+  const statusText = isPremium && notice === "purchased" ? "" :
+    paymentPending && !isPremium ? label("pending") :
     notice ? label(notice) : operation === "loading" ? label("loading") : "";
 
   useFocusEffect(useCallback(() => {
@@ -78,16 +78,16 @@ export default function ShopScreen() {
     rewardAdLabel("rewardBenefitOutlineShadow"),
   ];
 
-  function renderRestore(inHeader: boolean) {
+  function renderRestore() {
     return (
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ disabled: !canRestore, busy }}
         disabled={!canRestore}
         onPress={() => { void restorePremium(); }}
-        style={[inHeader ? styles.headerRestore : styles.restore, !canRestore && styles.disabled]}
+        style={[styles.restore, !canRestore && styles.disabled]}
       >
-        <Text allowFontScaling={false} style={inHeader ? styles.headerRestoreText : styles.restoreText}>
+        <Text allowFontScaling={false} style={styles.restoreText}>
           {textSectionLabel("restorePreviousPurchase")}
         </Text>
       </Pressable>
@@ -110,31 +110,44 @@ export default function ShopScreen() {
               <Text allowFontScaling={false} style={styles.restoreText}>{label("retry")}</Text>
             </Pressable>
           )}
-          {renderRestore(false)}
-          <View style={styles.priceSlot}>
-            <Text allowFontScaling={false} style={styles.price}>
-              {isPremium ? "" : displayedPrice}
-            </Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !canBuy, busy }}
-            disabled={!canBuy}
-            onPress={() => { if (price) void buyPremium(price); }}
-            style={[styles.buy, !canBuy && !isPremium && styles.disabled]}
-          >
-            <LinearGradient
-              colors={["#FF8900", "#FF6500"]}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-              style={styles.buyFill}
-            >
-              <ReservedText
-                text={actionText}
-                variants={[textSectionLabel("shopBuy"), label("owned"), label("purchasing"), label("restoring")]}
-                textStyle={styles.buyText}
-              />
-            </LinearGradient>
-          </Pressable>
+          {isPremium ? (
+            <View style={styles.ownedStatus} accessibilityLiveRegion="polite">
+              <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                <Ionicons name="checkmark" size={20} color="#913A00" />
+              </View>
+              <Text allowFontScaling={false} style={[styles.buyText, styles.ownedText]}>
+                {label("owned")}
+              </Text>
+            </View>
+          ) : (
+            <>
+              <View style={styles.priceSlot}>
+                <Text allowFontScaling={false} style={styles.price}>
+                  {displayedPrice}
+                </Text>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !canBuy, busy }}
+                disabled={!canBuy}
+                onPress={() => { if (price) void buyPremium(price); }}
+                style={[styles.buy, !canBuy && styles.disabled]}
+              >
+                <LinearGradient
+                  colors={["#FF8900", "#FF6500"]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={styles.buyFill}
+                >
+                  <ReservedText
+                    text={actionText}
+                    variants={[textSectionLabel("shopBuy"), label("purchasing"), label("restoring")]}
+                    textStyle={styles.buyText}
+                  />
+                </LinearGradient>
+              </Pressable>
+            </>
+          )}
+          {renderRestore()}
         </View>
       </View>
     );
@@ -193,7 +206,6 @@ export default function ShopScreen() {
             {textSectionLabel("shop")}
           </Text>
         </View>
-        {renderRestore(true)}
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -202,7 +214,7 @@ export default function ShopScreen() {
             LED POP PRO
           </Text>
           <Text allowFontScaling={false} style={styles.description}>
-            {textSectionLabel("premiumProductDescription")}
+            {isPremium ? label("ownedDescription") : textSectionLabel("premiumProductDescription")}
           </Text>
           <View style={styles.benefits}>
             {benefits.map((benefit, index) => (
@@ -230,8 +242,6 @@ const styles = StyleSheet.create({
   header: { paddingBottom: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#E7E7E7" },
   backButton: { minWidth: 48, minHeight: 48 },
   headerTitle: { flex: 1 },
-  headerRestore: { minHeight: 48, maxWidth: "52%", justifyContent: "center", paddingLeft: 12 },
-  headerRestoreText: { ...uiThemeFontStyle, color: "#747474", fontSize: 12, textAlign: "right" },
   scroll: { flex: 1 },
   scrollContent: { flexGrow: 1 },
   content: { width: "100%", maxWidth: 600, alignSelf: "center", paddingHorizontal: 20, paddingTop: 24, paddingBottom: 24 },
@@ -253,6 +263,8 @@ const styles = StyleSheet.create({
   buy: { borderRadius: 14, shadowColor: "#FF7800", shadowOpacity: 0.18, shadowOffset: { width: 0, height: 5 }, shadowRadius: 8, elevation: 3 },
   buyFill: { minHeight: 52, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, justifyContent: "center" },
   buyText: { ...uiThemeFontStyle, color: "#FFFFFF", fontSize: 16, fontWeight: "700", textAlign: "center" },
+  ownedStatus: { minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 16, paddingVertical: 14, borderRadius: 14, backgroundColor: "#FFF0E0" },
+  ownedText: { color: "#913A00", flexShrink: 1 },
   footer: { backgroundColor: "#3D3D3D", paddingTop: 4, paddingHorizontal: 16 },
   footerContent: { width: "100%", maxWidth: 600, alignSelf: "center", flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 4 },
   logoLink: { minWidth: 100, minHeight: 48, justifyContent: "center" },

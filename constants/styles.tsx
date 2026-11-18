@@ -318,6 +318,15 @@ export const rewardAdModalStyles = StyleSheet.create({
     color: "#1A1A1A",
     textAlign: "center",
     lineHeight: moderateScale(26),
+    marginBottom: 8,
+    paddingHorizontal: 10,
+  },
+  rewardDescription: {
+    ...uiThemeFontStyle,
+    fontSize: moderateScale(14),
+    lineHeight: moderateScale(20),
+    textAlign: "center",
+    color: "#444444",
     marginBottom: 24,
     paddingHorizontal: 10,
   },
@@ -342,19 +351,6 @@ export const rewardAdModalStyles = StyleSheet.create({
     fontWeight: "500",
     color: "#333333",
     lineHeight: moderateScale(21),
-  },
-  proActiveBadge: {
-    alignSelf: "center",
-    backgroundColor: "rgba(0,0,0,0.55)",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginBottom: 16,
-  },
-  proActiveBadgeText: {
-    fontSize: moderateScale(12),
-    fontWeight: "600",
-    color: "#fff",
   },
   modalBody: {
     flexGrow: 0,
@@ -454,17 +450,17 @@ export const rewardAdModalStyles = StyleSheet.create({
   },
   ctaButtonContent: {
     minHeight: 56,
-    paddingHorizontal: 16,
+    paddingHorizontal: 56,
     paddingVertical: 12,
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "center",
-    gap: 8,
   },
   ctaPlayBg: {
+    position: "absolute",
+    left: 16,
+    top: "50%",
+    transform: [{ translateY: -16 }],
     width: 32,
     height: 32,
-    flexShrink: 0,
   },
   ctaButtonText: {
     fontSize: 15,
@@ -735,26 +731,6 @@ export const settingsFooterStyles = StyleSheet.create({
   separator: {
     fontSize: moderateScale(11),
     color: "#CCCCCC",
-  },
-  containerDark: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 14,
-    paddingBottom: 14,
-    paddingHorizontal: 20,
-    gap: 12,
-    backgroundColor: "#3F3F3F",
-  },
-  linkTextDark: {
-    fontSize: moderateScale(12),
-    color: "#E8E3EC",
-    fontWeight: "500",
-  },
-  separatorDark: {
-    fontSize: moderateScale(11),
-    color: "#AFA9B8",
   },
 });
 

@@ -399,3 +399,13 @@ Dependency schema 2 and native schema 4 now remove only the root `package.json.v
 - 전체 로그 1,921줄 검토, BUILD SUCCESSFUL, 기존 서명·패키지·target SDK 36·ZIP 정렬과 R8 설정 확인. 동일 빌드 매핑 SHA-256 `0288FC2FF25777D5A5BBC26EF6C0F9EC34C411BCFE6AE7FF9E043AEF4E9B49BF` 보관. 기존 AGP/Gradle/Kotlin 폐기 예정 API 경고가 있습니다. AAB 지표 검증은 APK-only이므로 해당하지 않습니다.
 - APK: `artifacts/apk-runs/20261117-194130-f9692cbb/apk-deliveries/20261117-195338-e24ae110b6a1464d983fcdba94fe3fc1/LedPopV114.apk`, SHA-256 `BDD078B374B0B768CE035A9465DA34D248ADB4EFC6D50524DF1FD76D7948CF5D`; export `2026-11-18T00:53:40.4581732Z` (Toronto 11월 17일 19:53).
 - Galaxy 덮어 설치 후 설치 해시·번들 소스 일치와 구매 복원·연결 끊김 복구를 확인했습니다. 신규 거래와 환불 원인의 구분은 [IAP_SETUP](../IAP_SETUP.md#구매-없음-원인-및-연결-복구-후속-확인--2026-11-17)에 기록했습니다. Play 업로드·iOS 검증·Git 전달은 수행하지 않았습니다.
+
+
+## Shop 디자인 포함 ARM64 테스트 APK — 2026-11-17
+
+- 실행 `20261117-212140-85edd896`, clean main `d31d31cbb78a9412a1c01e78cf7db77951ee52a5`, V1.1.4 (33). 최신 Shop UI·Settings Back·결제 연결 복구를 포함합니다. `-AdProfile test -RewardExpiryQa -Arm64Qa -VersionCode 33`으로 기존 G: 빌드 경로·캐시·서명을 유지했습니다. AAB는 만들지 않았습니다.
+- 의존성 설치는 생략했습니다. 테스트 광고 프로필로 네이티브 설정을 갱신하고 `.gradle`, `build`, `app/build`를 복원했습니다. 전체 1,326.29초(22분 6초), Gradle 17분 38초; 1,238개 작업 중 80개 실행·1개 캐시·1,157개 up-to-date. 프로필 변경에 따른 네이티브 준비와 R8 재실행이 있어 이전 ARM64 증분 빌드와 동일 조건의 속도 비교는 아닙니다.
+- 전체 컴파일 출력 1,901줄 검토, BUILD SUCCESSFUL. 기존 AGP/Kotlin 폐기 예정 API·색상·manifest 병합·Expo AdMob 플러그인 경고가 남으며 유효 manifest·서명·정렬 검사는 통과했습니다. 동일 빌드 R8 매핑도 보관했습니다.
+- 공식 Android AdMob 테스트 App ID·배너·보상형 ID, 일반 UMP의 네이티브 브리지와 남아 있는 SDK 구현 클래스, ARM64-only·16KiB ELF/ZIP 정렬과 번들 소스 일치를 포함한 174개 산출물 검사가 통과했습니다. R8가 UserMessagingPlatform 진입 클래스를 제거/인라인했으므로 남아 있는 동의 SDK 구현과 브리지를 실제 DEX와 대조했습니다.
+- Hermes 바이트코드에서 PRO_REWARD_DURATION_MS에 연결된 60,000ms 상수와 QA 전용 저장 키를 확인했고 정식 보상 저장 키는 이 QA 번들에 없었습니다. 보상 팝업·번역은 커밋 소스와 일치하며 문구를 바꾸지 않았습니다. 영구 구매 시간 제한은 추가하지 않았습니다. 강제 EEA는 설정하지 않았고 실제 동의창·광고·보상 만료·새 Shop의 기기 실행은 이번 빌드 작업에서 확인하지 않았습니다.
+- APK: `artifacts/apk-runs/20261117-212140-85edd896/apk-deliveries/20261117-214345-863069fbd58349b1bf11da787c70ba14/LedPopV114.apk`, 75.44MiB, SHA-256 `3EDC50BF2A4DF0373B96D840746F987F6102441B291ADDE6D7F6B3524A5CADC6`; export `2026-11-18T02:43:46.8872087Z` (Toronto 11월 17일 21:43). 증거: 같은 실행 폴더의 `qa-artifact-verification.json`, `qa-reward-bytecode.txt`, `stage-timings.json`.

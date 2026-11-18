@@ -266,6 +266,9 @@ export function RewardAdModal({
             >
               {rewardAdLabel("rewardHeaderBadge")}
             </Text>
+            <Text style={styles.rewardDescription} allowFontScaling={false}>
+              {rewardAdLabel("rewardDescription")}
+            </Text>
 
           <RewardBenefits rewardAdLabel={rewardAdLabel} />
         </View>
