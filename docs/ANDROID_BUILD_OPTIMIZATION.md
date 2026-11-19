@@ -4,6 +4,14 @@
 
 The initial review inspected the local release wrapper and retained build logs without running a build. A later user-authorized production build measured the applied changes; its result is recorded below. No lint, test, upload, deployment, or Play Console change was run as part of the documentation update.
 
+## Production build with Watch Ad alignment — 2026-11-18
+
+- Run 20261118-232746-d9c9d2f0 built clean main 74a509d as V1.1.4 (33), reused G: dependency and native outputs, and derived the signed universal APK from one signed AAB with bundletool 1.18.3. Gradle succeeded in 10m34s with 72 tasks executed and 1,207 up to date. The wrapper took about 11m10s and reused the R8 output.
+- Both files passed 479 release checks. Artifact checks confirmed production AdMob IDs, normal Google UMP, a two-hour reward, the Play product and public licensing key, and exact current Shop, consent and Watch Ad source. AAB SHA-256: 1602B9D016ED34F50AB7A03432DFE3A3543CF7128C79D03987E2B0B5A6907F1A. APK SHA-256: 9F1321F31518419DB7A27F48C0D80902A9E4F5A965179CA4C56095AFD567EC42.
+- The Galaxy installation matched the APK hash. Shop showed ₩7,500 and Restore below Buy. Restore reported no owned purchase. The official Google Play license-test sheet showed the matching price and no-charge notice. Cancelling returned to Shop with Buy enabled. The earlier build covered a completed test purchase and successful restore of an owned product.
+- Galaxy accessibility bounds placed the Watch Ad icon at the button's vertical center and its visible text box within 0.5 px of center. This checked the English ready state without playing an ad. Evidence is in device-watch-ad-layout.json and device-commerce-verification.json under the run directory.
+- Play Console showed production 1.1.3 (31) and code 32 as the newest uploaded bundle and a production draft. The check was read-only.
+
 ## Production rebuild V1.1.4 (33) — 2026-11-18
 
 - Run 20261118-223109-945aeb55 built clean main 2b73df9 after the G: drive was reconnected. It reused the prepared dependency and native caches, ran bundleRelease once, and generated a matching universal APK with bundletool 1.18.3.

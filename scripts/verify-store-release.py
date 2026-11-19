@@ -144,6 +144,9 @@ def verify(args, out, report):
           and "sdkVersion:'24'" in badging
           and re.search(r"compileSdkVersion[^\n]*=\(type 0x10\)0x" + format(compile_sdk, "x") + r"\b", manifest))
     app = tree.find("application")
+    ad_activity = app.find(f"activity[@{a}name='com.google.android.gms.ads.AdActivity']")
+    check("aabAdActivityFullscreen", ad_activity is not None
+          and ad_activity.get(a+"theme") == "@android:style/Theme.Translucent.NoTitleBar.Fullscreen")
     check("notDebuggable", app.get(a+"debuggable", "false") == "false"
           and "application-debuggable" not in badging
           and not re.search(r"android:debuggable[^\n]*0xffffffff", manifest))

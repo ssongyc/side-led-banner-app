@@ -9,9 +9,13 @@
 
 ## 현재 문서의 기준
 
-- **최신 로컬 출시 APK/AAB — 2026-11-18:** Android 1.1.4 (33), 실행 `20261118-223109-945aeb55`, 소스 `2b73df9`. 운영 AdMob, 일반 Google UMP 및 2시간 보상을 포함하며 출시 검사 479개를 통과했습니다. 갤럭시에서 설치 해시, Shop 가격, Google Play 무청구 테스트 결제창, 취소 후 복귀, 구매 내역이 없는 계정의 복원 조회를 확인했습니다. 구매 완료·Pro 복원과 Test Ad 배너 확인은 아래 직전 출시 APK의 기록입니다. [빌드와 검증 결과](docs/ANDROID_BUILD_OPTIMIZATION.md#production-rebuild-v114-33--2026-11-18)
+- **최신 로컬 출시 APK/AAB — 2026-11-18:** Android 1.1.4 (33), 실행 `20261118-232746-d9c9d2f0`, 소스 `74a509d`. Watch Ad 세로 정렬과 운영 AdMob·일반 UMP·2시간 보상이 포함됩니다. 출시 검사 479개를 통과했고 갤럭시에서 Shop 가격, 무청구 테스트 결제창·취소, 구매 내역 없는 계정의 복원 조회 및 Watch Ad 영어 문구와 아이콘의 중앙 좌표를 확인했습니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-watch-ad-alignment--2026-11-18)
 
-- **Watch Ad 세로 정렬:** 재생 아이콘과 Watch Ad·준비 중 문구를 버튼 높이의 중앙에 배치합니다. 여러 줄 번역에 필요한 높이를 확보하며, 문구의 가로 중앙 정렬도 유지합니다. 이 변경은 소스에 반영됐으며 위 APK/AAB 생성 이후 작업입니다. [광고 버튼 레이아웃](docs/ADVERTISING.md#watch-ad-버튼의-세로-정렬)
+- **이전 로컬 재빌드 APK/AAB — 2026-11-18:** Android 1.1.4 (33), 실행 `20261118-223109-945aeb55`, 소스 `2b73df9`. 운영 AdMob, 일반 Google UMP 및 2시간 보상을 포함하며 출시 검사 479개를 통과했습니다. 갤럭시에서 설치 해시, Shop 가격, Google Play 무청구 테스트 결제창, 취소 후 복귀, 구매 내역이 없는 계정의 복원 조회를 확인했습니다. 구매 완료·Pro 복원과 Test Ad 배너 확인은 아래 직전 출시 APK의 기록입니다. [빌드와 검증 결과](docs/ANDROID_BUILD_OPTIMIZATION.md#production-rebuild-v114-33--2026-11-18)
+
+- **Android 광고 화면 수정 — 소스:** 보상형 광고 창에 제목과 상태 표시줄이 없는 전체화면 테마를 지정했습니다. 설정 하단 배너에서 Google 광고 화면을 열었다가 돌아올 때는 설정과 배너가 이전 높이·여백을 유지하고, 창이 안정되면 실제 크기를 반영합니다. 두 수정은 위 출시 APK/AAB를 만든 뒤 반영했으며, 새 빌드와 갤럭시 복귀 화면은 미검증입니다. [보상형 광고 전체화면](docs/ADVERTISING.md#android-보상형-광고-전체화면), [설정 배너 복귀](docs/ADVERTISING.md#android-설정-배너에서-복귀할-때-레이아웃-유지)
+
+- **Watch Ad 세로 정렬:** 재생 아이콘과 Watch Ad·준비 중 문구를 버튼 높이의 중앙에 배치합니다. 여러 줄 번역에 필요한 높이를 확보하며, 문구의 가로 중앙 정렬도 유지합니다. 이 변경은 최신 출시 APK/AAB에 포함됩니다. [광고 버튼 레이아웃](docs/ADVERTISING.md#watch-ad-버튼의-세로-정렬)
 
 - **직전 로컬 출시 APK/AAB — 2026-11-18:** Android 1.1.4 (33), 실행 `20261118-114825-c8bd2378`, 소스 `7f9672c`. 운영 AdMob, 일반 Google UMP, 2시간 보상과 최신 Shop을 포함합니다. 서명·16 KiB 정렬·동일 R8 매핑을 포함한 출시 파일 검사 479개를 통과했습니다. 갤럭시에서 무청구 구매·복원·재실행 후 Pro 유지와 환불 후 권한 해제를 확인했습니다. 사용자가 AdMob 테스트 기기 등록 후 원본 출시 APK의 설정 하단에서 Test Ad 배너를 확인했습니다. [출시 빌드와 검증 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-v114-33--2026-11-18)
 

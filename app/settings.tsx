@@ -1,6 +1,6 @@
-import { AdPrivacyOptions, useAdConsent } from '@/ads/adConsent';
+import { AdPrivacyOptions } from '@/ads/adConsent';
 import { usePremium } from "@/contexts/premiumContext";
-import BannerAdComponent from "@/components/admob/bannerAd";
+import BannerAdComponent, { useSettingsBannerViewport } from "@/components/admob/bannerAd";
 import type { AppLocaleKey } from "@/constants/language";
 import { settingsStyles } from "@/constants/settingsStyles";
 import { SUNNY_LINKS } from "@/constants/sunnyLinks";
@@ -37,23 +37,10 @@ export default function SettingsScreen() {
   const { adsAllowed } = usePremium();
   const router = useRouter();
   const liveInsets = useSafeAreaInsets();
-  const { width: windowW, height: liveWindowH } = useWindowDimensions();
-  const { privacyOpen } = useAdConsent();
-  const preserveLayout = Platform.OS === "android" && privacyOpen;
-  const [stableLayout, setStableLayout] = useState({
-    width: windowW, height: liveWindowH, insets: liveInsets,
-  });
-  if ((!preserveLayout || stableLayout.width !== windowW) &&
-      (stableLayout.width !== windowW || stableLayout.height !== liveWindowH ||
-       stableLayout.insets.top !== liveInsets.top ||
-       stableLayout.insets.bottom !== liveInsets.bottom ||
-       stableLayout.insets.left !== liveInsets.left ||
-       stableLayout.insets.right !== liveInsets.right)) {
-    setStableLayout({ width: windowW, height: liveWindowH, insets: liveInsets });
-  }
-  const frozenLayout = preserveLayout && stableLayout.width === windowW ? stableLayout : null;
-  const insets = frozenLayout?.insets ?? liveInsets;
-  const windowH = frozenLayout?.height ?? liveWindowH;
+  const { height: liveWindowH } = useWindowDimensions();
+  const bannerViewport = useSettingsBannerViewport();
+  const insets = bannerViewport?.insets ?? liveInsets;
+  const windowH = bannerViewport?.height ?? liveWindowH;
   const [languageDropdownContentHeight, setLanguageDropdownContentHeight] =
     useState(0);
   const [languageDropdownWidth, setLanguageDropdownWidth] = useState(0);
