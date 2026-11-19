@@ -150,6 +150,13 @@ def verify(args, out, report):
     check("notDebuggable", app.get(a+"debuggable", "false") == "false"
           and "application-debuggable" not in badging
           and not re.search(r"android:debuggable[^\n]*0xffffffff", manifest))
+    wifi_feature = "android.hardware.wifi"
+    wifi_entries = [feature for feature in tree.findall("uses-feature")
+                    if feature.get(a+"name") == wifi_feature]
+    check("aabWifiOptional", len(wifi_entries) == 1 and wifi_entries[0].get(a+"required") == "false")
+    check("apkWifiOptional", f"uses-feature-not-required: name='{wifi_feature}'" in badging
+          and f"uses-feature: name='{wifi_feature}'" not in badging
+          and f"uses-implied-feature: name='{wifi_feature}'" not in badging)
     permissions = {x.get(a+"name") for x in tree.findall("uses-permission")}
     forbidden = {"android.permission.CAMERA", "android.permission.RECORD_AUDIO"}
     check("permissions", not permissions & forbidden and not any(x in manifest for x in forbidden))

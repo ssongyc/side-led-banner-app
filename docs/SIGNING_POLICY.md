@@ -175,6 +175,13 @@ Results and same-build symbols are retained under the run's release-verification
 Optional Configuration Cache, Daemon reuse and Gradle worker 1/2 comparisons are opt-in; defaults retain one worker and no reusable daemon. Configuration-cache errors fail the run. Signing credentials and cached signing configuration must remain local. See the 5 → 3 → 4 sequence in the optimization document; these options and 1.1.0(28) are not yet build-verified.
 
 
+## TestFlight 1.1.5 (5) — 2026-11-19
+
+- EAS built iOS 1.1.5 (5) from `879f8e9`. Apple reported build `cd3175bf-bac6-4691-860e-f8387ff09aab` as `VALID` and available in the internal TestFlight group LPT. The IPA and Apple status record are in `artifacts/testflight-115-5/`.
+- The US English product page uses the final v4 header and search-result images, with the full iPhone frame visible in both. The listing description, release notes, and keywords were updated for all seven existing locales. Six non-English subtitles were localized, and the official Sunny Innovation Lab site is the marketing URL.
+- The US app download is free and the non-consumable LED POP Pro is US$4.99. The iPhone Shop screenshot and review notes completed the product metadata. The Paid Apps Agreement was active in the supplied Business screenshot. The copyright text was retained at the user's request, and promotional text and app data collection declarations were outside the final review scope.
+- The user submitted build 5 and the permanent ad removal product together. App Store Connect reported both as `WAITING_FOR_REVIEW` on receipt. The supplied iPhone Shop screenshot shows the localized price and Buy and Restore controls. Sandbox purchase completion and restoration remain unverified.
+
 ## TestFlight 1.1.5 (4) — 2026-11-19
 
 - The user approved iOS 1.1.5 after App Store Connect showed 1.1.4 was already distributed. The isolated iOS build copy used `6c60018` with marketing version 1.1.5 and local build 4. The existing macOS-compatible signing adapter and provisioning profile were reused. Android and main kept their existing version configuration.

@@ -4,12 +4,23 @@
 
 The initial review inspected the local release wrapper and retained build logs without running a build. A later user-authorized production build measured the applied changes; its result is recorded below. No lint, test, upload, deployment, or Play Console change was run as part of the documentation update.
 
+## Wi-Fi hardware filtering in Google Play
+
+Play Console blocked review of the Android 1.1.4 (33) production draft because it treated Wi-Fi hardware as required. The local code 33 AAB contains ACCESS_WIFI_STATE and no explicit Wi-Fi feature entry. The release manifest merger report attributes the permission to expo-network, which the app uses to track connectivity for ad loading.
+
+The Expo Android release plugin now declares Wi-Fi hardware optional while keeping the network permission. Release verification checks the final AAB manifest and APK badging for this hardware setting. The existing code 33 AAB predates the fix. A new signed AAB and subsequent Play Console verification are pending.
+
+## Production build with startup recovery — 2026-11-19
+
+- Run `20261119-023304-5e464521` built Android 1.1.4 (33) from `879f8e9`. The signed AAB and its universal APK include startup recovery and the updated rewarded popup spacing and status placement.
+- The 480 release checks passed. The bundle source matched the Shop, startup, rewarded popup, consent and Pro storage sources, and the APK and AAB contained the same Hermes bundle. The build report records the exact artifact hashes. This run did not include device QA or a Play upload.
+
 ## Production build with rewarded popup layout — 2026-11-19
 
 - Run `20261119-014712-dc1aa4b4` built Android 1.1.4 (33) from clean main `206103f`. It reused the existing G: dependency and native outputs and generated the signed universal APK from the signed AAB.
 - All 480 release checks passed, including production AdMob, normal Google UMP, the two-hour reward, signing, 16 KiB alignment and matching R8 mapping. Gradle took 12m06s with 72 tasks executed and 1,207 up to date. The full run took 13m32s.
 - The Galaxy SM-M336K installed APK matched the delivery hash. Shop showed ₩7,500. The no-charge test checkout could be cancelled and reopened. A completed purchase unlocked Pro, which survived a cold restart and was confirmed by manual restoration.
-- An active temporary Pro reward unlocked the features that normally open the popup, so its layout was not verified. Live ad serving and standard EEA consent also remain unverified for this APK. The later 15dp spacing, ad status placement and startup recovery changes are source-only. The AAB was retained for manual upload.
+- An active temporary Pro reward unlocked the features that normally open the popup, so its layout was not verified. Live ad serving and standard EEA consent also remain unverified for this APK. The 15dp spacing, ad status placement and startup recovery changes first appeared in the later run above. The AAB was retained for manual upload.
 
 ## Production build with Android ad window fixes — 2026-11-19
 

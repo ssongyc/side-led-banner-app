@@ -11,13 +11,17 @@
 
 - **시작 오류 복구 — 현재 소스:** 로딩 이미지가 실패해도 저장 설정·폰트·첫 화면이 준비되면 편집 화면으로 전환합니다. 갤럭시에서 기존 출시 APK를 재시작했을 때는 오류가 재현되지 않았습니다. 수정본의 Android·iOS 실기기 동작은 미검증입니다.
 
-- **최신 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-014712-dc1aa4b4`, 소스 `206103f`. 혜택 아래 버튼 배치와 흰 여백을 포함합니다. 운영 AdMob·일반 Google UMP·2시간 보상 및 출시 파일 검사 480개를 확인했습니다. 갤럭시에서 ₩7,500 가격, 결제 취소 후 복귀, 무청구 구매, 재실행 후 Pro 유지와 복원을 확인했습니다. 임시 Pro 보상으로 새 팝업은 열지 못했고, 실광고와 일반 EEA 동의창도 미검증입니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-rewarded-popup-layout--2026-11-19)
+- **최신 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-023304-5e464521`, 소스 `879f8e9`. 시작 오류 복구와 보상 팝업의 15dp 간격·상태 안내 재배치를 포함합니다. 기존 출시 파일 검사 480개와 Shop·광고·시작 화면 관련 번들 소스 대조를 통과했습니다. 이 실행의 실기기 QA는 하지 않았습니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-startup-recovery--2026-11-19)
 
-- **이전 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-001934-7ed6fc53`, 소스 `6c60018`. 운영 AdMob·일반 Google UMP·2시간 보상과 Android 광고 화면 수정을 포함합니다. 출시 파일 검사 480개를 통과했고, 갤럭시에서 ₩7,500 가격, 무청구 구매, 앱 재실행 후 Pro 유지와 구매 복원을 확인했습니다. 새 APK의 EEA 동의창, 과금 실광고 및 광고 복귀 화면은 미검증입니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-android-ad-window-fixes--2026-11-19)
+- **Play Console 프로덕션 초안 — 2026-11-19:** 1.1.4 (33)의 출시 노트를 영어, 일본어, 한국어, 중국어 간체·번체로 저장했습니다. Google Play에서 필수 Wi-Fi 하드웨어 선언을 이유로 심사 제출을 차단했습니다. Expo 소스에 Wi-Fi 선택 선언을 추가했으며, 수정 AAB 생성과 Play 재확인은 남아 있습니다. [원인 및 수정 범위](docs/ANDROID_BUILD_OPTIMIZATION.md#wi-fi-hardware-filtering-in-google-play)
 
-- **최신 TestFlight — 2026-11-19:** iOS 1.1.5 (4), 소스 `6c60018`의 iOS 빌드 복사본. Apple 처리 완료 후 기존 내부 그룹 LPT에서 설치할 수 있습니다. IPA 서명, React 프레임워크, dSYM, 운영 AdMob·일반 Google UMP 설정을 확인했습니다. iPhone 시작과 구매·복원은 미검증입니다. [TestFlight 검증](docs/SIGNING_POLICY.md#testflight-115-4--2026-11-19)
+- **이전 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-014712-dc1aa4b4`, 소스 `206103f`. 혜택 아래 버튼 배치와 흰 여백을 포함합니다. 운영 AdMob·일반 Google UMP·2시간 보상 및 출시 파일 검사 480개를 확인했습니다. 갤럭시에서 ₩7,500 가격, 결제 취소 후 복귀, 무청구 구매, 재실행 후 Pro 유지와 복원을 확인했습니다. 임시 Pro 보상으로 새 팝업은 열지 못했고, 실광고와 일반 EEA 동의창도 미검증입니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-rewarded-popup-layout--2026-11-19)
 
-- **보상 광고 팝업 — 현재 소스:** 마지막 혜택 행과 Watch Ad 사이를 15dp로 조정했습니다. 준비 중·실패·만료 안내를 구매 버튼 아래에 가운데 정렬하고 그 아래에 여백을 둡니다. 이 변경과 시작 오류 복구는 최신 Android 출시 파일 및 TestFlight 1.1.5 (4) 생성 이후 소스에 반영했으며 실기기 동작은 미검증입니다. [팝업 레이아웃](docs/ADVERTISING.md#watch-ad-간격과-구매-버튼-아래-광고-상태)
+- **Android 광고 창 수정 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-001934-7ed6fc53`, 소스 `6c60018`. 운영 AdMob·일반 Google UMP·2시간 보상과 Android 광고 화면 수정을 포함합니다. 출시 파일 검사 480개를 통과했고, 갤럭시에서 ₩7,500 가격, 무청구 구매, 앱 재실행 후 Pro 유지와 구매 복원을 확인했습니다. 새 APK의 EEA 동의창, 과금 실광고 및 광고 복귀 화면은 미검증입니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-android-ad-window-fixes--2026-11-19)
+
+- **최신 TestFlight와 App Review 접수 — 2026-11-19:** iOS 1.1.5 (5), 소스 `879f8e9`. Apple이 빌드를 `VALID`로 처리했고 내부 그룹 LPT에 배포됐습니다. 사용자가 빌드 5와 Pro 영구 광고 제거 상품을 같은 App Review 건에 제출했으며 접수 당시 두 항목은 심사 대기 상태였습니다. iPhone Shop 가격 표시는 확인했고 Sandbox 구매 완료와 복원은 미검증입니다. [TestFlight 및 심사 기록](docs/SIGNING_POLICY.md#testflight-115-5--2026-11-19)
+
+- **보상 광고 팝업 — 현재 소스:** 마지막 혜택 행과 Watch Ad 사이를 15dp로 조정했습니다. 준비 중·실패·만료 안내를 구매 버튼 아래에 가운데 정렬하고 그 아래에 여백을 둡니다. 이 변경과 시작 오류 복구는 Android 실행 `20261119-023304-5e464521` 및 TestFlight 1.1.5 (5)에 포함되며 실기기 동작은 미검증입니다. [팝업 레이아웃](docs/ADVERTISING.md#watch-ad-간격과-구매-버튼-아래-광고-상태)
 
 - **Watch Ad 정렬 출시 APK/AAB — 2026-11-18:** Android 1.1.4 (33), 실행 `20261118-232746-d9c9d2f0`, 소스 `74a509d`. 출시 검사 479개를 통과했고 갤럭시에서 Shop 가격, 무청구 테스트 결제창·취소, 구매 내역 없는 계정의 복원 조회 및 Watch Ad 영어 문구와 아이콘의 중앙 좌표를 확인했습니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-watch-ad-alignment--2026-11-18)
 
@@ -282,6 +286,8 @@ pwsh -NoProfile -File scripts/android-build-observability.test.ps1
 node scripts/check-reward-expiry.cjs
 node scripts/check-rewarded-lifecycle.cjs
 ```
+
+2026-11-19 Wi-Fi 기기 호환성 후속 점검에서 ESLint 오류·경고 0개, Node 테스트 87개, PowerShell 검사 20개, 보상 만료·광고 수명 주기 검사 2개가 통과했습니다. 별도 매니페스트 fixture에서 Wi-Fi 선언 추가·중복 정리·재실행을 확인했습니다. 추적된 소스와 리소스의 참조를 조사했으며 새 삭제 대상은 확인되지 않았습니다. 수정 APK/AAB 생성과 Play Console 검증은 남아 있습니다.
 
 2026-11-19 후속 점검에서 시작 오류 복구와 광고 상태 안내 재배치를 포함한 소스에 ESLint를 실행해 오류·경고 0개를 확인했습니다. Node 테스트 87개, PowerShell 검사 20개, 보상 만료·광고 수명 주기 검사 2개가 통과했습니다. 추가 삭제를 확정할 미사용 파일·리소스·API는 확인되지 않았습니다. 이 점검 이후의 새 설치 파일과 실기기 시작·팝업 동작은 검증하지 않았습니다.
 
