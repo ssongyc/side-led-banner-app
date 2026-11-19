@@ -4,6 +4,13 @@
 
 The initial review inspected the local release wrapper and retained build logs without running a build. A later user-authorized production build measured the applied changes; its result is recorded below. No lint, test, upload, deployment, or Play Console change was run as part of the documentation update.
 
+## Production build with Android ad window fixes — 2026-11-19
+
+- Run 20261119-001934-7ed6fc53 built 1.1.4 (33) from clean main `6c60018`. It reused G: dependencies and Gradle outputs, regenerated the native project for the manifest plugin, and created the signed universal APK from one signed AAB.
+- All 480 release checks passed, including the fullscreen AdActivity theme, production AdMob, normal Google UMP, two-hour rewards, signing, 16 KiB alignment and matching embedded R8 mapping.
+- The Galaxy SM-M336K installed APK matched the delivery hash. Shop showed ₩7,500. Google Play confirmed a no-charge test purchase, the app enabled Pro, and Pro persisted across a cold restart. A restore with an owned purchase succeeded. Before purchase, restore correctly found no owned product.
+- End-to-end local build and checks took 21m37s. Gradle took 16m17s with 98 tasks executed and 1,181 up to date. The new APK’s ad presentation, Settings return, and EEA dialog were not exercised on-device. The AAB was delivered locally for manual upload.
+
 ## Production build with Watch Ad alignment — 2026-11-18
 
 - Run 20261118-232746-d9c9d2f0 built clean main 74a509d as V1.1.4 (33), reused G: dependency and native outputs, and derived the signed universal APK from one signed AAB with bundletool 1.18.3. Gradle succeeded in 10m34s with 72 tasks executed and 1,207 up to date. The wrapper took about 11m10s and reused the R8 output.

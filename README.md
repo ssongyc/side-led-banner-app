@@ -9,11 +9,17 @@
 
 ## 현재 문서의 기준
 
-- **최신 로컬 출시 APK/AAB — 2026-11-18:** Android 1.1.4 (33), 실행 `20261118-232746-d9c9d2f0`, 소스 `74a509d`. Watch Ad 세로 정렬과 운영 AdMob·일반 UMP·2시간 보상이 포함됩니다. 출시 검사 479개를 통과했고 갤럭시에서 Shop 가격, 무청구 테스트 결제창·취소, 구매 내역 없는 계정의 복원 조회 및 Watch Ad 영어 문구와 아이콘의 중앙 좌표를 확인했습니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-watch-ad-alignment--2026-11-18)
+- **최신 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-001934-7ed6fc53`, 소스 `6c60018`. 운영 AdMob·일반 Google UMP·2시간 보상과 Android 광고 화면 수정을 포함합니다. 출시 파일 검사 480개를 통과했고, 갤럭시에서 ₩7,500 가격, 무청구 구매, 앱 재실행 후 Pro 유지와 구매 복원을 확인했습니다. 새 APK의 EEA 동의창, 과금 실광고 및 광고 복귀 화면은 미검증입니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-android-ad-window-fixes--2026-11-19)
+
+- **최신 TestFlight — 2026-11-19:** iOS 1.1.5 (4), 소스 `6c60018`의 iOS 빌드 복사본. Apple 처리 완료 후 기존 내부 그룹 LPT에서 설치할 수 있습니다. IPA 서명, React 프레임워크, dSYM, 운영 AdMob·일반 Google UMP 설정을 확인했습니다. iPhone 시작과 구매·복원은 미검증입니다. [TestFlight 검증](docs/SIGNING_POLICY.md#testflight-115-4--2026-11-19)
+
+- **보상 광고 팝업 — 현재 소스:** 광고 보기와 LED POP Pro 구매를 혜택 목록 아래로 옮겼습니다. 버튼 아래에 흰 여백을 두고 팝업 높이를 약 5% 늘리도록 조정했습니다. 11월 19일 Android 및 TestFlight 바이너리 제작 이후 변경이며, 새 실기기 화면은 미검증입니다. [팝업 레이아웃](docs/ADVERTISING.md#보상-광고-팝업-버튼과-하단-여백--2026-11-19)
+
+- **Watch Ad 정렬 출시 APK/AAB — 2026-11-18:** Android 1.1.4 (33), 실행 `20261118-232746-d9c9d2f0`, 소스 `74a509d`. 출시 검사 479개를 통과했고 갤럭시에서 Shop 가격, 무청구 테스트 결제창·취소, 구매 내역 없는 계정의 복원 조회 및 Watch Ad 영어 문구와 아이콘의 중앙 좌표를 확인했습니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-watch-ad-alignment--2026-11-18)
 
 - **이전 로컬 재빌드 APK/AAB — 2026-11-18:** Android 1.1.4 (33), 실행 `20261118-223109-945aeb55`, 소스 `2b73df9`. 운영 AdMob, 일반 Google UMP 및 2시간 보상을 포함하며 출시 검사 479개를 통과했습니다. 갤럭시에서 설치 해시, Shop 가격, Google Play 무청구 테스트 결제창, 취소 후 복귀, 구매 내역이 없는 계정의 복원 조회를 확인했습니다. 구매 완료·Pro 복원과 Test Ad 배너 확인은 아래 직전 출시 APK의 기록입니다. [빌드와 검증 결과](docs/ANDROID_BUILD_OPTIMIZATION.md#production-rebuild-v114-33--2026-11-18)
 
-- **Android 광고 화면 수정 — 소스:** 보상형 광고 창에 제목과 상태 표시줄이 없는 전체화면 테마를 지정했습니다. 설정 하단 배너에서 Google 광고 화면을 열었다가 돌아올 때는 설정과 배너가 이전 높이·여백을 유지하고, 창이 안정되면 실제 크기를 반영합니다. 두 수정은 위 출시 APK/AAB를 만든 뒤 반영했으며, 새 빌드와 갤럭시 복귀 화면은 미검증입니다. [보상형 광고 전체화면](docs/ADVERTISING.md#android-보상형-광고-전체화면), [설정 배너 복귀](docs/ADVERTISING.md#android-설정-배너에서-복귀할-때-레이아웃-유지)
+- **Android 광고 화면 수정:** 보상형 광고 창에 제목과 상태 표시줄이 없는 전체화면 테마를 지정했습니다. 설정의 Google 광고 화면에서 돌아오는 동안 배너 자리와 여백을 유지하도록 조정했습니다. 최신 로컬 출시 파일에 포함됐으며 광고 종료 화면과 설정 복귀 동작은 실기기 미검증입니다. [보상형 광고 전체화면](docs/ADVERTISING.md#android-보상형-광고-전체화면), [설정 배너 복귀](docs/ADVERTISING.md#android-설정-배너에서-복귀할-때-레이아웃-유지)
 
 - **Watch Ad 세로 정렬:** 재생 아이콘과 Watch Ad·준비 중 문구를 버튼 높이의 중앙에 배치합니다. 여러 줄 번역에 필요한 높이를 확보하며, 문구의 가로 중앙 정렬도 유지합니다. 이 변경은 최신 출시 APK/AAB에 포함됩니다. [광고 버튼 레이아웃](docs/ADVERTISING.md#watch-ad-버튼의-세로-정렬)
 
@@ -59,7 +65,7 @@
 
 > **TestFlight 1.1.3 (1) 시작 충돌 확인:** 사용자 제공 iPhone 로그는 `ExpoModulesWorklets`가 참조하는 `React.framework` 누락으로 앱 코드 실행 전에 종료됨을 보여줍니다. Apple 경고에는 `ReactNativeDependencies.framework`도 포함됩니다. 이후 제공된 Mac 설정에서는 소스 방식 React Native와 사전 컴파일 Expo 프레임워크의 혼합이 확인되어, package.json에서 iOS autolinking 모듈의 소스 빌드를 명시했습니다. Mac에서 pod install·새 Archive·실기기 실행 확인은 아직 필요합니다. Mac용 읽기 전용 검사와 개발자 전달 사항은 [충돌 기록](docs/SIGNING_POLICY.md#ios-launch-crash--2026-09-22)을 참고하세요.
 
-현재 소스 버전은 **1.1.4 (Android versionCode 33, iOS buildNumber 3)**이며 Settings에는 **V1.1.4**가 표시됩니다. 개별 산출물의 버전과 확인 범위는 아래 기록을 따릅니다.
+메인 소스 기준 버전은 **1.1.4 (Android 버전 코드 33, iOS 빌드 번호 3)**이며 Settings에는 **V1.1.4**가 표시됩니다. 최신 TestFlight의 **1.1.5 (4)**는 iOS 빌드 복사본에만 적용한 버전입니다.
 
 **2026-10-20 도구 체인 업그레이드:** Expo 58.0.16 / React Native 0.88.0 / AGP 9.2.1, compileSdk 37 / targetSdk 36, AGP 내장 R8 9.2.14를 적용했습니다. Windows CMake 경로 길이 오류와 R8이 Room 생성자를 제거해 발생한 시작 충돌을 수정했습니다. 수정 QA APK는 `compile-ok`이며 Galaxy에서 재시작, 테스트 UMP 거부·동의·개인정보 재변경, 테스트 배너·보상 광고 및 보상 후 잠금 해제를 확인했습니다. 당시 수정 QA 재빌드는 Gradle 6분 50초(72 executed / 1138 up-to-date)였습니다. 최신 production 빌드 기록은 아래에서 구분합니다. 당시 구매 화면은 비활성 상태였으며 결제·복원과 iOS는 검증 범위 밖이었습니다. 이 APK는 테스트 광고·EEA QA 설정이 포함되어 스토어 제출용이 아닙니다. [빌드 기록](docs/SIGNING_POLICY.md#combined-exporn-upgrade-assessment--2026-10-20)과 [광고 QA 범위](docs/ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20)를 참고하세요.
 
@@ -272,6 +278,8 @@ pwsh -NoProfile -File scripts/android-build-observability.test.ps1
 node scripts/check-reward-expiry.cjs
 node scripts/check-rewarded-lifecycle.cjs
 ```
+
+2026-11-19 정리에서는 참조가 없는 버튼·설정 스타일 3개를 제거했습니다. ESLint는 오류·경고 없이 통과했고, Node 테스트 87개, PowerShell 검사 20개, 보상 만료·광고 수명 주기 검사 2개가 통과했습니다. 새 팝업의 화면 표시와 스크롤은 실기기 미검증입니다.
 
 2026-11-18 재점검에서 사용하지 않는 웹 UMP 조회 함수를 제거하고, 네이티브 UMP 조회 함수와 네이티브·웹 원격 폰트 캐시 조회 함수를 모듈 내부로 제한했습니다. ESLint, Node 자동 테스트 87개, PowerShell 검사 20개와 보상 만료·광고 수명 주기 검사 2개를 통과했습니다. 출시 APK/AAB와 실기기 결과는 위 빌드 기록을 기준으로 합니다.
 

@@ -114,10 +114,4 @@ export const creditsStyles = StyleSheet.create({
   namesTextLeft: {
     textAlign: "left",
   },
-  subtitleText: {
-    ...uiThemeFontStyle,
-    fontSize: moderateScale(13),
-    fontWeight: "400",
-    color: "#9A9A9A",
-  },
 });

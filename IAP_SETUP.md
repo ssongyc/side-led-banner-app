@@ -2,7 +2,11 @@
 
 > Android와 iOS의 설정에서 Shop을 열어 광고 영구 제거를 구매하거나 복원할 수 있습니다. 양쪽 스토어에서 미국 기준가 US$4.99를 확인했습니다. 현지 가격은 스토어 조회 결과를 사용합니다. 출시 파일에 포함된 범위는 [README](README.md)를 참고하세요.
 
-## 최신 Android 출시 APK 검증 — 2026-11-18
+## 최신 Android 출시 APK 검증 — 2026-11-19
+
+1.1.4 (33) 출시 APK `20261119-001934-7ed6fc53`를 갤럭시 SM-M336K에 설치하고 배포 파일의 해시와 일치하는지 확인했습니다. Shop에서 ₩7,500을 표시했고, 구매 전 복원은 보유 상품 없음으로 응답했습니다. Google Play 무청구 테스트 구매가 완료된 뒤 Pro가 활성화됐고, 앱을 완전히 종료하고 다시 열어도 Pro가 유지됐습니다. 보유한 구매의 수동 복원도 확인했습니다. iOS TestFlight 1.1.5 (4)의 Sandbox 구매와 복원은 아직 확인하지 않았습니다. [출시 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-android-ad-window-fixes--2026-11-19)
+
+## 이전 Android 출시 APK 검증 — 2026-11-18
 
 V1.1.4 (33), 실행 `20261118-114825-c8bd2378`의 출시 APK를 Galaxy에 설치하고 SHA-256 일치를 확인했습니다. Shop에는 ₩7,500과 Buy 아래 복원 버튼 한 개가 표시됐습니다. Google Play 라이선스 테스트 결제를 취소하고 다시 열 수 있었으며, 무청구 주문 완료 후 Purchased가 표시됐습니다. 수동 복원과 앱 종료·재실행 후에도 Pro가 유지됐습니다. 사용자가 테스트 주문을 환불한 뒤에는 재실행 시 Buy가 다시 나타났고 복원 결과에서도 보유한 Pro 구매가 없었습니다. iOS 구매와 차지백은 이번 확인 범위에 포함되지 않습니다. [출시 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-v114-33--2026-11-18)
 

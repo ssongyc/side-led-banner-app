@@ -64,11 +64,6 @@ export const btnStyles = StyleSheet.create({
     alignItems: "center",
     marginRight: 3,
   },
-  contentsInputResetButtonText: {
-    ...uiThemeFontStyle,
-    color: "white",
-    fontSize: moderateScale(25),
-  },
   playResumeButton: {
     flex: 1, // 나머지 3개 슬롯이 고정폭이므로 남는 공간을 전부 채움 (여백 없음)
     justifyContent: "center",
@@ -83,11 +78,6 @@ export const btnStyles = StyleSheet.create({
   playBarSettingsImage: {
     width: 53,
     height: 53,
-  },
-  settingsRowValueButton: {
-    fontSize: 0,
-    color: "black",
-    fontWeight: "400",
   },
   effectItemButton: {
     padding: 10,

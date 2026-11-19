@@ -21,6 +21,7 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
   type ViewProps,
 } from "react-native";
@@ -83,6 +84,13 @@ export function RewardAdModal({
 }: Props) {
   const { rewardAdLabel, resolvedAppLocale } = useSettingsLocalizationContext();
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+  // The iOS editor already sits inside its safe area. Keep the remaining
+  // vertical margin smaller so the card can expand inside that editor.
+  const verticalInsetScale = Platform.OS === "ios" ? 0.6 : 1;
+  // Leave the extra space below the actions, where it can scroll on short screens.
+  const bottomPadding = 84 + Math.round(height * 0.04);
+  const canShowRetry = Boolean(canRetry && onRetry);
   const drag = useRef({ x: 0, y: 0, moved: false });
   const watchAdFontFamily =
     resolvedAppLocale === "ko" || resolvedAppLocale === "en"
@@ -218,7 +226,7 @@ export function RewardAdModal({
   return (
     <Animated.View
       onLayout={showAfterLayout}
-      style={[styles.root, { zIndex: 10000, paddingTop: 12 + insets.top, paddingBottom: 12 + insets.bottom, paddingLeft: 12 + insets.left, paddingRight: 12 + insets.right }, overlayStyle]}
+      style={[styles.root, { zIndex: 10000, paddingTop: 12 + insets.top * verticalInsetScale, paddingBottom: 12 + insets.bottom * verticalInsetScale, paddingLeft: 12 + insets.left, paddingRight: 12 + insets.right }, overlayStyle]}
       pointerEvents={visible ? "auto" : "none"}
       accessibilityViewIsModal={visible}
       importantForAccessibility={visible ? "yes" : "no-hide-descendants"}
@@ -235,7 +243,10 @@ export function RewardAdModal({
       <FireworksBurst visible={visible} />
 
       <View style={styles.card}>
-        <ScrollView style={styles.modalBody} contentContainerStyle={styles.modalBodyContent}
+        <ScrollView style={styles.modalBody}
+          contentContainerStyle={[styles.modalBodyContent, { paddingBottom: bottomPadding }]}
+          automaticallyAdjustContentInsets={false}
+          contentInsetAdjustmentBehavior="never"
           keyboardShouldPersistTaps="handled" canCancelContentTouches
           onTouchStart={event => {
             drag.current = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY, moved: false };
@@ -279,17 +290,18 @@ export function RewardAdModal({
             variants={REWARD_AD_STATUS_TEXTS}
             textStyle={styles.adStatusText}
           />
+          <TouchableOpacity
+            onPress={() => { if (!drag.current.moved && visible && canRetry) onRetry?.(); }}
+            disabled={!canShowRetry}
+            pointerEvents={canShowRetry ? "auto" : "none"}
+            accessibilityRole="button"
+            accessibilityElementsHidden={!canShowRetry}
+            importantForAccessibility={canShowRetry ? "auto" : "no-hide-descendants"}
+            style={[styles.adRetryButton, !canShowRetry && styles.adRetryHidden]}
+          >
+            <Text style={styles.adRetryText} allowFontScaling={false}>{rewardAdLabel("rewardAdRetry")}</Text>
+          </TouchableOpacity>
         </View>
-
-        <View style={styles.modalActions}>
-          <View style={styles.adRetryArea}>
-            {canRetry && onRetry && (
-              <TouchableOpacity onPress={() => { if (!drag.current.moved && visible && canRetry) onRetry(); }}
-                accessibilityRole="button" style={styles.adRetryButton}>
-                <Text style={styles.adRetryText} allowFontScaling={false}>{rewardAdLabel("rewardAdRetry")}</Text>
-              </TouchableOpacity>
-            )}
-          </View>
 
         <TouchableOpacity
           activeOpacity={0.85}
@@ -348,7 +360,6 @@ export function RewardAdModal({
             </Text>
           </TouchableOpacity>
         )}
-        </View>
         </ScrollView>
       </View>
     </Animated.View>

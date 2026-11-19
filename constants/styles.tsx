@@ -332,7 +332,6 @@ export const rewardAdModalStyles = StyleSheet.create({
   },
   benefitContainer: {
     width: "100%",
-    marginBottom: 24,
   },
   benefitRow: {
     flexDirection: "row",
@@ -356,13 +355,12 @@ export const rewardAdModalStyles = StyleSheet.create({
     flexGrow: 0,
     flexShrink: 1,
     minHeight: 0,
+    borderRadius: 32,
+    overflow: "hidden",
   },
   modalBodyContent: {
-    padding: 16,
-  },
-  modalActions: {
-    flexShrink: 0,
-    paddingTop: 8,
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   reservedText: {
     width: "100%",
@@ -387,7 +385,9 @@ export const rewardAdModalStyles = StyleSheet.create({
     justifyContent: "center",
   },
   adStatusArea: {
-    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 8,
     marginBottom: 8,
   },
   adStatusText: {
@@ -397,23 +397,23 @@ export const rewardAdModalStyles = StyleSheet.create({
     color: "#555555",
     textAlign: "center",
   },
-  adRetryArea: {
-    minHeight: 44,
-    flexShrink: 0,
-    alignItems: "center",
-  },
   adRetryButton: {
     minHeight: 44,
-    minWidth: 88,
+    width: 100,
+    flexShrink: 0,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 12,
+    paddingHorizontal: 6,
+  },
+  adRetryHidden: {
+    opacity: 0,
   },
   adRetryText: {
     ...uiThemeFontStyle,
     fontSize: 14,
     fontWeight: "700",
     color: "#7156B3",
+    textAlign: "center",
   },
   ctaButton: {
     width: "100%",
