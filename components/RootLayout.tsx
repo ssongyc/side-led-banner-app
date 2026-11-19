@@ -128,7 +128,8 @@ export default function RootLayout() {
     setSplashAttempt(attempt => attempt + 1);
   }, []);
 
-  const recoveryVisible = !!storageStartup?.failed || fontsFailed || preparationTimedOut || loaderImageFailed;
+  const mainPreparationFailed = !!storageStartup?.failed || fontsFailed || preparationTimedOut;
+  const recoveryVisible = mainPreparationFailed || loaderImageFailed;
 
   // Hand off to the complete loader or directly to the prepared main screen.
   // Main readiness must never depend on the branding image or native dismissal.
@@ -174,7 +175,8 @@ export default function RootLayout() {
   const isReady = fontsLoaded && !!storageStartup?.ready && preparedLocale === startupLocale && mainLaidOut &&
     (pathname !== "/" || previewReady);
   useEffect(() => {
-    if (startupComplete || !isReady || recoveryVisible) return;
+    // A failed loader image can be reported while Main prepares, but cannot veto a ready Main.
+    if (startupComplete || !isReady || mainPreparationFailed) return;
     // Allow committed layout/font updates to reach a frame before uncovering the screen.
     let secondFrame: number | undefined;
     const frame = requestAnimationFrame(() => {
@@ -184,7 +186,7 @@ export default function RootLayout() {
       cancelAnimationFrame(frame);
       if (secondFrame !== undefined) cancelAnimationFrame(secondFrame);
     };
-  }, [startupComplete, isReady, recoveryVisible]);
+  }, [startupComplete, isReady, mainPreparationFailed]);
 
   useEffect(() => {
     if (startupComplete || storageStartup?.failed || fontsFailed) return;
@@ -249,6 +251,7 @@ export default function RootLayout() {
     setPreviewReady(false);
     setMainLaidOut(false);
     setPreparationTimedOut(false);
+    setLoaderImageReady(false);
     setLoaderImageFailed(false);
     if (!storageStartup?.ready) storageStartup?.retry();
     setPreparationAttempt(attempt => attempt + 1);

@@ -4,6 +4,13 @@
 
 The initial review inspected the local release wrapper and retained build logs without running a build. A later user-authorized production build measured the applied changes; its result is recorded below. No lint, test, upload, deployment, or Play Console change was run as part of the documentation update.
 
+## Production build with rewarded popup layout — 2026-11-19
+
+- Run `20261119-014712-dc1aa4b4` built Android 1.1.4 (33) from clean main `206103f`. It reused the existing G: dependency and native outputs and generated the signed universal APK from the signed AAB.
+- All 480 release checks passed, including production AdMob, normal Google UMP, the two-hour reward, signing, 16 KiB alignment and matching R8 mapping. Gradle took 12m06s with 72 tasks executed and 1,207 up to date. The full run took 13m32s.
+- The Galaxy SM-M336K installed APK matched the delivery hash. Shop showed ₩7,500. The no-charge test checkout could be cancelled and reopened. A completed purchase unlocked Pro, which survived a cold restart and was confirmed by manual restoration.
+- An active temporary Pro reward unlocked the features that normally open the popup, so its layout was not verified. Live ad serving and standard EEA consent also remain unverified for this APK. The later 15dp spacing, ad status placement and startup recovery changes are source-only. The AAB was retained for manual upload.
+
 ## Production build with Android ad window fixes — 2026-11-19
 
 - Run 20261119-001934-7ed6fc53 built 1.1.4 (33) from clean main `6c60018`. It reused G: dependencies and Gradle outputs, regenerated the native project for the manifest plugin, and created the signed universal APK from one signed AAB.

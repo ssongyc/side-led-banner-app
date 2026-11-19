@@ -284,25 +284,6 @@ export function RewardAdModal({
           <RewardBenefits rewardAdLabel={rewardAdLabel} />
         </View>
 
-        <View style={styles.adStatusArea}>
-          <ReservedText
-            text={adUnavailableReason(resolvedAppLocale) ?? (adReady || adFailure === "consent" ? "" : rewardAdLabel(adFailure === "unavailable" ? "rewardAdUnavailable" : adFailure === "initialization" ? "rewardAdInitializationFailed" : adFailure === "configuration" ? "rewardAdConfigurationFailed" : adFailure === "open-timeout" ? "rewardAdOpenUnconfirmed" : adExpired ? "rewardAdExpired" : adShowFailed ? "rewardAdShowFailed" : adFailed ? "rewardAdLoadFailed" : adDelayed ? "rewardAdDelayed" : "rewardAdPreparing"))}
-            variants={REWARD_AD_STATUS_TEXTS}
-            textStyle={styles.adStatusText}
-          />
-          <TouchableOpacity
-            onPress={() => { if (!drag.current.moved && visible && canRetry) onRetry?.(); }}
-            disabled={!canShowRetry}
-            pointerEvents={canShowRetry ? "auto" : "none"}
-            accessibilityRole="button"
-            accessibilityElementsHidden={!canShowRetry}
-            importantForAccessibility={canShowRetry ? "auto" : "no-hide-descendants"}
-            style={[styles.adRetryButton, !canShowRetry && styles.adRetryHidden]}
-          >
-            <Text style={styles.adRetryText} allowFontScaling={false}>{rewardAdLabel("rewardAdRetry")}</Text>
-          </TouchableOpacity>
-        </View>
-
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={handleWatchAd}
@@ -360,6 +341,25 @@ export function RewardAdModal({
             </Text>
           </TouchableOpacity>
         )}
+
+        <View style={styles.adStatusArea}>
+          <ReservedText
+            text={adUnavailableReason(resolvedAppLocale) ?? (adReady || adFailure === "consent" ? "" : rewardAdLabel(adFailure === "unavailable" ? "rewardAdUnavailable" : adFailure === "initialization" ? "rewardAdInitializationFailed" : adFailure === "configuration" ? "rewardAdConfigurationFailed" : adFailure === "open-timeout" ? "rewardAdOpenUnconfirmed" : adExpired ? "rewardAdExpired" : adShowFailed ? "rewardAdShowFailed" : adFailed ? "rewardAdLoadFailed" : adDelayed ? "rewardAdDelayed" : "rewardAdPreparing"))}
+            variants={REWARD_AD_STATUS_TEXTS}
+            textStyle={styles.adStatusText}
+          />
+          <TouchableOpacity
+            onPress={() => { if (!drag.current.moved && visible && canRetry) onRetry?.(); }}
+            disabled={!canShowRetry}
+            pointerEvents={canShowRetry ? "auto" : "none"}
+            accessibilityRole="button"
+            accessibilityElementsHidden={!canShowRetry}
+            importantForAccessibility={canShowRetry ? "auto" : "no-hide-descendants"}
+            style={[styles.adRetryButton, !canShowRetry && styles.adRetryHidden]}
+          >
+            <Text style={styles.adRetryText} allowFontScaling={false}>{rewardAdLabel("rewardAdRetry")}</Text>
+          </TouchableOpacity>
+        </View>
         </ScrollView>
       </View>
     </Animated.View>

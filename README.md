@@ -9,11 +9,15 @@
 
 ## 현재 문서의 기준
 
-- **최신 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-001934-7ed6fc53`, 소스 `6c60018`. 운영 AdMob·일반 Google UMP·2시간 보상과 Android 광고 화면 수정을 포함합니다. 출시 파일 검사 480개를 통과했고, 갤럭시에서 ₩7,500 가격, 무청구 구매, 앱 재실행 후 Pro 유지와 구매 복원을 확인했습니다. 새 APK의 EEA 동의창, 과금 실광고 및 광고 복귀 화면은 미검증입니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-android-ad-window-fixes--2026-11-19)
+- **시작 오류 복구 — 현재 소스:** 로딩 이미지가 실패해도 저장 설정·폰트·첫 화면이 준비되면 편집 화면으로 전환합니다. 갤럭시에서 기존 출시 APK를 재시작했을 때는 오류가 재현되지 않았습니다. 수정본의 Android·iOS 실기기 동작은 미검증입니다.
+
+- **최신 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-014712-dc1aa4b4`, 소스 `206103f`. 혜택 아래 버튼 배치와 흰 여백을 포함합니다. 운영 AdMob·일반 Google UMP·2시간 보상 및 출시 파일 검사 480개를 확인했습니다. 갤럭시에서 ₩7,500 가격, 결제 취소 후 복귀, 무청구 구매, 재실행 후 Pro 유지와 복원을 확인했습니다. 임시 Pro 보상으로 새 팝업은 열지 못했고, 실광고와 일반 EEA 동의창도 미검증입니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-rewarded-popup-layout--2026-11-19)
+
+- **이전 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-001934-7ed6fc53`, 소스 `6c60018`. 운영 AdMob·일반 Google UMP·2시간 보상과 Android 광고 화면 수정을 포함합니다. 출시 파일 검사 480개를 통과했고, 갤럭시에서 ₩7,500 가격, 무청구 구매, 앱 재실행 후 Pro 유지와 구매 복원을 확인했습니다. 새 APK의 EEA 동의창, 과금 실광고 및 광고 복귀 화면은 미검증입니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-android-ad-window-fixes--2026-11-19)
 
 - **최신 TestFlight — 2026-11-19:** iOS 1.1.5 (4), 소스 `6c60018`의 iOS 빌드 복사본. Apple 처리 완료 후 기존 내부 그룹 LPT에서 설치할 수 있습니다. IPA 서명, React 프레임워크, dSYM, 운영 AdMob·일반 Google UMP 설정을 확인했습니다. iPhone 시작과 구매·복원은 미검증입니다. [TestFlight 검증](docs/SIGNING_POLICY.md#testflight-115-4--2026-11-19)
 
-- **보상 광고 팝업 — 현재 소스:** 광고 보기와 LED POP Pro 구매를 혜택 목록 아래로 옮겼습니다. 버튼 아래에 흰 여백을 두고 팝업 높이를 약 5% 늘리도록 조정했습니다. 11월 19일 Android 및 TestFlight 바이너리 제작 이후 변경이며, 새 실기기 화면은 미검증입니다. [팝업 레이아웃](docs/ADVERTISING.md#보상-광고-팝업-버튼과-하단-여백--2026-11-19)
+- **보상 광고 팝업 — 현재 소스:** 마지막 혜택 행과 Watch Ad 사이를 15dp로 조정했습니다. 준비 중·실패·만료 안내를 구매 버튼 아래에 가운데 정렬하고 그 아래에 여백을 둡니다. 이 변경과 시작 오류 복구는 최신 Android 출시 파일 및 TestFlight 1.1.5 (4) 생성 이후 소스에 반영했으며 실기기 동작은 미검증입니다. [팝업 레이아웃](docs/ADVERTISING.md#watch-ad-간격과-구매-버튼-아래-광고-상태)
 
 - **Watch Ad 정렬 출시 APK/AAB — 2026-11-18:** Android 1.1.4 (33), 실행 `20261118-232746-d9c9d2f0`, 소스 `74a509d`. 출시 검사 479개를 통과했고 갤럭시에서 Shop 가격, 무청구 테스트 결제창·취소, 구매 내역 없는 계정의 복원 조회 및 Watch Ad 영어 문구와 아이콘의 중앙 좌표를 확인했습니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-watch-ad-alignment--2026-11-18)
 
@@ -278,6 +282,8 @@ pwsh -NoProfile -File scripts/android-build-observability.test.ps1
 node scripts/check-reward-expiry.cjs
 node scripts/check-rewarded-lifecycle.cjs
 ```
+
+2026-11-19 후속 점검에서 시작 오류 복구와 광고 상태 안내 재배치를 포함한 소스에 ESLint를 실행해 오류·경고 0개를 확인했습니다. Node 테스트 87개, PowerShell 검사 20개, 보상 만료·광고 수명 주기 검사 2개가 통과했습니다. 추가 삭제를 확정할 미사용 파일·리소스·API는 확인되지 않았습니다. 이 점검 이후의 새 설치 파일과 실기기 시작·팝업 동작은 검증하지 않았습니다.
 
 2026-11-19 정리에서는 참조가 없는 버튼·설정 스타일 3개를 제거했습니다. ESLint는 오류·경고 없이 통과했고, Node 테스트 87개, PowerShell 검사 20개, 보상 만료·광고 수명 주기 검사 2개가 통과했습니다. 새 팝업의 화면 표시와 스크롤은 실기기 미검증입니다.
 

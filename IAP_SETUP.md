@@ -4,6 +4,10 @@
 
 ## 최신 Android 출시 APK 검증 — 2026-11-19
 
+1.1.4 (33) 출시 APK `20261119-014712-dc1aa4b4`를 갤럭시 SM-M336K에 설치하고 배포 파일 해시와 일치하는지 확인했습니다. Shop에서 ₩7,500 표시, 결제 취소 후 복귀, Google Play 무청구 구매, 재실행 후 Pro 유지와 수동 복원을 확인했습니다. iOS TestFlight의 Sandbox 구매와 복원은 미검증입니다. [출시 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-rewarded-popup-layout--2026-11-19)
+
+## 이전 Android 출시 APK 검증 — 2026-11-19
+
 1.1.4 (33) 출시 APK `20261119-001934-7ed6fc53`를 갤럭시 SM-M336K에 설치하고 배포 파일의 해시와 일치하는지 확인했습니다. Shop에서 ₩7,500을 표시했고, 구매 전 복원은 보유 상품 없음으로 응답했습니다. Google Play 무청구 테스트 구매가 완료된 뒤 Pro가 활성화됐고, 앱을 완전히 종료하고 다시 열어도 Pro가 유지됐습니다. 보유한 구매의 수동 복원도 확인했습니다. iOS TestFlight 1.1.5 (4)의 Sandbox 구매와 복원은 아직 확인하지 않았습니다. [출시 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-android-ad-window-fixes--2026-11-19)
 
 ## 이전 Android 출시 APK 검증 — 2026-11-18

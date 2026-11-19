@@ -332,11 +332,12 @@ export const rewardAdModalStyles = StyleSheet.create({
   },
   benefitContainer: {
     width: "100%",
+    rowGap: 14,
+    marginBottom: 15,
   },
   benefitRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 14,
   },
   checkIcon: {
     width: 24,
@@ -385,10 +386,7 @@ export const rewardAdModalStyles = StyleSheet.create({
     justifyContent: "center",
   },
   adStatusArea: {
-    flexDirection: "row",
-    alignItems: "center",
-    columnGap: 8,
-    marginBottom: 8,
+    marginTop: 8,
   },
   adStatusText: {
     ...uiThemeFontStyle,
@@ -401,6 +399,7 @@ export const rewardAdModalStyles = StyleSheet.create({
     minHeight: 44,
     width: 100,
     flexShrink: 0,
+    alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 6,
