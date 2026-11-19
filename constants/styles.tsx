@@ -381,10 +381,10 @@ export const rewardAdModalStyles = StyleSheet.create({
     opacity: 0,
   },
   reservedTextVisible: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
+    ...StyleSheet.absoluteFill,
+  },
+  reservedTextCentered: {
+    justifyContent: "center",
   },
   adStatusArea: {
     width: "100%",
@@ -452,13 +452,17 @@ export const rewardAdModalStyles = StyleSheet.create({
     minHeight: 56,
     paddingHorizontal: 56,
     paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  ctaPlaySlot: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 16,
     justifyContent: "center",
   },
   ctaPlayBg: {
-    position: "absolute",
-    left: 16,
-    top: "50%",
-    transform: [{ translateY: -16 }],
     width: 32,
     height: 32,
   },

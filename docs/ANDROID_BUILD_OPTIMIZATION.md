@@ -4,6 +4,14 @@
 
 The initial review inspected the local release wrapper and retained build logs without running a build. A later user-authorized production build measured the applied changes; its result is recorded below. No lint, test, upload, deployment, or Play Console change was run as part of the documentation update.
 
+## Production rebuild V1.1.4 (33) — 2026-11-18
+
+- Run 20261118-223109-945aeb55 built clean main 2b73df9 after the G: drive was reconnected. It reused the prepared dependency and native caches, ran bundleRelease once, and generated a matching universal APK with bundletool 1.18.3.
+- Gradle succeeded in 17m37s. Of 1,279 tasks, 109 executed, 2 came from cache, and 1,168 were up to date. R8 output was reused. The resumed wrapper took about 18m52s.
+- The signed files passed 479 release checks, including API 36, Billing 9.1.0, four ABIs, 16 KiB alignment and embedded same-build R8 mapping. Additional artifact checks confirmed latest bundled Shop and consent sources, the public Play licensing key and product, production AdMob, normal Google UMP and the two-hour reward.
+- AAB SHA-256: 0253624682A71EA86209D323AEB859697242EE2BDE991B644182336D54426AFD. APK SHA-256: AD7AF6FAFFAE76369E1B112952CB810BA9FB1BB8373C73BC45935DEE7A00C1FF. Delivery paths and evidence are in build-result.json, release-verification, commerce-verification.json and device-commerce-verification.json under the run directory.
+- The Galaxy installation matched the new APK hash. Shop displayed ₩7,500 and the restore control below Buy. Restore returned no purchase for the current account, and the Google Play license-test sheet showed the matching price, official test card and no-charge notice. Cancelling returned to Shop with Buy available. A completed transaction and a restore of an owned purchase were verified on the preceding artifact documented below. Play version-code availability, upload and review were not checked for this rebuild.
+
 ## Production build V1.1.4 (33) — 2026-11-18
 
 - Run `20261118-114825-c8bd2378` built the signed AAB and derived the universal APK from clean `7f9672c`. The build resumed after the first attempt completed native generation and then reached the Gradle memory gate. The resumed run reused the G: caches and prepared native output without reinstalling dependencies or regenerating native files.

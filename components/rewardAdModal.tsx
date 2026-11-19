@@ -317,13 +317,16 @@ export function RewardAdModal({
             />
           )}
           <View style={styles.ctaButtonContent}>
-            <Image
-              source={PLAY_BG}
-              style={styles.ctaPlayBg}
-              contentFit="contain"
-              accessibilityIgnoresInvertColors
-            />
+            <View pointerEvents="none" style={styles.ctaPlaySlot}>
+              <Image
+                source={PLAY_BG}
+                style={styles.ctaPlayBg}
+                contentFit="contain"
+                accessibilityIgnoresInvertColors
+              />
+            </View>
             <ReservedText
+              centerVertically
               text={rewardAdLabel(adReady ? "rewardWatchAd" : "rewardAdPreparingButton")}
               variants={REWARD_AD_BUTTON_TEXTS}
               textStyle={[
