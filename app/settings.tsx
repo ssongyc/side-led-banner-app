@@ -135,8 +135,6 @@ export default function SettingsScreen() {
   const footer = (
     <SettingsFooter
         onLogoPress={() => openUrl(SUNNY_LINKS.homepage)}
-        termsLabel={textSectionLabel("terms")}
-        privacyLabel={textSectionLabel("privacy")}
         onTermsPress={() => openUrl(SUNNY_LINKS.terms)}
         onPrivacyPress={() => openUrl(SUNNY_LINKS.privacy)}
       />
@@ -331,16 +329,12 @@ function LinkRow({
 
 interface SettingsFooterProps {
   onLogoPress: () => void;
-  termsLabel: string;
-  privacyLabel: string;
   onTermsPress: () => void;
   onPrivacyPress: () => void;
 }
 
 function SettingsFooter({
   onLogoPress,
-  termsLabel,
-  privacyLabel,
   onTermsPress,
   onPrivacyPress,
 }: SettingsFooterProps) {
@@ -356,8 +350,8 @@ function SettingsFooter({
 
       <View style={settingsFooterStyles.linksRow}>
         <TouchableOpacity onPress={onTermsPress}>
-          <Text style={settingsFooterStyles.linkText} allowFontScaling={false}>
-            {termsLabel}
+          <Text style={settingsFooterStyles.linkText} allowFontScaling={false} numberOfLines={1}>
+            Terms
           </Text>
         </TouchableOpacity>
 
@@ -366,8 +360,8 @@ function SettingsFooter({
         </Text>
 
         <TouchableOpacity onPress={onPrivacyPress}>
-          <Text style={settingsFooterStyles.linkText} allowFontScaling={false}>
-            {privacyLabel}
+          <Text style={settingsFooterStyles.linkText} allowFontScaling={false} numberOfLines={1}>
+            Privacy
           </Text>
         </TouchableOpacity>
       </View>

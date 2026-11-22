@@ -170,11 +170,11 @@ export default function ShopScreen() {
           </Pressable>
           <View style={styles.footerLinks}>
             <Pressable accessibilityRole="link" onPress={() => openUrl(SUNNY_LINKS.terms)} style={styles.footerLink}>
-              <Text allowFontScaling={false} style={styles.footerText}>{textSectionLabel("terms")}</Text>
+              <Text allowFontScaling={false} numberOfLines={1} style={styles.footerText}>Terms</Text>
             </Pressable>
             <View style={styles.footerSeparator} />
             <Pressable accessibilityRole="link" onPress={() => openUrl(SUNNY_LINKS.privacy)} style={styles.footerLink}>
-              <Text allowFontScaling={false} style={styles.footerText}>{textSectionLabel("privacy")}</Text>
+              <Text allowFontScaling={false} numberOfLines={1} style={styles.footerText}>Privacy</Text>
             </Pressable>
           </View>
         </View>
@@ -266,10 +266,10 @@ const styles = StyleSheet.create({
   ownedStatus: { minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 16, paddingVertical: 14, borderRadius: 14, backgroundColor: "#FFF0E0" },
   ownedText: { color: "#913A00", flexShrink: 1 },
   footer: { backgroundColor: "#3D3D3D", paddingTop: 4, paddingHorizontal: 16 },
-  footerContent: { width: "100%", maxWidth: 600, alignSelf: "center", flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 4 },
+  footerContent: { width: "100%", maxWidth: 600, alignSelf: "center", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 4 },
   logoLink: { minWidth: 100, minHeight: 48, justifyContent: "center" },
   logo: { width: 96, height: 34, tintColor: "#FFFFFF" },
-  footerLinks: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "flex-end", flexShrink: 1 },
+  footerLinks: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end" },
   footerLink: { minWidth: 48, minHeight: 48, paddingHorizontal: 6, justifyContent: "center" },
   footerText: { ...uiThemeFontStyle, color: "#DDDDDD", fontSize: 12 },
   footerSeparator: { width: 1, height: 12, backgroundColor: "#929292" },
