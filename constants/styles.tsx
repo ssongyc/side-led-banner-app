@@ -2,6 +2,8 @@ import { uiThemeFontStyle } from "@/constants/appFonts";
 import { moderateScale } from "@/constants/scale";
 import { Platform, StyleSheet } from "react-native";
 
+const SETTINGS_ROW_INSET = 15;
+
 export const CONTENTS_INPUT_FONT_SIZE = moderateScale(18);
 const CONTENTS_INPUT_LINE_HEIGHT = Math.round(
   CONTENTS_INPUT_FONT_SIZE * 1.3,
@@ -113,7 +115,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: SETTINGS_ROW_INSET,
     marginBottom: 5,
     borderBottomWidth: 2,
     borderBottomColor: "#DDDDDD",
@@ -712,12 +714,13 @@ export const settingsFooterStyles = StyleSheet.create({
     justifyContent: "space-between",
     paddingTop: 8,
     paddingBottom: 24,
-    paddingHorizontal: 20,
+    paddingLeft: SETTINGS_ROW_INSET,
+    paddingRight: 20,
     gap: 12,
     backgroundColor: "#F9F9F9",
   },
   logo: {
-    width: 130,
+    width: 108,
     height: 36,
   },
   linksRow: {

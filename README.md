@@ -11,9 +11,13 @@
 
 - **시작 오류 복구 — 현재 소스:** 로딩 이미지가 실패해도 저장 설정·폰트·첫 화면이 준비되면 편집 화면으로 전환합니다. 갤럭시에서 기존 출시 APK를 재시작했을 때는 오류가 재현되지 않았습니다. 수정본의 Android·iOS 실기기 동작은 미검증입니다.
 
-- **최신 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-023304-5e464521`, 소스 `879f8e9`. 시작 오류 복구와 보상 팝업의 15dp 간격·상태 안내 재배치를 포함합니다. 기존 출시 파일 검사 480개와 Shop·광고·시작 화면 관련 번들 소스 대조를 통과했습니다. 이 실행의 실기기 QA는 하지 않았습니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-startup-recovery--2026-11-19)
+- **최신 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (34), 실행 `20261119-072859-0bdb580b`, 소스 `2b31933`. 운영 AdMob·Google UMP·Play Billing과 기존 서명을 확인했으며, APK와 AAB 모두 Wi-Fi를 선택 사항으로 명시합니다. 출시 파일 검사 482개를 통과했습니다. 이 버전의 실기기 구매·복원은 미검증입니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-optional-wi-fi--2026-11-19)
 
-- **Play Console 프로덕션 초안 — 2026-11-19:** 1.1.4 (33)의 출시 노트를 영어, 일본어, 한국어, 중국어 간체·번체로 저장했습니다. Google Play에서 필수 Wi-Fi 하드웨어 선언을 이유로 심사 제출을 차단했습니다. Expo 소스에 Wi-Fi 선택 선언을 추가했으며, 수정 AAB 생성과 Play 재확인은 남아 있습니다. [원인 및 수정 범위](docs/ANDROID_BUILD_OPTIMIZATION.md#wi-fi-hardware-filtering-in-google-play)
+- **설정 푸터 — 현재 소스:** Sunny 로고의 왼쪽 끝을 App Version 라벨과 정렬합니다. Settings 및 Shop은 로고 옆에 `Terms`와 `Privacy`를 한 줄로 표시합니다. 이 변경은 위 Android 1.1.4 (34)와 TestFlight 1.1.5 (5) 이후 소스에 적용됐으며 화면 표시는 실기기에서 확인하지 않았습니다.
+
+- **이전 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-023304-5e464521`, 소스 `879f8e9`. 시작 오류 복구와 보상 팝업의 15dp 간격·상태 안내 재배치를 포함합니다. 기존 출시 파일 검사 480개와 Shop·광고·시작 화면 관련 번들 소스 대조를 통과했습니다. 이 실행의 실기기 QA는 하지 않았습니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-startup-recovery--2026-11-19)
+
+- **Play Console 프로덕션 초안 — 2026-11-19:** 1.1.4 (33)의 출시 노트를 영어, 일본어, 한국어, 중국어 간체·번체로 저장했습니다. Google Play에서 필수 Wi-Fi 하드웨어 선언을 이유로 심사 제출을 차단했습니다. 이후 코드 34 AAB에 Wi-Fi 선택 선언을 반영했습니다. 이 빌드의 Play Console 처리 결과는 이 기록에 포함되지 않습니다. [원인 및 수정 범위](docs/ANDROID_BUILD_OPTIMIZATION.md#wi-fi-hardware-filtering-in-google-play)
 
 - **이전 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-014712-dc1aa4b4`, 소스 `206103f`. 혜택 아래 버튼 배치와 흰 여백을 포함합니다. 운영 AdMob·일반 Google UMP·2시간 보상 및 출시 파일 검사 480개를 확인했습니다. 갤럭시에서 ₩7,500 가격, 결제 취소 후 복귀, 무청구 구매, 재실행 후 Pro 유지와 복원을 확인했습니다. 임시 Pro 보상으로 새 팝업은 열지 못했고, 실광고와 일반 EEA 동의창도 미검증입니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-rewarded-popup-layout--2026-11-19)
 
@@ -73,7 +77,7 @@
 
 > **TestFlight 1.1.3 (1) 시작 충돌 확인:** 사용자 제공 iPhone 로그는 `ExpoModulesWorklets`가 참조하는 `React.framework` 누락으로 앱 코드 실행 전에 종료됨을 보여줍니다. Apple 경고에는 `ReactNativeDependencies.framework`도 포함됩니다. 이후 제공된 Mac 설정에서는 소스 방식 React Native와 사전 컴파일 Expo 프레임워크의 혼합이 확인되어, package.json에서 iOS autolinking 모듈의 소스 빌드를 명시했습니다. Mac에서 pod install·새 Archive·실기기 실행 확인은 아직 필요합니다. Mac용 읽기 전용 검사와 개발자 전달 사항은 [충돌 기록](docs/SIGNING_POLICY.md#ios-launch-crash--2026-09-22)을 참고하세요.
 
-메인 소스 기준 버전은 **1.1.4 (Android 버전 코드 33, iOS 빌드 번호 3)**이며 Settings에는 **V1.1.4**가 표시됩니다. 최신 TestFlight의 **1.1.5 (4)**는 iOS 빌드 복사본에만 적용한 버전입니다.
+메인 소스 기준 버전은 **1.1.4 (Android 버전 코드 33, iOS 빌드 번호 3)**이며 Settings에는 **V1.1.4**가 표시됩니다. TestFlight **1.1.5 (5)**는 iOS 빌드 복사본에서, Android **1.1.4 (34)**는 빌드 시 버전 코드를 지정해 생성했습니다.
 
 **2026-10-20 도구 체인 업그레이드:** Expo 58.0.16 / React Native 0.88.0 / AGP 9.2.1, compileSdk 37 / targetSdk 36, AGP 내장 R8 9.2.14를 적용했습니다. Windows CMake 경로 길이 오류와 R8이 Room 생성자를 제거해 발생한 시작 충돌을 수정했습니다. 수정 QA APK는 `compile-ok`이며 Galaxy에서 재시작, 테스트 UMP 거부·동의·개인정보 재변경, 테스트 배너·보상 광고 및 보상 후 잠금 해제를 확인했습니다. 당시 수정 QA 재빌드는 Gradle 6분 50초(72 executed / 1138 up-to-date)였습니다. 최신 production 빌드 기록은 아래에서 구분합니다. 당시 구매 화면은 비활성 상태였으며 결제·복원과 iOS는 검증 범위 밖이었습니다. 이 APK는 테스트 광고·EEA QA 설정이 포함되어 스토어 제출용이 아닙니다. [빌드 기록](docs/SIGNING_POLICY.md#combined-exporn-upgrade-assessment--2026-10-20)과 [광고 QA 범위](docs/ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20)를 참고하세요.
 
@@ -287,7 +291,9 @@ node scripts/check-reward-expiry.cjs
 node scripts/check-rewarded-lifecycle.cjs
 ```
 
-2026-11-19 Wi-Fi 기기 호환성 후속 점검에서 ESLint 오류·경고 0개, Node 테스트 87개, PowerShell 검사 20개, 보상 만료·광고 수명 주기 검사 2개가 통과했습니다. 별도 매니페스트 fixture에서 Wi-Fi 선언 추가·중복 정리·재실행을 확인했습니다. 추적된 소스와 리소스의 참조를 조사했으며 새 삭제 대상은 확인되지 않았습니다. 수정 APK/AAB 생성과 Play Console 검증은 남아 있습니다.
+2026-11-22 Settings와 Shop에서 쓰지 않는 Terms·Privacy 번역 키와 시트 매핑을 제거했습니다. 푸터 정렬과 정리 변경에 대해 ESLint는 오류·경고 없이 통과했고, Node 테스트 87개, PowerShell 검사 20개, 보상 만료·광고 수명 주기 검사 2개도 통과했습니다.
+
+2026-11-19 Wi-Fi 기기 호환성 후속 점검에서 ESLint 오류·경고 0개, Node 테스트 87개, PowerShell 검사 20개, 보상 만료·광고 수명 주기 검사 2개가 통과했습니다. 별도 매니페스트 fixture에서 Wi-Fi 선언 추가·중복 정리·재실행을 확인했습니다. 추적된 소스와 리소스의 참조를 조사했으며 새 삭제 대상은 확인되지 않았습니다. 이 소스 수정이 포함된 코드 34 APK/AAB는 이후 생성됐으며 Play Console 처리 결과는 이 기록에 포함되지 않습니다.
 
 2026-11-19 후속 점검에서 시작 오류 복구와 광고 상태 안내 재배치를 포함한 소스에 ESLint를 실행해 오류·경고 0개를 확인했습니다. Node 테스트 87개, PowerShell 검사 20개, 보상 만료·광고 수명 주기 검사 2개가 통과했습니다. 추가 삭제를 확정할 미사용 파일·리소스·API는 확인되지 않았습니다. 이 점검 이후의 새 설치 파일과 실기기 시작·팝업 동작은 검증하지 않았습니다.
 
@@ -500,7 +506,7 @@ side-led-banner-app/
 
 ## 스토어 버전과 제출 상태
 
-11월 18일 Play Console에서 Android 프로덕션 출시 **1.1.3 (31)**과 프로덕션 초안 **1.1.4 (32)**를 확인했습니다. 로컬 Android 빌드 기본값은 **1.1.4 (33)**입니다. [현재 문서의 기준](#현재-문서의-기준)에 최신 산출물과 검증 범위를 정리했습니다.
+11월 18일 Play Console에서 Android 프로덕션 출시 **1.1.3 (31)**과 프로덕션 초안 **1.1.4 (32)**를 확인했습니다. 현재 소스의 Android 기본값은 **1.1.4 (33)**이며, Wi-Fi 수정이 포함된 출시 파일에는 **1.1.4 (34)**가 적용됐습니다. [현재 문서의 기준](#현재-문서의-기준)에 최신 산출물과 검증 범위를 정리했습니다.
 
 TypeScript 검증은 node_modules와 생성 산출물 artifacts를 제외합니다. 과거 빌드 복사본을 현재 소스로 중복 검사하지 않도록 범위를 고정했습니다.
 

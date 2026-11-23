@@ -8,7 +8,13 @@ The initial review inspected the local release wrapper and retained build logs w
 
 Play Console blocked review of the Android 1.1.4 (33) production draft because it treated Wi-Fi hardware as required. The local code 33 AAB contains ACCESS_WIFI_STATE and no explicit Wi-Fi feature entry. The release manifest merger report attributes the permission to expo-network, which the app uses to track connectivity for ad loading.
 
-The Expo Android release plugin now declares Wi-Fi hardware optional while keeping the network permission. Release verification checks the final AAB manifest and APK badging for this hardware setting. The existing code 33 AAB predates the fix. A new signed AAB and subsequent Play Console verification are pending.
+The Expo Android release plugin now declares Wi-Fi hardware optional while keeping the network permission. Release verification checks the final AAB manifest and APK badging for this hardware setting. The existing code 33 AAB predates the fix. The signed code 34 APK and AAB both passed the optional Wi-Fi check. Play Console processing for code 34 was outside the local build verification.
+
+## Production build with optional Wi-Fi — 2026-11-19
+
+- Run `20261119-072859-0bdb580b` delivered signed Android 1.1.4 (34) APK and AAB from `2b31933`. The wrapper used a build-time version override and derived the universal APK from the same AAB.
+- All 482 release file checks passed, including the Wi-Fi declaration on both files, production AdMob, Play Billing 9.1.0, signing, 16 KiB alignment and embedded R8 mapping. The artifacts contain the Google UMP SDK and Pro purchase product ID. Code 34 device QA was outside this run. The earlier code 33 purchase and restore results apply to that build.
+- A Codex Desktop restart interrupted the first attempt. The successful run reused prepared native inputs and the G: Gradle cache. Gradle took 21m 23s with 82 tasks executed and 1,197 up to date. The resumed wrapper took about 22 minutes, excluding the first attempt.
 
 ## Production build with startup recovery — 2026-11-19
 
