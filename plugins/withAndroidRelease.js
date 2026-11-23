@@ -14,15 +14,17 @@ const R8_VERSION = "9.2.14";
 module.exports = function withAndroidRelease(config) {
   config = withAndroidManifest(config, (mod) => {
     const { manifest } = mod.modResults;
-    const wifi = "android.hardware.wifi";
-    const features = manifest["uses-feature"] ?? [];
-    const wifiFeature = features.find((feature) => feature.$["android:name"] === wifi);
-    manifest["uses-feature"] = features.filter((feature) => feature.$["android:name"] !== wifi);
-    // expo-network requests Wi-Fi state, but LED POP works without Wi-Fi hardware.
-    manifest["uses-feature"].push({
-      ...wifiFeature,
-      $: { ...wifiFeature?.$, "android:name": wifi, "android:required": "false" },
-    });
+    // Network permissions and dependency activities can imply Play hardware requirements.
+    let features = manifest["uses-feature"] ?? [];
+    for (const name of ["android.hardware.wifi", "android.hardware.screen.portrait"]) {
+      const current = features.find((feature) => feature.$["android:name"] === name);
+      features = features.filter((feature) => feature.$["android:name"] !== name);
+      features.push({
+        ...current,
+        $: { ...current?.$, "android:name": name, "android:required": "false" },
+      });
+    }
+    manifest["uses-feature"] = features;
     return mod;
   });
   config = withDangerousMod(config, ["android", (mod) => {

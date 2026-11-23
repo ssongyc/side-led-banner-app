@@ -159,6 +159,14 @@ def verify(args, out, report):
           and f"uses-implied-feature: name='{wifi_feature}'" not in badging)
     permissions = {x.get(a+"name") for x in tree.findall("uses-permission")}
     forbidden = {"android.permission.CAMERA", "android.permission.RECORD_AUDIO"}
+    portrait_feature = "android.hardware.screen.portrait"
+    portrait_entries = [feature for feature in tree.findall("uses-feature")
+                        if feature.get(a+"name") == portrait_feature]
+    check("aabPortraitOptional", len(portrait_entries) == 1
+          and portrait_entries[0].get(a+"required") == "false")
+    check("apkPortraitOptional", f"uses-feature-not-required: name='{portrait_feature}'" in badging
+          and f"uses-feature: name='{portrait_feature}'" not in badging
+          and f"uses-implied-feature: name='{portrait_feature}'" not in badging)
     check("permissions", not permissions & forbidden and not any(x in manifest for x in forbidden))
     md = {x.get(a+"name"): x.get(a+"value") for x in app.findall("meta-data")}
     profile = read_json(root / "advertising.config.json")["production"]
