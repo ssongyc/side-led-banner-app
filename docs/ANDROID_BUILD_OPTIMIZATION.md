@@ -4,6 +4,12 @@
 
 The initial review inspected the local release wrapper and retained build logs without running a build. A later user-authorized production build measured the applied changes; its result is recorded below. No lint, test, upload, deployment, or Play Console change was run as part of the documentation update.
 
+## Production rebuild with Settings footer alignment — 2026-11-22
+
+Run `20261122-200638-0a620869` built Android 1.1.4 (34) from `4c7b032`. The signed APK and AAB passed all 482 local release checks. The wrapper reused the G: caches and completed in 16m 28s. This run did not include device QA or a Play upload.
+
+The subsequent source configuration is Android 1.1.5 (34). The files from this run retain 1.1.4 (34).
+
 ## Wi-Fi hardware filtering in Google Play
 
 Play Console blocked review of the Android 1.1.4 (33) production draft because it treated Wi-Fi hardware as required. The local code 33 AAB contains ACCESS_WIFI_STATE and no explicit Wi-Fi feature entry. The release manifest merger report attributes the permission to expo-network, which the app uses to track connectivity for ad loading.

@@ -11,9 +11,11 @@
 
 - **시작 오류 복구 — 현재 소스:** 로딩 이미지가 실패해도 저장 설정·폰트·첫 화면이 준비되면 편집 화면으로 전환합니다. 갤럭시에서 기존 출시 APK를 재시작했을 때는 오류가 재현되지 않았습니다. 수정본의 Android·iOS 실기기 동작은 미검증입니다.
 
-- **최신 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (34), 실행 `20261119-072859-0bdb580b`, 소스 `2b31933`. 운영 AdMob·Google UMP·Play Billing과 기존 서명을 확인했으며, APK와 AAB 모두 Wi-Fi를 선택 사항으로 명시합니다. 출시 파일 검사 482개를 통과했습니다. 이 버전의 실기기 구매·복원은 미검증입니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-optional-wi-fi--2026-11-19)
+- **최신 로컬 출시 APK/AAB — 2026-11-22:** Android 1.1.4 (34), 실행 `20261122-200638-0a620869`, 소스 `4c7b032`. Sunny 로고 정렬과 운영 AdMob·UMP·Play Billing을 포함하며 출시 파일 검사 482개를 통과했습니다. 코드 34의 실기기 구매·복원은 미검증입니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-rebuild-with-settings-footer-alignment--2026-11-22)
 
-- **설정 푸터 — 현재 소스:** Sunny 로고의 왼쪽 끝을 App Version 라벨과 정렬합니다. Settings 및 Shop은 로고 옆에 `Terms`와 `Privacy`를 한 줄로 표시합니다. 이 변경은 위 Android 1.1.4 (34)와 TestFlight 1.1.5 (5) 이후 소스에 적용됐으며 화면 표시는 실기기에서 확인하지 않았습니다.
+- **이전 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (34), 실행 `20261119-072859-0bdb580b`, 소스 `2b31933`. 운영 AdMob·Google UMP·Play Billing과 기존 서명을 확인했으며, APK와 AAB 모두 Wi-Fi를 선택 사항으로 명시합니다. 출시 파일 검사 482개를 통과했습니다. 이 버전의 실기기 구매·복원은 미검증입니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-optional-wi-fi--2026-11-19)
+
+- **설정 푸터 — 현재 소스:** Sunny 로고의 왼쪽 끝을 App Version 라벨과 정렬합니다. Settings 및 Shop은 로고 옆에 `Terms`와 `Privacy`를 한 줄로 표시합니다. 이 변경은 11월 22일 Android 1.1.4 (34)에 포함됐으며, TestFlight 1.1.5 (5) 이후에 반영됐습니다. 실기기 화면은 미검증입니다.
 
 - **이전 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-023304-5e464521`, 소스 `879f8e9`. 시작 오류 복구와 보상 팝업의 15dp 간격·상태 안내 재배치를 포함합니다. 기존 출시 파일 검사 480개와 Shop·광고·시작 화면 관련 번들 소스 대조를 통과했습니다. 이 실행의 실기기 QA는 하지 않았습니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-startup-recovery--2026-11-19)
 
@@ -77,7 +79,7 @@
 
 > **TestFlight 1.1.3 (1) 시작 충돌 확인:** 사용자 제공 iPhone 로그는 `ExpoModulesWorklets`가 참조하는 `React.framework` 누락으로 앱 코드 실행 전에 종료됨을 보여줍니다. Apple 경고에는 `ReactNativeDependencies.framework`도 포함됩니다. 이후 제공된 Mac 설정에서는 소스 방식 React Native와 사전 컴파일 Expo 프레임워크의 혼합이 확인되어, package.json에서 iOS autolinking 모듈의 소스 빌드를 명시했습니다. Mac에서 pod install·새 Archive·실기기 실행 확인은 아직 필요합니다. Mac용 읽기 전용 검사와 개발자 전달 사항은 [충돌 기록](docs/SIGNING_POLICY.md#ios-launch-crash--2026-09-22)을 참고하세요.
 
-메인 소스 기준 버전은 **1.1.4 (Android 버전 코드 33, iOS 빌드 번호 3)**이며 Settings에는 **V1.1.4**가 표시됩니다. TestFlight **1.1.5 (5)**는 iOS 빌드 복사본에서, Android **1.1.4 (34)**는 빌드 시 버전 코드를 지정해 생성했습니다.
+메인 소스 기준 버전은 **1.1.5 (Android 버전 코드 34, 소스의 iOS 빌드 번호 3)**이며 Settings의 App Version은 **V1.1.5**를 표시합니다. 기존 Android 출시 파일은 **1.1.4 (34)**이고, TestFlight **1.1.5 (5)**는 별도의 iOS 빌드 복사본에서 생성했습니다.
 
 **2026-10-20 도구 체인 업그레이드:** Expo 58.0.16 / React Native 0.88.0 / AGP 9.2.1, compileSdk 37 / targetSdk 36, AGP 내장 R8 9.2.14를 적용했습니다. Windows CMake 경로 길이 오류와 R8이 Room 생성자를 제거해 발생한 시작 충돌을 수정했습니다. 수정 QA APK는 `compile-ok`이며 Galaxy에서 재시작, 테스트 UMP 거부·동의·개인정보 재변경, 테스트 배너·보상 광고 및 보상 후 잠금 해제를 확인했습니다. 당시 수정 QA 재빌드는 Gradle 6분 50초(72 executed / 1138 up-to-date)였습니다. 최신 production 빌드 기록은 아래에서 구분합니다. 당시 구매 화면은 비활성 상태였으며 결제·복원과 iOS는 검증 범위 밖이었습니다. 이 APK는 테스트 광고·EEA QA 설정이 포함되어 스토어 제출용이 아닙니다. [빌드 기록](docs/SIGNING_POLICY.md#combined-exporn-upgrade-assessment--2026-10-20)과 [광고 QA 범위](docs/ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20)를 참고하세요.
 
@@ -506,7 +508,7 @@ side-led-banner-app/
 
 ## 스토어 버전과 제출 상태
 
-11월 18일 Play Console에서 Android 프로덕션 출시 **1.1.3 (31)**과 프로덕션 초안 **1.1.4 (32)**를 확인했습니다. 현재 소스의 Android 기본값은 **1.1.4 (33)**이며, Wi-Fi 수정이 포함된 출시 파일에는 **1.1.4 (34)**가 적용됐습니다. [현재 문서의 기준](#현재-문서의-기준)에 최신 산출물과 검증 범위를 정리했습니다.
+11월 18일 Play Console에서 Android 프로덕션 출시 **1.1.3 (31)**과 프로덕션 초안 **1.1.4 (32)**를 확인했습니다. 현재 Android 소스 설정은 **1.1.5 (34)**입니다. Wi-Fi 수정이 포함된 기존 출시 파일의 버전은 **1.1.4 (34)**입니다. [현재 문서의 기준](#현재-문서의-기준)에 최신 산출물과 검증 범위를 정리했습니다.
 
 TypeScript 검증은 node_modules와 생성 산출물 artifacts를 제외합니다. 과거 빌드 복사본을 현재 소스로 중복 검사하지 않도록 범위를 고정했습니다.
 
