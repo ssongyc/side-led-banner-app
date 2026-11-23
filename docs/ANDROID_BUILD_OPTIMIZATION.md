@@ -4,6 +4,13 @@
 
 The initial review inspected the local release wrapper and retained build logs without running a build. A later user-authorized production build measured the applied changes; its result is recorded below. No lint, test, upload, deployment, or Play Console change was run as part of the documentation update.
 
+## Production build V1.1.5 (34) — 2026-11-23
+
+- 실행: `20261123-021801-09d42ee5`, 소스 `73f8f07`. G: Gradle과 의존성 캐시를 재사용했습니다. 의존성 재설치는 생략했고 적응형 아이콘 변경을 반영하기 위해 네이티브 설정을 다시 생성했습니다.
+- 전체 21분 48초, Gradle 16분 15초. Gradle 작업 1,279개 중 94개 실행, 1,185개 up-to-date였습니다.
+- 출시 파일 검사 482개 통과. 기존 서명, 16 KiB 정렬, 선택적 Wi-Fi 선언, 운영 AdMob·Google UMP, Shop 상품·Google Play 공개키·구매 및 복원 코드, 내장 R8 매핑과 적응형 아이콘을 확인했습니다.
+- 실행 폴더 `artifacts/apk-runs/20261123-021801-09d42ee5/`의 `release-file-audit.json`에 산출물 경로와 추가 검증을 기록했습니다. Play 업로드, 실기기 광고 노출·구매·복원, S3 런처 아이콘은 확인하지 않았습니다. 이후 Android 태블릿 방향 전환과 배경 전환 수정은 현재 소스에 반영됐습니다.
+
 ## Production build V1.1.5 (34) — 2026-11-22
 
 Run `20261122-205130-7cf299a7` built Android 1.1.5 (34) from clean main `382873d`. The wrapper produced a signed AAB and derived the signed universal APK from it. All 482 local release checks passed. The files contain production AdMob, Google UMP, Play Billing 9.1.0 and the Pro product configuration. Device purchase and restore, live ad delivery and Play Console status were outside this verification.

@@ -8,7 +8,7 @@ export function PlaybackTextLayer({
   ...props
 }: PropsWithChildren<ViewProps & {
   layoutRevision: string;
-  rotationMode: "device" | "paused" | "window";
+  rotationMode: "device" | "paused";
   onDeviceRotation?: (event: { nativeEvent: { degrees: number } }) => void;
 }>) {
   return <View {...props} />;

@@ -78,11 +78,14 @@ export const LedBannerFullScreen = ({
     },
     [visible],
   );
-  // A window already laid out in landscape needs no extra quarter turn.
-  const rotatesContent = usesSensorRotation && viewportHeight >= viewportWidth;
+  // Android reports the sensor angle relative to the current display rotation.
+  const rotatesContent =
+    usesSensorRotation && (Platform.OS === "android" || viewportHeight >= viewportWidth);
   const {
     rotation: contentRotation,
-    opacity: rotationOpacity,
+    textOpacity,
+    backgroundRotate,
+    backgroundScale,
     onLayout: onRotatedLayout,
   } = usePlayRotation(visible && rotatesContent, deviceRotation, viewportWidth, viewportHeight);
   const swapsAxes = contentRotation === 90 || contentRotation === 270;
@@ -270,7 +273,7 @@ export const LedBannerFullScreen = ({
         onLayout={onStageLayout}
         onTouchStart={hideAndroidNavigationBar}
       >
-        <Animated.View
+        <View
           onLayout={rotatesContent ? onRotatedLayout : undefined}
           style={rotatesContent
             ? {
@@ -279,7 +282,6 @@ export const LedBannerFullScreen = ({
                 top: (viewportHeight - stageHeight) / 2,
                 width: stageWidth,
                 height: stageHeight,
-                opacity: rotationOpacity,
                 transform: [{ rotate: `${contentRotation}deg` }],
               }
             : styles.layerPassThrough}
@@ -298,86 +300,99 @@ export const LedBannerFullScreen = ({
             ]}
             pointerEvents="box-none"
           >
-            {backgroundImageUri && !effects.isPixelEffect ? (
-              <BackgroundPhotoLayer
-                key={backgroundImageUri}
-                uri={backgroundImageUri}
-                width={stageWidth}
-                height={stageHeight}
-                blurRadius={backgroundBlur / 8}
-                viewMode={backgroundPhotoViewMode}
-              />
-            ) : null}
-            {effects.isPixelEffect ? (
-              <PixelBackgroundCanvas {...pixelBackgroundProps} isActive={isAnimationActive} />
-            ) : null}
-            {!effects.isPixelEffect && effects.showGradientBackdrop && stageWidth > 0 && stageHeight > 0 ? (
-              <View style={StyleSheet.absoluteFill} pointerEvents="none">
-                <Canvas style={{ flex: 1 }} opaque={false}>
-                  <GradientBackdrop
-                    isActive={isAnimationActive}
-                    key={`gradient-${gradientBackgroundPreset}`}
-                    preset={gradientBackgroundPreset as GradientBackdropId}
-                    width={stageWidth}
-                    height={stageHeight}
-                    blur={backgroundBlur / 8}
-                  />
-                </Canvas>
-              </View>
-            ) : null}
-            <BackgroundEffectLayer
-              effect={backgroundEdgeEffectAnim}
-              translateX={backgroundTranslateX}
-              isPortrait={isPortrait}
-              mode="fullscreen"
-              suppressPixelManagedBackgrounds={effects.isPixelEffect}
-              blurRadius={backgroundBlur / 8}
-            />
-            <PlaybackTextLayer
-              style={StyleSheet.absoluteFill}
+            <Animated.View
               pointerEvents="none"
-              layoutRevision={`${stageWidth}:${stageHeight}:${canvas.skiaCanvasLayout.width}:${canvas.skiaCanvasLayout.height}`}
-              rotationMode={usesSensorRotation
-                ? (isAnimationActive ? "device" : "paused")
-                : "window"}
-              onDeviceRotation={usesSensorRotation ? onDeviceRotation : undefined}
+              style={[
+                StyleSheet.absoluteFill,
+                rotatesContent && {
+                  transform: [{ rotate: backgroundRotate }, { scale: backgroundScale }],
+                },
+              ]}
             >
-              {speechBubble.isActive ? (
-                <View
-                  style={{
-                    ...StyleSheet.absoluteFill,
-                    alignItems: "center",
-                    ...(speechBubble.speechTextTop == null
-                      ? { justifyContent: "center" }
-                      : null),
-                  }}
-                  pointerEvents="none"
-                >
+              {backgroundImageUri && !effects.isPixelEffect ? (
+                <BackgroundPhotoLayer
+                  key={backgroundImageUri}
+                  uri={backgroundImageUri}
+                  width={stageWidth}
+                  height={stageHeight}
+                  blurRadius={backgroundBlur / 8}
+                  viewMode={backgroundPhotoViewMode}
+                />
+              ) : null}
+              {effects.isPixelEffect ? (
+                <PixelBackgroundCanvas {...pixelBackgroundProps} isActive={isAnimationActive} />
+              ) : null}
+              {!effects.isPixelEffect && effects.showGradientBackdrop && stageWidth > 0 && stageHeight > 0 ? (
+                <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                  <Canvas style={{ flex: 1 }} opaque={false}>
+                    <GradientBackdrop
+                      isActive={isAnimationActive}
+                      key={`gradient-${gradientBackgroundPreset}`}
+                      preset={gradientBackgroundPreset as GradientBackdropId}
+                      width={stageWidth}
+                      height={stageHeight}
+                      blur={backgroundBlur / 8}
+                    />
+                  </Canvas>
+                </View>
+              ) : null}
+              <BackgroundEffectLayer
+                effect={backgroundEdgeEffectAnim}
+                translateX={backgroundTranslateX}
+                isPortrait={isPortrait}
+                mode="fullscreen"
+                suppressPixelManagedBackgrounds={effects.isPixelEffect}
+                blurRadius={backgroundBlur / 8}
+              />
+            </Animated.View>
+            <Animated.View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, rotatesContent && { opacity: textOpacity }]}
+            >
+              <PlaybackTextLayer
+                style={StyleSheet.absoluteFill}
+                pointerEvents="none"
+                layoutRevision={`${stageWidth}:${stageHeight}:${canvas.skiaCanvasLayout.width}:${canvas.skiaCanvasLayout.height}`}
+                rotationMode={usesSensorRotation && isAnimationActive ? "device" : "paused"}
+                onDeviceRotation={usesSensorRotation ? onDeviceRotation : undefined}
+              >
+                {speechBubble.isActive ? (
                   <View
-                    style={speechBubble.textContainerStyle!}
+                    style={{
+                      ...StyleSheet.absoluteFill,
+                      alignItems: "center",
+                      ...(speechBubble.speechTextTop == null
+                        ? { justifyContent: "center" }
+                        : null),
+                    }}
+                    pointerEvents="none"
+                  >
+                    <View
+                      style={speechBubble.textContainerStyle!}
+                      onLayout={canvas.onSkiaCanvasLayout}
+                    >
+                      <MarqueeCanvas
+                        {...marqueeCanvasProps}
+                      />
+                    </View>
+                  </View>
+                ) : (
+                  <View
+                    style={[
+                      StyleSheet.absoluteFill,
+                      { transform: [{ translateX: textShiftX }] },
+                    ]}
                     onLayout={canvas.onSkiaCanvasLayout}
                   >
                     <MarqueeCanvas
                       {...marqueeCanvasProps}
                     />
                   </View>
-                </View>
-              ) : (
-                <View
-                  style={[
-                    StyleSheet.absoluteFill,
-                    { transform: [{ translateX: textShiftX }] },
-                  ]}
-                  onLayout={canvas.onSkiaCanvasLayout}
-                >
-                  <MarqueeCanvas
-                    {...marqueeCanvasProps}
-                  />
-                </View>
-              )}
-            </PlaybackTextLayer>
+                )}
+              </PlaybackTextLayer>
+            </Animated.View>
           </View>
-        </Animated.View>
+        </View>
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={onClose}

@@ -25,18 +25,15 @@ import { Image } from "expo-image";
 import { type Href, useRouter } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Dimensions, Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAvoidingView, KeyboardToolbar } from "react-native-keyboard-controller";
 import { initialWindowMetrics, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 
 // iOS applies changing system insets in native layout, without a JS padding pass.
 const MainScreen = Platform.OS === "ios" ? SafeAreaView : View;
-const { width: screenWidth, height: screenHeight } = Dimensions.get("screen");
 const usesSensorRotation =
-  Platform.OS === "ios"
-    ? !Platform.isPad
-    : Platform.OS === "android" && Math.min(screenWidth, screenHeight) < 600;
+  Platform.OS === "android" || (Platform.OS === "ios" && !Platform.isPad);
 
 function DismissLabel() {
   return (
@@ -141,9 +138,11 @@ export default function Index() {
       // Finish the Play request before restoring portrait.
       await playOrientationRequest.current;
       if (Platform.OS === "ios") StatusBar.setHidden(false, "none");
-      await ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.PORTRAIT_UP,
-      );
+      if (!usesSensorRotation) {
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.PORTRAIT_UP,
+        );
+      }
     } catch (error) {
       console.warn("Could not restore editor orientation:", error);
     } finally {
