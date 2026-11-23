@@ -35,8 +35,8 @@ import {
   RuntimeShader,
   useImage,
 } from "@shopify/react-native-skia";
-import React, { useMemo } from "react";
-import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
+import React, { useCallback, useMemo } from "react";
+import { Platform, StyleSheet, useWindowDimensions, View, type LayoutChangeEvent } from "react-native";
 import { useDerivedValue, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { getCachedSkiaRuntimeEffect } from "@/utils/skiaRuntimeEffectCache";
 
@@ -123,9 +123,14 @@ export function PixelBackgroundCanvas({
   const { width: winW, height: winH } = useWindowDimensions();
   const isTablet = Math.min(winW, winH) >= TABLET_MIN_SHORTEST_SIDE_DP;
   const isFullscreen = mode === "fullscreen";
-  const surfaceSize = useSharedValue({ width, height });
-  // Keep the complete last scene covering the native surface while JS catches
-  // up with rotation. Steady-state scales are 1; images stay mounted/decoded.
+  const surfaceSize = useSharedValue({ width: 0, height: 0 });
+  const onSurfaceLayout = useCallback(({ nativeEvent }: LayoutChangeEvent) => {
+    const { width, height } = nativeEvent.layout;
+    surfaceSize.set({ width, height });
+  }, [surfaceSize]);
+  // Wrapper layout is in canvas coordinates. Canvas.onSize uses a measurement
+  // that includes Play's parent rotation and swaps the axes on quarter turns.
+  // Keep the last scene covering the surface until the scene dimensions update.
   const surfaceTransform = useDerivedValue(() => [
     { scaleX: isFullscreen && width > 0 && surfaceSize.value.width > 0 ? surfaceSize.value.width / width : 1 },
     { scaleY: isFullscreen && height > 0 && surfaceSize.value.height > 0 ? surfaceSize.value.height / height : 1 },
@@ -159,11 +164,13 @@ export function PixelBackgroundCanvas({
   }
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {/* Follow native fullscreen bounds before JS layout sizes arrive. */}
+    <View
+      style={StyleSheet.absoluteFill}
+      pointerEvents="none"
+      onLayout={isFullscreen ? onSurfaceLayout : undefined}
+    >
       <Canvas
         style={isFullscreen ? StyleSheet.absoluteFill : { width, height }}
-        onSize={isFullscreen ? surfaceSize : undefined}
         opaque={false}
       >
         {/* Selected background remains visible outside photo/effect coverage. */}

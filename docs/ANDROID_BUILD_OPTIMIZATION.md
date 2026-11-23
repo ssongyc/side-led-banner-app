@@ -4,6 +4,12 @@
 
 The initial review inspected the local release wrapper and retained build logs without running a build. A later user-authorized production build measured the applied changes; its result is recorded below. No lint, test, upload, deployment, or Play Console change was run as part of the documentation update.
 
+## Production build V1.1.5 (34) — 2026-11-22
+
+Run `20261122-205130-7cf299a7` built Android 1.1.5 (34) from clean main `382873d`. The wrapper produced a signed AAB and derived the signed universal APK from it. All 482 local release checks passed. The files contain production AdMob, Google UMP, Play Billing 9.1.0 and the Pro product configuration. Device purchase and restore, live ad delivery and Play Console status were outside this verification.
+
+The version update changed the lockfile metadata and triggered dependency installation and native generation. The wrapper restored the existing G: Gradle and app build caches. Gradle took 1h 57m 59s with 620 tasks executed, 366 from cache and 293 up to date. The full recorded run took about 2h 8m 23s. The Play pixelated-photo rotation fix was made after this run.
+
 ## Production rebuild with Settings footer alignment — 2026-11-22
 
 Run `20261122-200638-0a620869` built Android 1.1.4 (34) from `4c7b032`. The signed APK and AAB passed all 482 local release checks. The wrapper reused the G: caches and completed in 16m 28s. This run did not include device QA or a Play upload.

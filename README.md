@@ -11,11 +11,13 @@
 
 - **시작 오류 복구 — 현재 소스:** 로딩 이미지가 실패해도 저장 설정·폰트·첫 화면이 준비되면 편집 화면으로 전환합니다. 갤럭시에서 기존 출시 APK를 재시작했을 때는 오류가 재현되지 않았습니다. 수정본의 Android·iOS 실기기 동작은 미검증입니다.
 
-- **최신 로컬 출시 APK/AAB — 2026-11-22:** Android 1.1.4 (34), 실행 `20261122-200638-0a620869`, 소스 `4c7b032`. Sunny 로고 정렬과 운영 AdMob·UMP·Play Billing을 포함하며 출시 파일 검사 482개를 통과했습니다. 코드 34의 실기기 구매·복원은 미검증입니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-rebuild-with-settings-footer-alignment--2026-11-22)
+- **최신 로컬 출시 APK/AAB — 2026-11-22:** Android 1.1.5 (34), 실행 `20261122-205130-7cf299a7`, 소스 `382873d`. 서명된 두 파일에서 운영 AdMob·Google UMP·Play Billing 및 Pro 구매 설정을 확인했고, 출시 파일 검사 482개를 통과했습니다. 실기기 구매·복원과 Play Console 상태는 이 실행에서 검증하지 않았습니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-v115-34--2026-11-22)
+
+- **이전 로컬 출시 APK/AAB — 2026-11-22:** Android 1.1.4 (34), 실행 `20261122-200638-0a620869`, 소스 `4c7b032`. Sunny 로고 정렬과 운영 AdMob·UMP·Play Billing을 포함하며 출시 파일 검사 482개를 통과했습니다. 코드 34의 실기기 구매·복원은 미검증입니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-rebuild-with-settings-footer-alignment--2026-11-22)
 
 - **이전 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (34), 실행 `20261119-072859-0bdb580b`, 소스 `2b31933`. 운영 AdMob·Google UMP·Play Billing과 기존 서명을 확인했으며, APK와 AAB 모두 Wi-Fi를 선택 사항으로 명시합니다. 출시 파일 검사 482개를 통과했습니다. 이 버전의 실기기 구매·복원은 미검증입니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-optional-wi-fi--2026-11-19)
 
-- **설정 푸터 — 현재 소스:** Sunny 로고의 왼쪽 끝을 App Version 라벨과 정렬합니다. Settings 및 Shop은 로고 옆에 `Terms`와 `Privacy`를 한 줄로 표시합니다. 이 변경은 11월 22일 Android 1.1.4 (34)에 포함됐으며, TestFlight 1.1.5 (5) 이후에 반영됐습니다. 실기기 화면은 미검증입니다.
+- **설정 푸터 — 현재 소스:** Sunny 로고의 왼쪽 끝을 App Version 라벨과 정렬합니다. Settings 및 Shop은 로고 옆에 `Terms`와 `Privacy`를 한 줄로 표시합니다. 이 변경은 11월 22일 로컬 Android 1.1.4 (34)와 1.1.5 (34)에 포함됐으며, TestFlight 1.1.5 (5) 이후에 반영됐습니다. 실기기 화면은 미검증입니다.
 
 - **이전 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-023304-5e464521`, 소스 `879f8e9`. 시작 오류 복구와 보상 팝업의 15dp 간격·상태 안내 재배치를 포함합니다. 기존 출시 파일 검사 480개와 Shop·광고·시작 화면 관련 번들 소스 대조를 통과했습니다. 이 실행의 실기기 QA는 하지 않았습니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-startup-recovery--2026-11-19)
 
@@ -71,6 +73,8 @@
 
 **배경 사진 보기 모드:** 배경 탭의 색상과 흐림 사이에서 확대(기본) 또는 반복을 프리셋별로 선택할 수 있습니다. 확대에서 사진과 화면 방향이 다르면 가운데 80%에 사진 중앙을 잘라 채우고, 가로 화면의 좌우 또는 세로 화면의 위아래 10%씩을 같은 사진으로 흐리게 채웁니다. 방향이 같으면 사진을 화면 전체에 채웁니다. 반복은 사진을 타일처럼 이어 붙입니다. 편집 미리보기와 Play에서 Pixel 효과를 사용하는 경우에도 선택한 보기 모드가 적용됩니다. [배경 보기 모드와 QA 기록](docs/UI_INTERACTION_1.0.9_27.md#배경-사진-보기-모드와-android-저장--2026-11-17)
 
+**Play 픽셀 사진 배경 — 현재 소스:** 기기 방향에 따라 Play 콘텐츠를 90도 회전할 때 픽셀 배경이 회전 전의 로컬 배치 크기를 사용하도록 수정했습니다. 가로 Play에서 사진 폭이 잘못 줄어들면서 옆에 단색 배경이 드러나는 원인을 제거했습니다. 확대·반복 설정과 사진 없이 쓰는 단색 배경은 유지합니다. 이 수정은 기존 1.1.5 (34) 출시 파일 생성 이후 반영했으며, 새 설치 파일에서의 실기기 화면은 미검증입니다.
+
 **Android 사진 저장 후속 수정:** v1.1.4 (32) QA APK에서 HEIC 선택 시 이미지 로더가 실패하고, PNG에서는 크롭 파일 쓰기 완료 전에 영구 저장을 시도하는 문제를 재현했습니다. Android 9 이상에서 HEIC·HEIF 읽기에 플랫폼 디코더를 사용하도록 선택기 경로를 수정하고, 품질 95 JPEG 파일 쓰기가 끝난 뒤 영구 저장을 시작하도록 변경했습니다. 수정한 Android ImagePicker는 소스에서 빌드합니다. QA 실행 ID 20261116-210956-5731d163의 APK를 설치한 Galaxy SM-M336K(Android 16)에서 단일 이미지 HEIC와 PNG의 선택·크롭·저장을 확인했고, 앱을 완전히 종료한 뒤 HEIC에서 저장한 배경이 복원됐습니다. 이미지가 두 장 들어 있는 HEIC 샘플 한 개는 Galaxy의 디코더가 읽지 못했습니다. 배경 사진은 한 번에 한 장을 사용하며, 여러 이미지가 들어 있는 HEIC 파일은 지원 대상에서 제외합니다. iOS는 이번 검증 범위에 포함되지 않았습니다.
 
 **사진 배경 저장 보완 — 2026-10-25:** 사진 선택기의 캐시 URI를 그대로 저장하던 경로를 수정했습니다. 당시에는 사진 선택 결과를 Documents에 복사한 뒤 적용했고, 프리셋에는 앱 컨테이너에 의존하지 않는 사진 참조를 저장합니다. 과거 iOS 절대 경로는 현재 컨테이너에서 파일을 찾아 남아 있는 사진을 이전합니다. 기존 프리셋 키와 다른 설정을 유지하며, 이미 삭제된 캐시는 복구할 수 없어 원래 참조를 지우거나 기본 프리셋으로 덮어쓰지 않습니다. 소스 검토만 완료했으며 빌드·업데이트 설치·실기기 검증은 미실행입니다. 전달된 TestFlight 1.1.4 (3)에는 미포함입니다.
@@ -79,7 +83,7 @@
 
 > **TestFlight 1.1.3 (1) 시작 충돌 확인:** 사용자 제공 iPhone 로그는 `ExpoModulesWorklets`가 참조하는 `React.framework` 누락으로 앱 코드 실행 전에 종료됨을 보여줍니다. Apple 경고에는 `ReactNativeDependencies.framework`도 포함됩니다. 이후 제공된 Mac 설정에서는 소스 방식 React Native와 사전 컴파일 Expo 프레임워크의 혼합이 확인되어, package.json에서 iOS autolinking 모듈의 소스 빌드를 명시했습니다. Mac에서 pod install·새 Archive·실기기 실행 확인은 아직 필요합니다. Mac용 읽기 전용 검사와 개발자 전달 사항은 [충돌 기록](docs/SIGNING_POLICY.md#ios-launch-crash--2026-09-22)을 참고하세요.
 
-메인 소스 기준 버전은 **1.1.5 (Android 버전 코드 34, 소스의 iOS 빌드 번호 3)**이며 Settings의 App Version은 **V1.1.5**를 표시합니다. 기존 Android 출시 파일은 **1.1.4 (34)**이고, TestFlight **1.1.5 (5)**는 별도의 iOS 빌드 복사본에서 생성했습니다.
+메인 소스 기준 버전은 **1.1.5 (Android 버전 코드 34, 소스의 iOS 빌드 번호 3)**이며 Settings의 App Version은 **V1.1.5**를 표시합니다. 최신 로컬 Android 출시 파일은 **1.1.5 (34)**입니다. TestFlight **1.1.5 (5)**는 별도의 iOS 빌드 복사본에서 생성했습니다.
 
 **2026-10-20 도구 체인 업그레이드:** Expo 58.0.16 / React Native 0.88.0 / AGP 9.2.1, compileSdk 37 / targetSdk 36, AGP 내장 R8 9.2.14를 적용했습니다. Windows CMake 경로 길이 오류와 R8이 Room 생성자를 제거해 발생한 시작 충돌을 수정했습니다. 수정 QA APK는 `compile-ok`이며 Galaxy에서 재시작, 테스트 UMP 거부·동의·개인정보 재변경, 테스트 배너·보상 광고 및 보상 후 잠금 해제를 확인했습니다. 당시 수정 QA 재빌드는 Gradle 6분 50초(72 executed / 1138 up-to-date)였습니다. 최신 production 빌드 기록은 아래에서 구분합니다. 당시 구매 화면은 비활성 상태였으며 결제·복원과 iOS는 검증 범위 밖이었습니다. 이 APK는 테스트 광고·EEA QA 설정이 포함되어 스토어 제출용이 아닙니다. [빌드 기록](docs/SIGNING_POLICY.md#combined-exporn-upgrade-assessment--2026-10-20)과 [광고 QA 범위](docs/ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20)를 참고하세요.
 
@@ -292,6 +296,8 @@ pwsh -NoProfile -File scripts/android-build-observability.test.ps1
 node scripts/check-reward-expiry.cjs
 node scripts/check-rewarded-lifecycle.cjs
 ```
+
+2026-11-23 Play 픽셀 배경 후속 점검에서 ESLint 오류·경고 0개, Node 테스트 87개, PowerShell 검사 20개, 보상 만료·광고 수명 주기 검사 2개를 확인했습니다. 추적한 파일·리소스·API 중 삭제를 확정할 항목은 없었습니다. 기존 테스트는 실제 기기의 회전 후 사진 표시를 검증하지 않습니다.
 
 2026-11-22 Settings와 Shop에서 쓰지 않는 Terms·Privacy 번역 키와 시트 매핑을 제거했습니다. 푸터 정렬과 정리 변경에 대해 ESLint는 오류·경고 없이 통과했고, Node 테스트 87개, PowerShell 검사 20개, 보상 만료·광고 수명 주기 검사 2개도 통과했습니다.
 
@@ -508,7 +514,7 @@ side-led-banner-app/
 
 ## 스토어 버전과 제출 상태
 
-11월 18일 Play Console에서 Android 프로덕션 출시 **1.1.3 (31)**과 프로덕션 초안 **1.1.4 (32)**를 확인했습니다. 현재 Android 소스 설정은 **1.1.5 (34)**입니다. Wi-Fi 수정이 포함된 기존 출시 파일의 버전은 **1.1.4 (34)**입니다. [현재 문서의 기준](#현재-문서의-기준)에 최신 산출물과 검증 범위를 정리했습니다.
+11월 18일 Play Console에서 Android 프로덕션 출시 **1.1.3 (31)**과 프로덕션 초안 **1.1.4 (32)**를 확인했습니다. 현재 Android 소스 설정은 **1.1.5 (34)**입니다. Wi-Fi 수정은 로컬 **1.1.4 (34)**와 **1.1.5 (34)** 출시 파일에 포함됐습니다. [현재 문서의 기준](#현재-문서의-기준)에 최신 산출물과 검증 범위를 정리했습니다.
 
 TypeScript 검증은 node_modules와 생성 산출물 artifacts를 제외합니다. 과거 빌드 복사본을 현재 소스로 중복 검사하지 않도록 범위를 고정했습니다.
 
