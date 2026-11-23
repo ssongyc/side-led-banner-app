@@ -4,7 +4,7 @@
     "slug": "led-banner-app",
     "version": "1.1.5",
     "orientation": "default",
-    "icon": "./assets/images/Logo_IOS.png",
+    "icon": "./assets/images/LOGO_05_Final.png",
     "scheme": "sideledbannerapp",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -19,6 +19,11 @@
     },
     "android": {
       "icon": "./assets/images/LOGO_05_Final.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/android-adaptive-foreground.png",
+        "monochromeImage": "./assets/images/android-adaptive-foreground.png",
+        "backgroundColor": "#101010"
+      },
       "predictiveBackGestureEnabled": false,
       "package": "com.minkyokim.sideledbannerapp",
       "blockedPermissions": [

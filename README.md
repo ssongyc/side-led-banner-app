@@ -13,6 +13,8 @@
 
 - **최신 로컬 출시 APK/AAB — 2026-11-22:** Android 1.1.5 (34), 실행 `20261122-205130-7cf299a7`, 소스 `382873d`. 서명된 두 파일에서 운영 AdMob·Google UMP·Play Billing 및 Pro 구매 설정을 확인했고, 출시 파일 검사 482개를 통과했습니다. 실기기 구매·복원과 Play Console 상태는 이 실행에서 검증하지 않았습니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-v115-34--2026-11-22)
 
+- **Android 홈 화면 아이콘 — 현재 소스:** 검은 배경과 주황색 LED POP 점 글자를 분리한 적응형 아이콘을 사용합니다. 전경은 원형 마스크의 안전 영역에 배치했고, 테마 아이콘도 같은 글자 모양을 사용합니다. 기본·레거시 아이콘은 동일한 원본 한 장으로 통합했습니다. 아이콘 변경은 위에 기록한 1.1.5 (34) APK/AAB 생성 이후 반영됐으며, 새 APK와 SUAAT S3 홈 화면은 미검증입니다.
+
 - **이전 로컬 출시 APK/AAB — 2026-11-22:** Android 1.1.4 (34), 실행 `20261122-200638-0a620869`, 소스 `4c7b032`. Sunny 로고 정렬과 운영 AdMob·UMP·Play Billing을 포함하며 출시 파일 검사 482개를 통과했습니다. 코드 34의 실기기 구매·복원은 미검증입니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-rebuild-with-settings-footer-alignment--2026-11-22)
 
 - **이전 로컬 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (34), 실행 `20261119-072859-0bdb580b`, 소스 `2b31933`. 운영 AdMob·Google UMP·Play Billing과 기존 서명을 확인했으며, APK와 AAB 모두 Wi-Fi를 선택 사항으로 명시합니다. 출시 파일 검사 482개를 통과했습니다. 이 버전의 실기기 구매·복원은 미검증입니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-optional-wi-fi--2026-11-19)
@@ -27,7 +29,9 @@
 
 - **Android 광고 창 수정 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-001934-7ed6fc53`, 소스 `6c60018`. 운영 AdMob·일반 Google UMP·2시간 보상과 Android 광고 화면 수정을 포함합니다. 출시 파일 검사 480개를 통과했고, 갤럭시에서 ₩7,500 가격, 무청구 구매, 앱 재실행 후 Pro 유지와 구매 복원을 확인했습니다. 새 APK의 EEA 동의창, 과금 실광고 및 광고 복귀 화면은 미검증입니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-android-ad-window-fixes--2026-11-19)
 
-- **최신 TestFlight와 App Review 접수 — 2026-11-19:** iOS 1.1.5 (5), 소스 `879f8e9`. Apple이 빌드를 `VALID`로 처리했고 내부 그룹 LPT에 배포됐습니다. 사용자가 빌드 5와 Pro 영구 광고 제거 상품을 같은 App Review 건에 제출했으며 접수 당시 두 항목은 심사 대기 상태였습니다. iPhone Shop 가격 표시는 확인했고 Sandbox 구매 완료와 복원은 미검증입니다. [TestFlight 및 심사 기록](docs/SIGNING_POLICY.md#testflight-115-5--2026-11-19)
+- **최신 TestFlight — 2026-11-23:** iOS 1.1.6 (6), 소스 `6ff4d94`. Play에서 사진 배경에 픽셀레이션을 적용할 때 발생하던 회전 문제 수정이 포함됩니다. Apple 처리 상태는 `VALID`이며 내부 그룹 LPT에서 사용할 수 있습니다. iPhone의 수정 화면과 Sandbox 구매·복원은 실기기 미검증입니다. [TestFlight 기록](docs/SIGNING_POLICY.md#testflight-116-6--2026-11-23)
+
+- **이전 TestFlight와 App Review 접수 — 2026-11-19:** iOS 1.1.5 (5), 소스 `879f8e9`. Apple이 빌드를 `VALID`로 처리했고 내부 그룹 LPT에 배포됐습니다. 사용자가 빌드 5와 Pro 영구 광고 제거 상품을 같은 App Review 건에 제출했으며 접수 당시 두 항목은 심사 대기 상태였습니다. iPhone Shop 가격 표시는 확인했고 Sandbox 구매 완료와 복원은 미검증입니다. [TestFlight 및 심사 기록](docs/SIGNING_POLICY.md#testflight-115-5--2026-11-19)
 
 - **보상 광고 팝업 — 현재 소스:** 마지막 혜택 행과 Watch Ad 사이를 15dp로 조정했습니다. 준비 중·실패·만료 안내를 구매 버튼 아래에 가운데 정렬하고 그 아래에 여백을 둡니다. 이 변경과 시작 오류 복구는 Android 실행 `20261119-023304-5e464521` 및 TestFlight 1.1.5 (5)에 포함되며 실기기 동작은 미검증입니다. [팝업 레이아웃](docs/ADVERTISING.md#watch-ad-간격과-구매-버튼-아래-광고-상태)
 
@@ -83,7 +87,7 @@
 
 > **TestFlight 1.1.3 (1) 시작 충돌 확인:** 사용자 제공 iPhone 로그는 `ExpoModulesWorklets`가 참조하는 `React.framework` 누락으로 앱 코드 실행 전에 종료됨을 보여줍니다. Apple 경고에는 `ReactNativeDependencies.framework`도 포함됩니다. 이후 제공된 Mac 설정에서는 소스 방식 React Native와 사전 컴파일 Expo 프레임워크의 혼합이 확인되어, package.json에서 iOS autolinking 모듈의 소스 빌드를 명시했습니다. Mac에서 pod install·새 Archive·실기기 실행 확인은 아직 필요합니다. Mac용 읽기 전용 검사와 개발자 전달 사항은 [충돌 기록](docs/SIGNING_POLICY.md#ios-launch-crash--2026-09-22)을 참고하세요.
 
-메인 소스 기준 버전은 **1.1.5 (Android 버전 코드 34, 소스의 iOS 빌드 번호 3)**이며 Settings의 App Version은 **V1.1.5**를 표시합니다. 최신 로컬 Android 출시 파일은 **1.1.5 (34)**입니다. TestFlight **1.1.5 (5)**는 별도의 iOS 빌드 복사본에서 생성했습니다.
+메인 소스 기준 버전은 **1.1.5 (Android 버전 코드 34, 소스의 iOS 빌드 번호 3)**이며 Settings의 App Version은 **V1.1.5**를 표시합니다. 최신 로컬 Android 출시 파일은 **1.1.5 (34)**입니다. 최신 TestFlight **1.1.6 (6)**은 별도의 iOS 빌드 복사본에서 생성했으며, 해당 빌드의 Settings에는 **V1.1.6**이 표시되도록 구성했습니다.
 
 **2026-10-20 도구 체인 업그레이드:** Expo 58.0.16 / React Native 0.88.0 / AGP 9.2.1, compileSdk 37 / targetSdk 36, AGP 내장 R8 9.2.14를 적용했습니다. Windows CMake 경로 길이 오류와 R8이 Room 생성자를 제거해 발생한 시작 충돌을 수정했습니다. 수정 QA APK는 `compile-ok`이며 Galaxy에서 재시작, 테스트 UMP 거부·동의·개인정보 재변경, 테스트 배너·보상 광고 및 보상 후 잠금 해제를 확인했습니다. 당시 수정 QA 재빌드는 Gradle 6분 50초(72 executed / 1138 up-to-date)였습니다. 최신 production 빌드 기록은 아래에서 구분합니다. 당시 구매 화면은 비활성 상태였으며 결제·복원과 iOS는 검증 범위 밖이었습니다. 이 APK는 테스트 광고·EEA QA 설정이 포함되어 스토어 제출용이 아닙니다. [빌드 기록](docs/SIGNING_POLICY.md#combined-exporn-upgrade-assessment--2026-10-20)과 [광고 QA 범위](docs/ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20)를 참고하세요.
 
@@ -296,6 +300,8 @@ pwsh -NoProfile -File scripts/android-build-observability.test.ps1
 node scripts/check-reward-expiry.cjs
 node scripts/check-rewarded-lifecycle.cjs
 ```
+
+2026-11-23 Android 적응형 아이콘 후속 점검에서 ESLint 오류·경고 0개, Node 테스트 87개, PowerShell 검사 20개와 광고 검사 2개가 통과했습니다. 기본 아이콘 파일을 한 장으로 통합한 뒤 설정에 지정된 모든 아이콘 경로와 전경의 66dp 안전 영역을 확인했습니다. 새 APK와 SUAAT S3 런처 동작은 이 검사 범위에 포함되지 않습니다.
 
 2026-11-23 Play 픽셀 배경 후속 점검에서 ESLint 오류·경고 0개, Node 테스트 87개, PowerShell 검사 20개, 보상 만료·광고 수명 주기 검사 2개를 확인했습니다. 추적한 파일·리소스·API 중 삭제를 확정할 항목은 없었습니다. 기존 테스트는 실제 기기의 회전 후 사진 표시를 검증하지 않습니다.
 

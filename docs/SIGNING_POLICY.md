@@ -175,6 +175,12 @@ Results and same-build symbols are retained under the run's release-verification
 Optional Configuration Cache, Daemon reuse and Gradle worker 1/2 comparisons are opt-in; defaults retain one worker and no reusable daemon. Configuration-cache errors fail the run. Signing credentials and cached signing configuration must remain local. See the 5 → 3 → 4 sequence in the optimization document; these options and 1.1.0(28) are not yet build-verified.
 
 
+## TestFlight 1.1.6 (6) — 2026-11-23
+
+- App Store Connect showed iOS 1.1.5 as ready for distribution. The isolated iOS build copy used `6ff4d94` with marketing version 1.1.6 and build 6. It includes the Play pixelated-photo rotation fix. The main and Android version settings were preserved.
+- EAS build `78a862a3-0842-42bc-adf4-f03042d97595` passed the macOS signature, archive, matching dSYM, production AdMob and normal UMP checks. The IPA and verification records are retained in `artifacts/testflight-116-6/`.
+- EAS submission `8c354ca7-6911-4408-b72d-9414775aa715` uploaded the verified build. Apple reported `VALID` for build `2482bc4c-67ba-4938-b804-09664c3517fa` and `IN_BETA_TESTING` for internal testing with group LPT. The pixel background fix and Sandbox purchases and restoration have no iPhone runtime verification. This upload did not initiate App Review.
+
 ## TestFlight 1.1.5 (5) — 2026-11-19
 
 - EAS built iOS 1.1.5 (5) from `879f8e9`. Apple reported build `cd3175bf-bac6-4691-860e-f8387ff09aab` as `VALID` and available in the internal TestFlight group LPT. The IPA and Apple status record are in `artifacts/testflight-115-5/`.
