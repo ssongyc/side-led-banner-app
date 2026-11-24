@@ -4,7 +4,6 @@ import { styles as base } from "@/constants/styles";
 import { useSettingsLocalizationContext } from "@/contexts/settingsContext";
 import { Image, type ImageProps } from "expo-image";
 import { useRouter } from "expo-router";
-import React from "react";
 import {
   Linking,
   Platform,

@@ -11,7 +11,7 @@ import {
 } from "@/utils/remoteFontDownloadPrompt";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React, {
+import {
   useCallback,
   useEffect,
   useRef,

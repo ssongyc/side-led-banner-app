@@ -1,6 +1,6 @@
 import { heartBackgroundTickerStyles as styles } from "@/constants/styles";
 import { Image as ExpoImage } from "expo-image";
-import React, { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { LayoutChangeEvent, Image as RNImage, StyleSheet, View } from "react-native";
 import Animated, {
   SharedValue,

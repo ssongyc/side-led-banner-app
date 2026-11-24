@@ -18,7 +18,7 @@ import Constants from "expo-constants";
 import { type Href, useFocusEffect, useRouter } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { loadRewardedAd } from "@/hooks/useRewardedAd";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BackHandler,
   Image,

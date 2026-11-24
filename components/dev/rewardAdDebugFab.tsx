@@ -1,5 +1,4 @@
 import { uiThemeFontStyle } from "@/constants/appFonts";
-import React from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 
 type Props = {

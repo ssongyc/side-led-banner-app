@@ -9,7 +9,7 @@ import { FONT_SIZE_MIN } from "@/utils/textSizing";
 import { requestFontDownload } from "@/utils/remoteFontDownloadPrompt";
 import type { FontId } from "@/constants/appFonts";
 import { normalizeOneLineJoinMode } from "@/utils/viewMode";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ScrollView,
   Text,

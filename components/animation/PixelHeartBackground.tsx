@@ -1,6 +1,6 @@
 import { resolveHeartImageSource } from "@/components/animation/resolveBackgroundEffectImage";
 import { Group, Image, useImage } from "@shopify/react-native-skia";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Image as RNImage } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 import { useDerivedValue } from "react-native-reanimated";

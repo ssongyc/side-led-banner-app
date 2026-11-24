@@ -1,4 +1,3 @@
-import React from "react";
 import { Pressable, Text, ScrollView, useWindowDimensions } from "react-native";
 import { WEB_AD_DIAGNOSTICS, selectWebAdState, useWebAdState } from "@/ads/webAdDiagnostics.web";
 import { useSettingsUI } from "@/contexts/settingsContext";

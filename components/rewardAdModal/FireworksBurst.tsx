@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { StyleSheet, useWindowDimensions } from "react-native";
 import { Canvas, Group, Path, Rect, Skia } from "@shopify/react-native-skia";
 import {

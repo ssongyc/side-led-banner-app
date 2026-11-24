@@ -32,7 +32,7 @@ import { useKeepAwake } from 'expo-keep-awake';
 import { useLocales } from "expo-localization";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, AppState, Platform, StyleSheet, View } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";

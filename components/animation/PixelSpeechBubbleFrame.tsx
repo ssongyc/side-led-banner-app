@@ -1,7 +1,7 @@
 import { DOT_MATRIX_FRAME_SKSL, resolveFramePixelDotSize } from "@/components/animation/dotMatrixFrameShader";
 import { Group, Image, Paint, RuntimeShader, useImage } from "@shopify/react-native-skia";
 import { getCachedSkiaRuntimeEffect } from "@/utils/skiaRuntimeEffectCache";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 
 type Props = {
   source: number;

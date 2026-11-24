@@ -1,7 +1,6 @@
 import { SliderComponent } from "@/components/slider";
 import { styles } from "@/constants/styles";
 import { useSettingsLocalizationContext } from "@/contexts/settingsContext";
-import React from "react";
 import { StyleProp, Text, View, ViewStyle } from "react-native";
 
 const rowNoBottomBorder: ViewStyle = {

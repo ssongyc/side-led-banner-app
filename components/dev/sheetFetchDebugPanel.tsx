@@ -2,7 +2,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { uiThemeFontStyle } from "@/constants/appFonts";
 import { useSettingsLocalizationContext } from "@/contexts/settingsContext";
 import { hideAndroidNavigationBar } from "@/utils/SystemChrome";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Modal,
   Platform,

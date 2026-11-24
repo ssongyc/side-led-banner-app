@@ -71,6 +71,8 @@ export const BackgroundSection = () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: false,
+      // Android compression activates the patched HEIC exporter.
+      quality: Platform.OS === "android" ? 0.95 : undefined,
     });
     if (result.canceled || !result.assets[0]) return;
     await applyPhoto(result.assets[0].uri);

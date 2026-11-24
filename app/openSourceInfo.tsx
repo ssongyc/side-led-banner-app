@@ -5,7 +5,7 @@ import {
 import { styles as base } from "@/constants/styles";
 import { useSettingsLocalizationContext } from "@/contexts/settingsContext";
 import { useRouter } from "expo-router";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import {
   Image,
   ScrollView,

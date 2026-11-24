@@ -35,7 +35,7 @@ import {
   RuntimeShader,
   useImage,
 } from "@shopify/react-native-skia";
-import React, { useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Platform, StyleSheet, useWindowDimensions, View, type LayoutChangeEvent } from "react-native";
 import { useDerivedValue, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { getCachedSkiaRuntimeEffect } from "@/utils/skiaRuntimeEffectCache";

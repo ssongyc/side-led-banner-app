@@ -7,7 +7,12 @@ The initial review inspected the local release wrapper and retained build logs w
 ## 다음 Android 빌드 버전 1.1.6 (35)
 
 - Expo 설정, 루트 패키지 및 잠금 파일의 앱 버전을 1.1.6으로 맞췄습니다. Android 버전 코드는 35이며 Settings는 Expo 버전을 읽어 V1.1.6을 표시합니다.
-- 세로 하드웨어 선택 선언을 검증하기 시작한 실행 20261123-213751-ea6fe5c3의 준비 계획은 1.1.5 (34)입니다. 새 버전은 다음 APK/AAB 빌드에서 적용합니다.
+- 버전 35는 Play Console에서 미사용이라고 사용자가 확인했습니다. 출시 파일과 검증 결과는 각 빌드의 소스 리비전으로 식별합니다.
+
+## Production rebuild with optional portrait hardware — 2026-11-23
+
+- 소스 6563f9a, Android 1.1.5 (34), 실행 20261123-213751-ea6fe5c3. G: 캐시를 재사용해 전체 24분 32초가 걸렸습니다.
+- 출시 파일 검사 484개를 통과했습니다. APK와 AAB 모두 세로 화면과 Wi-Fi 하드웨어를 선택 사항으로 선언합니다. 이 실행에서는 실기기 검증과 Play 업로드를 수행하지 않았습니다. PhotoCrop 병합과 후속 정리는 이 실행 이후의 소스 변경입니다.
 
 ## Production rebuild with Android Play rotation — 2026-11-23
 

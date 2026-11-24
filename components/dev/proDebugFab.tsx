@@ -1,6 +1,5 @@
 import { uiThemeFontStyle } from "@/constants/appFonts";
 import { useSettingsUI } from "@/contexts/settingsContext";
-import React from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 
 export function ProDebugFab() {

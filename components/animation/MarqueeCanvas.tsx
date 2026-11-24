@@ -9,7 +9,7 @@ import {
     Rect,
     RuntimeShader,
 } from "@shopify/react-native-skia";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useDerivedValue, type SharedValue } from "react-native-reanimated";
 
 export interface MarqueeCanvasProps {

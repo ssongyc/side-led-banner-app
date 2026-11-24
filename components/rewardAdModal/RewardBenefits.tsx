@@ -1,4 +1,3 @@
-import React from "react";
 import { Text, View } from "react-native";
 import { Image } from "expo-image";
 import { rewardAdModalStyles as styles } from "@/constants/styles";

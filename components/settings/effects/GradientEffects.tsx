@@ -6,7 +6,6 @@ import type {
   useSettingsAppearance,
   useSettingsLocalizationContext,
 } from "@/contexts/settingsContext";
-import React from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 type Props = {

@@ -24,7 +24,7 @@ import { trackAnalyticsEvent } from "@/utils/ApiClient";
 import { Image } from "expo-image";
 import { type Href, useRouter } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAvoidingView, KeyboardToolbar } from "react-native-keyboard-controller";
 import { initialWindowMetrics, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";

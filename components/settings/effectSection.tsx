@@ -4,7 +4,6 @@ import {
   useSettingsLocalizationContext,
   useSettingsUI,
 } from "@/contexts/settingsContext";
-import React from "react";
 import { ScrollView } from "react-native";
 import { BackgroundEffects } from "./effects/BackgroundEffects";
 import { GradientEffects } from "./effects/GradientEffects";

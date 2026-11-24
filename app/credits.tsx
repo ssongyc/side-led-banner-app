@@ -5,7 +5,6 @@ import {
 import { styles as base } from "@/constants/styles";
 import { useSettingsLocalizationContext } from "@/contexts/settingsContext";
 import { useRouter } from "expo-router";
-import React from "react";
 import {
   Image,
   ScrollView,
@@ -14,7 +13,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-type CreditEntry = { role: string; names: string; subtitle?: string; leftAlign?: boolean };
+type CreditEntry = { role: string; names: string; leftAlign?: boolean };
 
 const CREDITS: CreditEntry[] = [
   { role: "Producer", names: "R.S." },
@@ -57,7 +56,7 @@ export default function CreditsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={base.scrollViewContainer}
       >
-        {CREDITS.map(({ role, names, subtitle, leftAlign }) => (
+        {CREDITS.map(({ role, names, leftAlign }) => (
           <View key={role} style={creditsStyles.row}>
             <Text style={creditsStyles.roleText} allowFontScaling={false}>
               {role}
