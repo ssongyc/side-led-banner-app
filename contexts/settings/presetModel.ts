@@ -261,7 +261,7 @@ export function normalizePresetSlot(raw: unknown): PresetSnapshot {
         : base.appearance.fontByLocale,
   });
 
-  const bgPartial =
+  const bgPartial: Partial<BannerConfig["background"]> =
     o.background &&
     typeof o.background === "object" &&
     !Array.isArray(o.background)

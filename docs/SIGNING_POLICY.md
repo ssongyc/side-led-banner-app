@@ -175,6 +175,11 @@ Results and same-build symbols are retained under the run's release-verification
 Optional Configuration Cache, Daemon reuse and Gradle worker 1/2 comparisons are opt-in; defaults retain one worker and no reusable daemon. Configuration-cache errors fail the run. Signing credentials and cached signing configuration must remain local. See the 5 → 3 → 4 sequence in the optimization document; these options and 1.1.0(28) are not yet build-verified.
 
 
+## TestFlight 1.1.7 (8) — 2026-11-24
+
+- 소스 184cc81, EAS 빌드 a12f907c-a159-47b9-926d-c05cae8d065f, 제출 5a4bf097-37d5-4f1c-b4f9-15612867ff45입니다. 기존 서명, 아카이브와 일치하는 dSYM, 운영 AdMob·일반 UMP를 확인했습니다. Apple 빌드 7fd2068b-38e0-4c8c-9207-2d0cb5245c11은 VALID, IN_BETA_TESTING 상태이며 기존 내부 그룹 LPT에 있습니다.
+- 사용자 자체 QA에서 배경 사진 자동 자르기와 세로 잠금 상태에서의 iPhone Play 회전에 문제가 없음을 확인했습니다. Sandbox 구매·복원은 미검증입니다.
+
 ## TestFlight 1.1.7 (7) — 2026-11-23
 
 - iOS 빌드 복사본에 소스 `98f42d5`, 버전 1.1.7, 빌드 7을 적용했습니다. EAS 빌드 `fe583bd0-f56a-4f8f-87e8-f97f5ed47fe3`에서 기존 서명, 원본 Xcode 아카이브와 일치하는 dSYM, 운영 AdMob·일반 UMP를 검증했습니다. 기록과 IPA는 `artifacts/testflight-117-7/`에 보관합니다.

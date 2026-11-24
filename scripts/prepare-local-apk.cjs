@@ -8,8 +8,8 @@ const target = path.join(root, 'artifacts', 'b');
 const statePath = path.join(target, '.source-state.json');
 const planPath = path.join(target, '.source-plan.json');
 const phase = process.argv[2];
-const dependencyHashSchema = 2;
-const nativeHashSchema = 4;
+const dependencyHashSchema = 3;
+const nativeHashSchema = 5;
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 const git = args => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -162,7 +162,7 @@ function digest(
   fromSource,
   normalizeNativeConfig = false,
   normalizeLineEndings = true,
-  normalizeRootPackageVersion = false,
+  rootVersionNormalization = 'none',
 ) {
   return hash(JSON.stringify([...new Set(names)].sort().map(name => {
     const file = safePath(target, name);
@@ -171,16 +171,22 @@ function digest(
       const parsed = JSON.parse(content.toString());
       content = Buffer.from(JSON.stringify(normalizeNativeConfig ? androidNativeAppConfig(parsed) : parsed));
     }
-    if (name === 'package.json' && content && normalizeRootPackageVersion) {
+    if (name === 'package.json' && content && rootVersionNormalization !== 'none') {
       const packageJson = JSON.parse(content.toString());
       delete packageJson.version;
       content = Buffer.from(JSON.stringify(packageJson));
+    }
+    if (name === 'package-lock.json' && content && rootVersionNormalization === 'package-and-lock') {
+      const lock = JSON.parse(content.toString());
+      delete lock.version;
+      const rootPackage = lock.packages?.[''];
+      if (rootPackage) delete rootPackage.version;
+      content = Buffer.from(JSON.stringify(lock));
     }
     if (content && normalizeLineEndings) content = fingerprintContent(name, content);
     return [name, content ? hash(content) : null];
   })));
 }
-const dependencyHash = digest(dependencyNames, true, false, true, true);
 // Hash the preserved local environment without copying or logging values.
 // .env.example is synchronized below; hash its incoming bytes, including addition/deletion.
 // Actual local environment files are preserved and remain byte-sensitive.
@@ -207,40 +213,46 @@ const toolchainHash = hash(JSON.stringify([
   }),
 ]));
 const adProfile = process.env.LEDPOP_AD_PROFILE ?? 'production';
-const nativeHash = hash(digest(nativeNames, true, true, true, true) + environmentHash + toolchainHash + adProfile);
+function dependencyFingerprint(fromSource, normalizeLineEndings = true, versions = 'package-and-lock') {
+  return digest(dependencyNames, fromSource, false, normalizeLineEndings, versions);
+}
+function nativeFingerprint(fromSource, normalizeLineEndings = true, versions = 'package-and-lock') {
+  return hash(digest(nativeNames, fromSource, true, normalizeLineEndings, versions) +
+    environmentHash + toolchainHash + adProfile);
+}
+const dependencyHash = dependencyFingerprint(true);
+const nativeHash = nativeFingerprint(true);
+// Reproduce the stored hash from the preserved snapshot before translating a
+// successful stamp. Old schemas differ in line endings and root version fields.
+const dependencyMigration = new Map([
+  [null, [false, 'none']],
+  [1, [true, 'none']],
+  [2, [true, 'package']],
+]).get(state?.dependencyHashSchema ?? null);
 let previousDependencyHash = null;
-if (state?.dependencyHashSchema === dependencyHashSchema && state?.dependencyHash) {
+if (state?.dependencyHashSchema === dependencyHashSchema && state.dependencyHash) {
   previousDependencyHash = state.dependencyHash;
-} else if (state?.dependencyHashSchema === 1 && state.dependencyHash &&
-           digest(dependencyNames, false) === state.dependencyHash) {
-  // Schema 2 ignores only the root package metadata version. Reproduce the
-  // successful schema-1 hash from preserved bytes before translating it.
-  previousDependencyHash = digest(dependencyNames, false, false, true, true);
-} else if (state?.dependencyHash && state.dependencyHashSchema == null &&
-           digest(dependencyNames, false, false, false) === state.dependencyHash) {
-  // Prove the preserved bytes match the successful legacy stamp before migration.
-  previousDependencyHash = digest(dependencyNames, false, false, true, true);
+} else if (state?.dependencyHash && dependencyMigration &&
+           dependencyFingerprint(false, ...dependencyMigration) === state.dependencyHash) {
+  previousDependencyHash = dependencyFingerprint(false);
 } else if (!state && bootstrap) {
-  previousDependencyHash = digest(dependencyNames, false, false, true, true);
+  previousDependencyHash = dependencyFingerprint(false);
 }
 const previousPlan = fs.existsSync(planPath) ? readJson(planPath) : null;
 const recordedProfile = state?.adProfile ??
   (state?.nativeHash && previousPlan?.nativeHash === state.nativeHash ? previousPlan.adProfile : null);
+const nativeMigration = new Map([
+  [2, [false, 'none']],
+  [3, [true, 'none']],
+  [4, [true, 'package']],
+]).get(state?.nativeHashSchema);
 let previousNativeHash = null;
-if (state?.nativeHashSchema === nativeHashSchema && state?.nativeHash) {
+if (state?.nativeHashSchema === nativeHashSchema && state.nativeHash) {
   previousNativeHash = state.nativeHash;
-} else if (state?.nativeHashSchema === 3 && state.nativeHash && recordedProfile === adProfile &&
+} else if (state?.nativeHash && nativeMigration && recordedProfile === adProfile &&
            fs.existsSync(path.join(target, 'android', 'app', 'build.gradle')) &&
-           hash(digest(nativeNames, false, true) + environmentHash + toolchainHash + adProfile) === state.nativeHash) {
-  // Schema 4 ignores only the root package metadata version. Reproduce the
-  // successful schema-3 hash from preserved bytes before translating it.
-  previousNativeHash = hash(digest(nativeNames, false, true, true, true) + environmentHash + toolchainHash + adProfile);
-} else if (state?.nativeHashSchema === 2 && state.nativeHash && recordedProfile === adProfile &&
-           fs.existsSync(path.join(target, 'android', 'app', 'build.gradle')) &&
-           hash(digest(nativeNames, false, true, false) + environmentHash + toolchainHash + adProfile) === state.nativeHash) {
-  // Migrate only a proven legacy snapshot, including the current environment/toolchain.
-  // A failed phase, mismatched snapshot or unknown schema must require preparation.
-  previousNativeHash = hash(digest(nativeNames, false, true, true, true) + environmentHash + toolchainHash + adProfile);
+           nativeFingerprint(false, ...nativeMigration) === state.nativeHash) {
+  previousNativeHash = nativeFingerprint(false);
 }
 const plan = {
   adProfile,

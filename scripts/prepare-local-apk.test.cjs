@@ -16,7 +16,13 @@ function fixture() {
   const source = {
     'app.json': JSON.stringify({expo:{version:'1.0.0',android:{versionCode:1},ios:{x:1},icon:'./assets/icon.png'}}, null, 2)+'\n',
     'package.json':'{\n  "version": "1.0.0",\n  "dependencies": {"example":"1.0.0"}\n}\n',
-    'package-lock.json':'{\n  "lockfileVersion":3\n}\n',
+    'package-lock.json': JSON.stringify({
+      name: 'fixture', version: '1.0.0', lockfileVersion: 3,
+      packages: {
+        '': {name: 'fixture', version: '1.0.0', dependencies: {example: '1.0.0'}},
+        'node_modules/example': {version: '1.0.0', integrity: 'sha512-fixture'},
+      },
+    }, null, 2) + '\n',
     '.npmrc':'audit=false\n',
     'app.config.js':'module.exports = {};\n',
     'advertising.config.json':'{\n "production":true\n}\n',
@@ -77,15 +83,16 @@ function fixture() {
     old.nativeHash=sha(digest(native,true)+environment+toolchain+'production');
     put(path.join(target,'.source-state.json'),JSON.stringify(old));
   };
-  const priorSchema=()=>{
+  const priorSchema=(packageVersionNormalized=false)=>{
     const dependency=['package.json','package-lock.json','.npmrc','patches/demo.patch'];
     const native=[...dependency,'app.json','advertising.config.json','app.config.js','plugins/demo.js','modules/demo/Main.kt','assets/icon.png'];
     const digest=(list,nativeConfig)=>sha(JSON.stringify([...new Set(list)].sort().map(n=>{
       let b=get(path.join(target,n));
       if(n==='app.json') {const app=JSON.parse(b);if(nativeConfig){delete app.expo.version;delete app.expo.android.versionCode;delete app.expo.ios;delete app.expo.web;}b=Buffer.from(JSON.stringify(app));}
+      if(n==='package.json'&&packageVersionNormalized){const pkg=JSON.parse(b);delete pkg.version;b=Buffer.from(JSON.stringify(pkg));}
       return [n,sha(b)];
     })));
-    const previous=state();previous.dependencyHashSchema=1;previous.dependencyHash=digest(dependency,false);previous.nativeHashSchema=3;
+    const previous=state();previous.dependencyHashSchema=packageVersionNormalized?2:1;previous.dependencyHash=digest(dependency,false);previous.nativeHashSchema=packageVersionNormalized?4:3;
     const environment=sha(JSON.stringify([]));
     const toolchain=sha(JSON.stringify(['v22.0.0',[jdk,sha('fixture-jdk')]]));
     previous.nativeHash=sha(digest(native,true)+environment+toolchain+'production');
@@ -102,7 +109,7 @@ for(const legacy of [false,true]) test(`LF/CRLF reuse and byte-exact provenance 
   const inventory=JSON.parse(f.get(f.target('source-inputs.json')));
   assert.equal(inventory.files['package.json'],sha(f.get(path.join(root,'package.json'))));
   assert.deepEqual(f.get(f.target('package.json')),f.get(path.join(root,'package.json')));
-  assert.equal(f.state().dependencyHashSchema,2);assert.equal(f.state().nativeHashSchema,4);
+  assert.equal(f.state().dependencyHashSchema,3);assert.equal(f.state().nativeHashSchema,5);
   flags(f.run(),false,false);
 });
 for(const [name,value,install,native] of [
@@ -124,7 +131,39 @@ test('unknown schemas cannot be reused',()=>{const f=fixture();f.ready();const s
 test('ad profile changes require native preparation',()=>{const f=fixture();f.ready();flags(f.run('prepare',{LEDPOP_AD_PROFILE:'test'}),false,true);});
 test('Android version-only changes preserve native reuse',()=>{const f=fixture();f.ready();const app=JSON.parse(f.get(path.join(root,'app.json')));app.expo.version='1.0.1';app.expo.android.versionCode=2;f.change('app.json',JSON.stringify(app));flags(f.run(),false,false);assert.equal(f.plan().versionCode,2);});
 test('root package metadata version-only changes preserve dependency and native reuse',()=>{const f=fixture();f.ready();const pkg=JSON.parse(f.get(path.join(root,'package.json')));pkg.version='1.0.1';f.change('package.json',JSON.stringify(pkg));flags(f.run(),false,false);});
-test('schema 1 and 3 migrate after a root package version-only change',()=>{const f=fixture();f.ready();f.priorSchema();const pkg=JSON.parse(f.get(path.join(root,'package.json')));pkg.version='1.0.1';f.change('package.json',JSON.stringify(pkg));flags(f.run(),false,false);assert.equal(f.state().dependencyHashSchema,2);assert.equal(f.state().nativeHashSchema,4);});
+test('schema 1 and 3 migrate after a root package version-only change',()=>{const f=fixture();f.ready();f.priorSchema();const pkg=JSON.parse(f.get(path.join(root,'package.json')));pkg.version='1.0.1';f.change('package.json',JSON.stringify(pkg));flags(f.run(),false,false);assert.equal(f.state().dependencyHashSchema,3);assert.equal(f.state().nativeHashSchema,5);});
+for (const migrate of [false, true]) test('root lock metadata version change reuses preparation (migrate=' + migrate + ')', () => {
+  const f = fixture();
+  f.ready();
+  if (migrate) f.priorSchema(true);
+  const lockPath = 'package-lock.json';
+  const lock = JSON.parse(f.get(path.join(root, lockPath)));
+  const pkg = JSON.parse(f.get(path.join(root, 'package.json')));
+  pkg.version = lock.version = lock.packages[''].version = '1.0.1';
+  f.change('package.json', JSON.stringify(pkg));
+  f.change(lockPath, JSON.stringify(lock));
+  flags(f.run(), false, false);
+  assert.equal(f.state().dependencyHashSchema, 3);
+  assert.equal(f.state().nativeHashSchema, 5);
+  assert.deepEqual(f.get(f.target(lockPath)), f.get(path.join(root, lockPath)));
+});
+test('resolved dependency changes still invalidate both phases', () => {
+  const f = fixture();
+  f.ready();
+  const lock = JSON.parse(f.get(path.join(root, 'package-lock.json')));
+  lock.packages['node_modules/example'].version = '1.0.1';
+  f.change('package-lock.json', JSON.stringify(lock));
+  flags(f.run(), true, true);
+});
+test('schema 2 and 4 cannot migrate a changed preserved lockfile', () => {
+  const f = fixture();
+  f.ready();
+  f.priorSchema(true);
+  const lock = JSON.parse(f.get(f.target('package-lock.json')));
+  lock.packages['node_modules/example'].integrity = 'sha512-changed';
+  f.put(f.target('package-lock.json'), JSON.stringify(lock));
+  flags(f.run(), true, true);
+});
 test('invalid UTF-8 source is not decoded and normalized',()=>{const f=fixture();f.change('plugins/demo.js',Buffer.from([255,13,10]));f.ready();f.change('plugins/demo.js',Buffer.from([255,10]));flags(f.run(),false,true);});
 
 test('CRLF legacy snapshot migrates to LF source without rebuilding',()=>{

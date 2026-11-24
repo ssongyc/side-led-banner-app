@@ -190,7 +190,7 @@ export function RewardAdModal({
     try {
       if (Platform.OS !== "web") {
         const viewTag = findNodeHandle(surfaceRef.current);
-        if (viewTag === null) throw new Error("Reward popup surface is unavailable");
+        if (typeof viewTag !== "number") throw new Error("Reward popup surface is unavailable");
         const native = requireNativeModule<PopupDismissalModule>("LedPopAdImmersive");
         const token = ++popupDismissalSequence;
         const subscription = native.addListener("rewardPopupDismissed", (event) => {
@@ -351,7 +351,6 @@ export function RewardAdModal({
           <TouchableOpacity
             onPress={() => { if (!drag.current.moved && visible && canRetry) onRetry?.(); }}
             disabled={!canShowRetry}
-            pointerEvents={canShowRetry ? "auto" : "none"}
             accessibilityRole="button"
             accessibilityElementsHidden={!canShowRetry}
             importantForAccessibility={canShowRetry ? "auto" : "no-hide-descendants"}

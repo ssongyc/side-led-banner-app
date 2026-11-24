@@ -9,6 +9,12 @@ The initial review inspected the local release wrapper and retained build logs w
 - Expo 설정, 루트 패키지 및 잠금 파일의 앱 버전을 1.1.6으로 맞췄습니다. Android 버전 코드는 35이며 Settings는 Expo 버전을 읽어 V1.1.6을 표시합니다.
 - 버전 35는 Play Console에서 미사용이라고 사용자가 확인했습니다. 출시 파일과 검증 결과는 각 빌드의 소스 리비전으로 식별합니다.
 
+## Production build with PhotoCrop — 2026-11-24
+
+- 소스 184cc81, Android 1.1.6 (35), 실행 20261124-000738-9e11f791. ImageManipulator 의존성 추가로 npm 설치와 네이티브 생성을 수행했습니다. 전체 1시간 43분 24초, npm 설치 11분 47초, Gradle 단계 1시간 30분 6초, AAB에서 APK 생성 25초입니다. Gradle 작업 1,279개 중 625개 실행, 363개 캐시 재사용, 291개 최신 상태입니다.
+- 출시 파일 검사 484개를 통과했습니다. 두 파일에서 기존 서명, 운영 AdMob, 일반 Google UMP, Shop 상품·공개키·구매/복원 구성, PhotoCrop 모듈과 버전을 확인했습니다. AAB는 동일 빌드의 R8 매핑을 포함합니다. 실기기 QA와 Play 업로드는 미실행입니다.
+- 기록은 artifacts/apk-runs/20261124-000738-9e11f791/release-file-audit.json과 stage-timings.json에 있습니다. 아래의 버전 메타데이터 캐시 개선 이전에 측정된 결과입니다.
+
 ## Production rebuild with optional portrait hardware — 2026-11-23
 
 - 소스 6563f9a, Android 1.1.5 (34), 실행 20261123-213751-ea6fe5c3. G: 캐시를 재사용해 전체 24분 32초가 걸렸습니다.
@@ -216,6 +222,13 @@ The native-input fingerprint previously included the full app.json. Therefore An
 For a store run, building an APK and AAB as separate top-level Gradle targets duplicated packaging work. The release AAB already contains the optimized base module and same-build R8 mapping needed to create a local universal APK.
 
 ## Applied changes
+
+### 버전 변경 시 Android 준비 캐시 재사용 — 2026-11-24
+
+- Android 1.1.6 (35)의 첫 준비에서 루트 패키지 버전만 바뀌었지만, 잠금 파일의 앱 버전 필드 두 곳 때문에 전체 npm 설치와 네이티브 준비가 실행됐습니다.
+- 의존성 지문 스키마 3과 네이티브 지문 스키마 5는 캐시 비교에서만 루트 패키지 버전과 npm 잠금 파일의 최상위 및 루트 패키지 버전을 제외합니다. 해석된 의존성의 버전·무결성은 계속 비교하며 동기화 파일과 출처 기록에는 원본 바이트를 보존합니다. 저장된 이전 지문을 기존 입력으로 재현할 수 있을 때 해당 캐시를 새 스키마로 이전합니다.
+- 비교 빌드에서 기존 -MeasureBuild를 사용하면 Gradle 프로파일과 함께 verification.json의 cmakeInputReasons에 Gradle이 출력한 CMake 작업별 재실행 사유를 기록합니다. 해당 로그가 없으면 미기록으로 표시합니다. 포착 범위는 Gradle 작업 입력이며, 개별 C++ 파일 재컴파일 원인은 Ninja 로그와 별도로 판단합니다.
+- 출시 프로필의 ABI·서명·검증 단계와 병렬 작업 한도는 유지합니다. 버전 메타데이터 재사용, 이전 스키마 이전, 실제 의존성 변경 및 변경된 캐시의 이전 거부를 포함한 Node 테스트 91개와 PowerShell 검증 20개가 통과했습니다. 이 변경으로 실제 빌드가 얼마나 단축되는지는 아직 측정하지 않았습니다.
 
 ### CRLF/LF fingerprint correction — 2026-09-14
 

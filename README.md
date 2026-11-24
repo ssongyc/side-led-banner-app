@@ -11,6 +11,8 @@
 
 - **시작 오류 복구 — 현재 소스:** 로딩 이미지가 실패해도 저장 설정·폰트·첫 화면이 준비되면 편집 화면으로 전환합니다. 갤럭시에서 기존 출시 APK를 재시작했을 때는 오류가 재현되지 않았습니다. 수정본의 Android·iOS 실기기 동작은 미검증입니다.
 
+- **최신 로컬 출시 APK/AAB — 2026-11-24:** Android 1.1.6 (35), 실행 20261124-000738-9e11f791, 소스 184cc81. PhotoCrop과 운영 AdMob·Google UMP·Shop 구매/복원 구성을 포함합니다. 서명된 두 파일은 검사 484개를 통과했습니다. 이 빌드의 실기기 구매·복원 및 Play 업로드는 미실행입니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-photocrop--2026-11-24)
+
 - **이전 로컬 출시 APK/AAB — 2026-11-23:** Android 1.1.5 (34), 실행 `20261123-065503-c5aa1726`, 소스 `f01adba`. Android 태블릿 Play 방향·배경 전환 수정을 포함합니다. 기존 G: 캐시를 재사용해 24분 32초 만에 482개 출시 파일 검사를 통과했습니다. 이후 Android 세로 하드웨어를 선택 항목으로 선언했습니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-rebuild-with-android-play-rotation--2026-11-23)
 
 - **이전 로컬 출시 APK/AAB — 2026-11-23:** Android 1.1.5 (34), 실행 `20261123-021801-09d42ee5`, 소스 `73f8f07`. Android 적응형 아이콘과 Play 픽셀 사진 배경 수정을 포함합니다. G: 캐시를 재사용해 파일 검증까지 21분 48초가 걸렸고, 출시 파일 검사 482개를 통과했습니다. Play 업로드와 실기기 구매·복원은 이번 실행 범위 밖입니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-v115-34--2026-11-23)
@@ -33,7 +35,9 @@
 
 - **Android 광고 창 수정 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-001934-7ed6fc53`, 소스 `6c60018`. 운영 AdMob·일반 Google UMP·2시간 보상과 Android 광고 화면 수정을 포함합니다. 출시 파일 검사 480개를 통과했고, 갤럭시에서 ₩7,500 가격, 무청구 구매, 앱 재실행 후 Pro 유지와 구매 복원을 확인했습니다. 새 APK의 EEA 동의창, 과금 실광고 및 광고 복귀 화면은 미검증입니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-android-ad-window-fixes--2026-11-19)
 
-- **최신 TestFlight — 2026-11-23:** iOS 1.1.7 (7), 소스 `98f42d5`. Apple 처리 `VALID`, 기존 내부 테스트 그룹 LPT에서 설치할 수 있습니다. iPhone 세로 잠금 회전 수정은 이 빌드 이후 소스에 반영했습니다. Sandbox 구매·복원은 미검증입니다. [TestFlight 기록](docs/SIGNING_POLICY.md#testflight-117-7--2026-11-23)
+- **최신 TestFlight — 2026-11-24:** iOS 1.1.7 (8), 소스 184cc81. Apple 처리 VALID, 내부 테스트 그룹 LPT에서 설치 가능합니다. 사용자 자체 QA에서 사진 자동 자르기와 iPhone 세로 잠금 상태의 Play 회전을 확인했습니다. Sandbox 구매·복원은 미검증입니다. [TestFlight 기록](docs/SIGNING_POLICY.md#testflight-117-8--2026-11-24)
+
+- **이전 TestFlight — 2026-11-23:** iOS 1.1.7 (7), 소스 `98f42d5`. Apple 처리 `VALID`, 기존 내부 테스트 그룹 LPT에서 설치할 수 있습니다. iPhone 세로 잠금 회전 수정은 이 빌드 이후 소스에 반영했습니다. Sandbox 구매·복원은 미검증입니다. [TestFlight 기록](docs/SIGNING_POLICY.md#testflight-117-7--2026-11-23)
 
 - **이전 TestFlight — 2026-11-23:** iOS 1.1.6 (6), 소스 `6ff4d94`. Play에서 사진 배경에 픽셀레이션을 적용할 때 발생하던 회전 문제 수정이 포함됩니다. Apple 처리 상태는 `VALID`이며 내부 그룹 LPT에서 사용할 수 있습니다. iPhone의 수정 화면과 Sandbox 구매·복원은 실기기 미검증입니다. [TestFlight 기록](docs/SIGNING_POLICY.md#testflight-116-6--2026-11-23)
 
@@ -77,7 +81,7 @@
 
 미사용 캔버스 속성과 UMP 공개 함수에 이어, 구독자가 사용하지 않는 구매 연결 상태와 웹의 팝업 감지용 대체 뷰를 정리했습니다. 린트, Node 테스트 60개, PowerShell 검사 20개와 보상 수명 주기·만료 검사를 통과했습니다. 11월 16일 실기기 기록은 당시 QA APK를 대상으로 합니다. 배경 보기 모드 추가 후 Pixel 캔버스에 중복 전달하던 사진 유무 속성을 제거했고, 린트·Node 테스트 61개·PowerShell 검사 20개·보상 수명 주기 및 만료 검사를 통과했습니다. Node 테스트에서 가로·세로 확대 영역과 기존 프리셋의 기본값을 확인했습니다.
 
-**현재 사진 배경 동작:** 사진 한 장을 선택하면 Expo ImageManipulator가 사진 방향에 맞춰 기기 화면 비율로 중앙을 자릅니다. 결과의 긴 변을 기기 화면의 긴 변 해상도 이하로 제한하고, 품질 95 JPEG 저장이 완료된 뒤 앱의 Documents 폴더에 옮깁니다. Android에서는 기존 HEIC 내보내기 패치가 적용되도록 사진 선택 품질을 0.95로 지정합니다. 이미 저장한 사진은 다시 인코딩하지 않습니다. 변경된 자르기 경로의 Android·iOS 실기기 동작은 미검증입니다. [사진 자르기 및 정리 기록](docs/UI_INTERACTION_1.0.9_27.md#배경-사진-자동-자르기-변경--2026-11-23)
+**현재 사진 배경 동작:** 사진 한 장을 선택하면 Expo ImageManipulator가 사진 방향에 맞춰 기기 화면 비율로 중앙을 자릅니다. 결과의 긴 변을 기기 화면의 긴 변 해상도 이하로 제한하고, 품질 95 JPEG 저장이 완료된 뒤 앱의 Documents 폴더에 옮깁니다. Android에서는 기존 HEIC 내보내기 패치가 적용되도록 사진 선택 품질을 0.95로 지정합니다. 이미 저장한 사진은 다시 인코딩하지 않습니다. iPhone의 사진 자동 자르기는 TestFlight 1.1.7 (8) 사용자 자체 QA에서 확인했습니다. Android 실기기 동작은 미검증입니다. [사진 자르기 및 정리 기록](docs/UI_INTERACTION_1.0.9_27.md#배경-사진-자동-자르기-변경--2026-11-23)
 
 **이전 HEIC 사진 배경 수정 — 2026-11-16:** 고효율(HEIC) 사진을 선택하면 자동 자르기에서 이미지를 읽지 못해 배경이 적용되지 않던 문제를 수정했습니다. 사진 선택기가 HEIC 원본을 `.jpeg` 이름으로 그대로 복사했고, 자르기에 쓰는 Skia에는 HEIF 디코더가 없었습니다. 선택 품질을 0.95로 지정해 OS 디코더로 읽은 뒤 JPEG로 다시 저장하도록 변경했습니다. 최초 실패는 Galaxy A32 디버그 빌드에서 재현했습니다. Android 후속 수정과 실기기 결과는 아래 사진 저장 기록에 있습니다.
 
@@ -93,7 +97,7 @@
 
 > **TestFlight 1.1.3 (1) 시작 충돌 확인:** 사용자 제공 iPhone 로그는 `ExpoModulesWorklets`가 참조하는 `React.framework` 누락으로 앱 코드 실행 전에 종료됨을 보여줍니다. Apple 경고에는 `ReactNativeDependencies.framework`도 포함됩니다. 이후 제공된 Mac 설정에서는 소스 방식 React Native와 사전 컴파일 Expo 프레임워크의 혼합이 확인되어, package.json에서 iOS autolinking 모듈의 소스 빌드를 명시했습니다. Mac에서 pod install·새 Archive·실기기 실행 확인은 아직 필요합니다. Mac용 읽기 전용 검사와 개발자 전달 사항은 [충돌 기록](docs/SIGNING_POLICY.md#ios-launch-crash--2026-09-22)을 참고하세요.
 
-메인 소스의 다음 Android 빌드 버전은 **1.1.6 (버전 코드 35)**입니다. Settings의 App Version은 Expo 설정을 읽어 **V1.1.6**으로 표시합니다. 소스의 iOS 빌드 번호는 **3**입니다. 검증 완료한 Android **1.1.5 (34)** APK/AAB 실행 중 최신 기록은 2026-11-23의 20261123-213751-ea6fe5c3(소스 6563f9a)입니다. [세로 하드웨어 선택 선언 빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-rebuild-with-optional-portrait-hardware--2026-11-23) 사진 자르기 변경은 그 빌드 이후에 병합됐습니다. 최신 TestFlight **1.1.7 (7)**은 별도의 iOS 빌드 복사본에서 생성했으며, 해당 빌드의 Settings에는 **V1.1.7**이 표시되도록 구성했습니다.
+메인 소스의 다음 Android 빌드 버전은 **1.1.6 (버전 코드 35)**입니다. Settings의 App Version은 Expo 설정을 읽어 **V1.1.6**으로 표시합니다. 소스의 iOS 빌드 번호는 **3**입니다. 검증이 완료된 로컬 Android APK/AAB는 **1.1.6 (35)**이며 사진 자르기 변경을 포함합니다. 빌드 이후에 반영한 TypeScript 수정과 빌드 캐시 개선은 현재 소스의 변경입니다. 최신 TestFlight **1.1.7 (8)**은 별도의 iOS 빌드 복사본에서 생성했으며, 해당 빌드의 Settings에는 **V1.1.7**이 표시되도록 구성했습니다.
 
 **2026-10-20 도구 체인 업그레이드:** Expo 58.0.16 / React Native 0.88.0 / AGP 9.2.1, compileSdk 37 / targetSdk 36, AGP 내장 R8 9.2.14를 적용했습니다. Windows CMake 경로 길이 오류와 R8이 Room 생성자를 제거해 발생한 시작 충돌을 수정했습니다. 수정 QA APK는 `compile-ok`이며 Galaxy에서 재시작, 테스트 UMP 거부·동의·개인정보 재변경, 테스트 배너·보상 광고 및 보상 후 잠금 해제를 확인했습니다. 당시 수정 QA 재빌드는 Gradle 6분 50초(72 executed / 1138 up-to-date)였습니다. 최신 production 빌드 기록은 아래에서 구분합니다. 당시 구매 화면은 비활성 상태였으며 결제·복원과 iOS는 검증 범위 밖이었습니다. 이 APK는 테스트 광고·EEA QA 설정이 포함되어 스토어 제출용이 아닙니다. [빌드 기록](docs/SIGNING_POLICY.md#combined-exporn-upgrade-assessment--2026-10-20)과 [광고 QA 범위](docs/ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20)를 참고하세요.
 

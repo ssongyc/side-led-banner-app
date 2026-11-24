@@ -298,6 +298,21 @@ def verify(args, out, report):
         "lines": lines[reason:reason+25] if reason is not None else [],
         "taskLines": [line for line in lines if r8_task in line],
     }
+    cmake_reasons = []
+    for i, line in enumerate(lines):
+        task = re.search(r"Task '([^']+:buildCMake[^']*)' is not up-to-date because:", line)
+        if task is None:
+            continue
+        inputs = []
+        for detail in lines[i+1:i+9]:
+            if not detail.startswith((" ", "\t")) or not detail.strip():
+                break
+            inputs.append(detail.strip())
+        cmake_reasons.append(dict(task=task[1], inputs=inputs))
+    report["cmakeInputReasons"] = {
+        "status": "recorded" if cmake_reasons else "not recorded",
+        "tasks": cmake_reasons,
+    }
     report["logReview"] = "findings collected; human review required"
     report["status"] = "static-checks-passed"
 

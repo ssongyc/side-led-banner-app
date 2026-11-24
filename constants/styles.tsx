@@ -408,6 +408,7 @@ export const rewardAdModalStyles = StyleSheet.create({
   },
   adRetryHidden: {
     opacity: 0,
+    pointerEvents: "none",
   },
   adRetryText: {
     ...uiThemeFontStyle,

@@ -252,9 +252,9 @@ android {
   # Release bundles never use Metro. Keep host-IP changes out of resValues/R8 inputs.
   $gradleArguments+=@('-PreactNativeDevServerIp=127.0.0.1','-PreactNativeDevServerPort=8081')
   if($ConfigurationCache){$gradleArguments+='--configuration-cache-problems=fail'}
+  if($MeasureBuild){$gradleArguments+=@('--profile','--info')}
   # Record the selected settings before execution, including failed compatibility trials.
   @{ configurationCache=[bool]$ConfigurationCache; reuseDaemon=[bool]$ReuseDaemon; gradleWorkers=$GradleWorkers; appCmakeCompilePool=1; appCmakeLinkPool=1; measureBuild=[bool]$MeasureBuild; arguments=$gradleArguments } | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath (Join-Path $record 'build-options.json')
-  if($MeasureBuild){$gradleArguments+=@('--profile','--info')}
   Start-AndroidBuildStage $timingState 'compilation'
   & ./android/gradlew.bat @gradleArguments > gradle-release.log 2>&1
   $buildExit=$LASTEXITCODE
