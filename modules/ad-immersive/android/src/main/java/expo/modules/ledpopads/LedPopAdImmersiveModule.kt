@@ -32,9 +32,15 @@ class LedPopAdImmersiveModule : Module(), Application.ActivityLifecycleCallbacks
   private val focusListeners = WeakHashMap<Activity, ViewTreeObserver.OnWindowFocusChangeListener>()
   private fun hide(activity: Activity) {
     if (activity.isFinishing || activity.isDestroyed) return
+    val navigationBars = WindowInsetsCompat.Type.navigationBars()
+    val bars = if (activity.javaClass.name == "com.google.android.gms.ads.AdActivity") {
+      navigationBars or WindowInsetsCompat.Type.statusBars()
+    } else {
+      navigationBars
+    }
     WindowCompat.getInsetsController(activity.window, activity.window.decorView).apply {
       systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-      hide(WindowInsetsCompat.Type.navigationBars())
+      hide(bars)
     }
   }
   private fun attach(activity: Activity) {

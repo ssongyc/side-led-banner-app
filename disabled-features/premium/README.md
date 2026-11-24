@@ -1,5 +1,5 @@
-# Upgrade to Pro — disabled
+# Upgrade to Pro migration history
 
-Disabled by explicit user request on 2026-09-08. Keep the Upgrade to Pro entry and screen out of all builds until the user explicitly asks to restore them. Ordinary build, SDK update, or release requests do not authorize re-enabling this feature.
+The Upgrade to Pro entry was paused on 2026-09-08. On 2026-11-17 the user requested its return as Shop.
 
-PremiumScreen.tsx preserves the implementation outside the Expo Router app directory. Do not import it from app code or register a premium route while disabled. Existing purchased entitlement verification and ad exemption remain unchanged. Re-enable only on explicit request by restoring the route and Settings entry together.
+The active [Shop screen](../../app/shop.tsx) is accessible from Android and iOS Settings. See the [IAP setup](../../IAP_SETUP.md) for product pricing and verification requirements.

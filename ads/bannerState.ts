@@ -1,5 +1,5 @@
 // Two fixed orientation placements preserve budgets across routes and width changes.
-type Phase = "idle" | "loading" | "loaded" | "waiting" | "failed" | "stopped" | "cancelled";
+type Phase = "idle" | "loading" | "loaded" | "waiting" | "failed" | "stopped" | "cancelled" | "retiring";
 type Snapshot = { phase: Phase; attempt: number; requestId: number; dueAt: number | null; messageUntil: number; extraUsed: boolean };
 function createBannerPlacement() {
   let state: Snapshot = { phase: "idle", attempt: 0, requestId: 0, dueAt: null, messageUntil: 0, extraUsed: false };
@@ -14,7 +14,7 @@ function createBannerPlacement() {
     return true;
   }
   function requestBanner(token: symbol) {
-    if (owner !== token || state.phase === "loading" || state.phase === "loaded" || state.phase === "stopped") return;
+    if (owner !== token || state.phase === "loading" || state.phase === "loaded" || state.phase === "retiring" || state.phase === "stopped") return;
     if (state.phase !== "idle" && (state.dueAt === null || performance.now() < state.dueAt)) return;
     const extra = state.phase === "failed";
     if (extra && state.extraUsed) return;
@@ -27,7 +27,7 @@ function createBannerPlacement() {
     return true;
   }
   function bannerFailed(token: symbol, requestId: number) {
-    if (owner !== token || state.requestId !== requestId || state.phase !== "loading") return false;
+    if (owner !== token || state.requestId !== requestId || (state.phase !== "loading" && state.phase !== "retiring")) return false;
     const delay = [6000, 12000][(state.attempt - 1) % 3];
     const now = performance.now();
     if (delay !== undefined) update({ phase: "waiting", dueAt: now + delay });
@@ -36,7 +36,8 @@ function createBannerPlacement() {
     return true;
   }
   function initializationFailed(token: symbol) {
-    if (owner !== token || state.phase === "failed" || state.phase === "stopped" || state.phase === "loaded") return;
+    if (owner !== token || state.phase === "failed" || state.phase === "stopped" ||
+        state.phase === "loaded" || state.phase === "loading" || state.phase === "retiring") return;
     const now = performance.now();
     update({ phase: "failed", messageUntil: now + 10_000,
       dueAt: state.extraUsed ? null : now + 70_000 });
@@ -54,13 +55,17 @@ function createBannerPlacement() {
   function invalidateConsent(token: symbol) {
     if (owner !== token) return;
     if (state.phase === "loading") {
-      // Cancellation is not a load failure and never refunds an issued request.
-      update({ phase: "cancelled", requestId: state.requestId + 1, dueAt: null, messageUntil: 0 });
+      // Hide but retain the issued native request until its actual SDK callback.
+      update({ phase: "retiring", dueAt: null, messageUntil: 0 });
     } else if (state.phase === "loaded") {
       update({ phase: "idle", attempt: 0, requestId: state.requestId + 1,
         extraUsed: false, dueAt: null, messageUntil: 0 });
     }
     // Real failure deadlines and exhausted budgets remain unchanged.
+  }
+  function consentRequestFinished(token: symbol, requestId: number) {
+    if (owner !== token || state.requestId !== requestId || state.phase !== "retiring") return;
+    update({ phase: "cancelled" });
   }
   function resumeConsent(token: symbol) {
     if (owner !== token || state.phase !== "cancelled") return;
@@ -75,12 +80,12 @@ function createBannerPlacement() {
     if (state.phase === "loaded") {
       // A successful cycle ended with actual disposal (for example ad removal).
       update({ phase: "idle", attempt: 0, extraUsed: false, dueAt: null, messageUntil: 0 });
-    } else if (state.phase === "loading") {
+    } else if (state.phase === "loading" || state.phase === "retiring") {
       update({ phase: "stopped", dueAt: null, messageUntil: 0 });
     }
   }
 
-  return { invalidateConsent, resumeConsent, discardLoadedBanner, initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, requestBanner, bannerLoaded, bannerFailed, releaseBanner };
+  return { invalidateConsent, consentRequestFinished, resumeConsent, discardLoadedBanner, initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, requestBanner, bannerLoaded, bannerFailed, releaseBanner };
 }
 
 const placements = new Map<string, ReturnType<typeof createBannerPlacement>>();

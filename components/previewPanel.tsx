@@ -1,3 +1,4 @@
+import { BackgroundPhotoLayer } from "@/components/animation/BackgroundPhotoLayer";
 import { DeleteAllButton } from "@/assets/svg/deleteAllButton";
 import { GradientBackdrop } from "@/components/skia/GradientBackdrop";
 import { btnStyles } from "@/constants/btnStyles";
@@ -110,10 +111,8 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
   const { previewText } = content;
   const { textSelectedColor, gradientBackgroundPreset, dropShadow } =
     appearance;
-  const { backgroundColor, backgroundImageUri, backgroundBlur } =
+  const { backgroundColor, backgroundImageUri, backgroundBlur, backgroundPhotoViewMode } =
     background;
-  const hasBgPhoto =
-    backgroundImageUri != null && backgroundImageUri.length > 0;
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isPortrait = windowHeight >= windowWidth;
 
@@ -205,9 +204,9 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
         width: previewBox.width,
         height: previewBox.height,
         effects,
-        hasBgPhoto,
         backgroundColor,
         backgroundImageUri: backgroundImageUri ?? null,
+        backgroundPhotoViewMode,
         gradientBackgroundPreset,
         backgroundEffect: backgroundEdgeEffectAnim,
         translateX: backgroundTranslateX,
@@ -218,9 +217,9 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
       previewBox.width,
       previewBox.height,
       effects,
-      hasBgPhoto,
       backgroundColor,
       backgroundImageUri,
+      backgroundPhotoViewMode,
       gradientBackgroundPreset,
       backgroundEdgeEffectAnim,
       backgroundTranslateX,
@@ -358,12 +357,14 @@ export default function PreviewPanel({ onCursorMovers, onUndoRedoControl, onUndo
         ]}
         onLayout={onPreviewLayout}
       >
-        {hasBgPhoto && !effects.isPixelEffect ? (
-          <Image
-            source={{ uri: backgroundImageUri }}
-            style={StyleSheet.absoluteFill}
-            contentFit="cover"
+        {backgroundImageUri && !effects.isPixelEffect ? (
+          <BackgroundPhotoLayer
+            key={backgroundImageUri}
+            uri={backgroundImageUri}
+            width={previewBox.width}
+            height={previewBox.height}
             blurRadius={backgroundBlur / 8}
+            viewMode={backgroundPhotoViewMode}
           />
         ) : null}
         {effects.isPixelEffect &&

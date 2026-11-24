@@ -184,6 +184,11 @@ test('preset model: text spacing, deep copies, migration and non-Pro cleanup pre
  const a=h.load('contexts/settings/presetModel.ts',deps);const original=JSON.parse(JSON.stringify(a.DEFAULT_BANNER_CONFIG));original.content.previewText='  라라라  하늘\n A  B ';original.appearance.letterSpacing=24;original.appearance.effectSelectedItems=['Blink','Glow'];original.appearance.fontByLocale.ko='noto_sans_kr';
  const before=JSON.stringify(original),snap=a.presetFromConfig(original);snap.appearance.effectParamValues.Glow=99;snap.appearance.fontByLocale.ko='changed';assert.equal(JSON.stringify(original),before);const restored=a.configFromPreset(a.presetFromConfig(original),'one');assert.equal(restored.content.previewText,original.content.previewText);assert.equal(restored.appearance.letterSpacing,24);
  const cleaned=a.nonProSanitize(original);assert.equal(cleaned.content.previewText,original.content.previewText);assert.equal(cleaned.appearance.letterSpacing,24);assert.equal(JSON.stringify(original),before);assert.equal(cleaned.appearance.effectSelectedItems.includes('Glow'),false);assert.equal(cleaned.appearance.effectSelectedItems.includes('Blink'),true);
+ const legacyPhoto = a.normalizePresetSlot({background:{backgroundImageUri:'file:///saved.jpg'}});
+ assert.equal(legacyPhoto.background.backgroundPhotoViewMode,'zoom');
+ assert.equal(legacyPhoto.background.backgroundImageUri,'file:///saved.jpg');
+ const repeatedPhoto = a.normalizePresetSlot({background:{...legacyPhoto.background,backgroundPhotoViewMode:'repeat'}});
+ assert.equal(a.configFromPreset(repeatedPhoto,'one').background.backgroundPhotoViewMode,'repeat');
  assert.equal(a.normalizePreviewTextMaxLines(' A  B\r\n라라라 하늘'),' A  B\n라라라 하늘');assert.equal(a.normalizePreviewTextMaxLines('1\n2\n3\n4'),null);
  const old=a.normalizePresetSlot({content:{previewText:'  X  Y '},appearance:{letterSpacing:17}});assert.equal(old.content.previewText,'  X  Y ');assert.equal(old.appearance.letterSpacing,17);
 });
@@ -240,15 +245,82 @@ test('consent: failure shared until explicit retry; requests deduplicated and QA
  h.online();a.prepareAdConsentRetry();await Promise.all([a.ensureAdConsent(),a.ensureAdConsent()]);
  assert.equal(h.requests(),2);assert.equal(h.resets(),1);assert.equal(h.forms(),1);assert.equal(a.isAdConsentAllowed(),true);
 });
-test('banner: consent cancellation preserves attempts and rejects old callbacks',()=>{
- const {api:a,token:t}=banner();a.claimBanner(t);a.requestBanner(t);const first=a.getBannerState().requestId;
- a.invalidateConsent(t);assert.equal(a.getBannerState().phase,'cancelled');assert.equal(a.getBannerState().attempt,1);assert.equal(a.bannerLoaded(t,first),false);
- a.resumeConsent(t);a.requestBanner(t);assert.equal(a.getBannerState().attempt,2);
- a.invalidateConsent(t);a.resumeConsent(t);a.requestBanner(t);assert.equal(a.getBannerState().attempt,3);
- a.invalidateConsent(t);a.resumeConsent(t);a.requestBanner(t);assert.equal(a.getBannerState().phase,'stopped');assert.equal(a.getBannerState().attempt,3);assert.equal(a.getBannerState().extraUsed,false);
+test('banner: consent waits for the real callback without refunding attempts',()=>{
+ const {api:a,token:t}=banner();a.claimBanner(t);
+ for(let attempt=1;attempt<=3;attempt++){
+   a.requestBanner(t);const id=a.getBannerState().requestId;
+   assert.equal(a.getBannerState().attempt,attempt);
+   a.invalidateConsent(t);assert.equal(a.getBannerState().phase,'retiring');
+   a.resumeConsent(t);a.requestBanner(t);a.initializationFailed(t);
+   assert.equal(a.getBannerState().requestId,id);assert.equal(a.getBannerState().phase,'retiring');
+   assert.equal(a.bannerLoaded(t,id),false);
+   a.consentRequestFinished(t,id);a.resumeConsent(t);
+ }
+ a.requestBanner(t);assert.equal(a.getBannerState().phase,'stopped');
+ assert.equal(a.getBannerState().attempt,3);assert.equal(a.getBannerState().extraUsed,false);
+});
+test('banner: genuine failure during privacy retains its retry deadline',()=>{
+ const {api:a,token:t,advance}=banner();a.claimBanner(t);a.requestBanner(t);
+ const id=a.getBannerState().requestId;a.invalidateConsent(t);
+ assert.equal(a.bannerFailed(t,id),true);const due=a.getBannerState().dueAt;
+ a.consentRequestFinished(t,id);a.resumeConsent(t);
+ assert.equal(a.getBannerState().dueAt,due);a.requestBanner(t);
+ assert.equal(a.getBannerState().attempt,1);advance(6000);a.requestBanner(t);
+ assert.equal(a.getBannerState().attempt,2);
+ assert.equal(a.bannerLoaded(t,id),false);
 });
 test('banner: privacy preserves genuine deadline and retires loaded inventory',()=>{
  const {api:a,token:t,advance}=banner();a.claimBanner(t);a.requestBanner(t);a.bannerFailed(t,a.getBannerState().requestId);const due=a.getBannerState().dueAt;
  a.invalidateConsent(t);a.resumeConsent(t);assert.equal(a.getBannerState().dueAt,due);advance(6000);a.requestBanner(t);a.bannerLoaded(t,a.getBannerState().requestId);
  a.invalidateConsent(t);assert.equal(a.getBannerState().phase,'idle');a.requestBanner(t);assert.equal(a.getBannerState().attempt,1);
+});
+
+for (const outcome of ['loaded','failed']) test(`consent banner: issued view survives privacy until real ${outcome} callback`,async()=>{
+ const h=harness();let completePrivacy;
+ h.env.process={env:{}};h.env.requestAnimationFrame=fn=>{fn();return 1;};
+ class Component { constructor(props){this.props=props;} setState(patch){this.state={...this.state,...patch};} }
+ const react={Component,createElement:(type,props,...children)=>({type,props:{...props,children}}),useSyncExternalStore:(_subscribe,get)=>get()};
+ const sdk={BannerAd:'Banner',AdsConsentPrivacyOptionsRequirementStatus:{REQUIRED:'required'},AdsConsent:{
+   requestInfoUpdate:async()=>{},loadAndShowConsentFormIfRequired:async()=>{},
+   getConsentInfo:async()=>({canRequestAds:true,privacyOptionsRequirementStatus:'required'}),
+   showPrivacyOptionsForm:()=>new Promise(resolve=>{completePrivacy=resolve;}),
+ }};
+ const a=h.load('ads/adConsent.tsx',{'react':react,'react-native':{AppState:{currentState:'active'},Platform:{OS:'android'},View:'View',Text:'Text',Pressable:'Pressable',useColorScheme:()=>null},'react-native-google-mobile-ads':sdk});
+ await a.ensureAdConsent();let retired=0,loaded=0,failed=0;
+ const instance=new a.ConsentBannerAd({unitId:'test',onConsentRequestFinished:()=>retired++,onAdLoaded:()=>loaded++,onAdFailedToLoad:()=>failed++});
+ instance.render();instance.componentDidMount();
+ const action=a.AdPrivacyOptions({language:'en'});action.props.onPress();await flush();
+ const hidden=instance.render();assert.notEqual(hidden,null);assert.equal(hidden.props.style.opacity,0);
+ assert.equal(hidden.props.children[0].type,'Banner');
+ completePrivacy();await flush();assert.notEqual(instance.render(),null);assert.equal(retired,0);
+ const callback=instance.render().props.children[0].props;
+ if(outcome==='loaded')callback.onAdLoaded({width:320,height:50});else callback.onAdFailedToLoad(Error('network'));
+ instance.componentDidUpdate();assert.equal(instance.render(),null);assert.equal(retired,1);
+ assert.equal(loaded,0);assert.equal(failed,outcome==='failed'?1:0);
+ instance.componentDidUpdate();assert.equal(retired,1);instance.componentWillUnmount();
+});
+
+function nativeSdkHarness(device, rejectConfiguration = false) {
+ const h=harness(), calls=[];
+ h.env.process={env:{EXPO_PUBLIC_UMP_EEA_TEST_DEVICE:device}};
+ const api=h.load('ads/AdClient.tsx',{
+  './adConsent':{ConsentBannerAd:class{}},'expo-modules-core':{},react:{},
+  'react-native':{Platform:{OS:'android'}},
+  'react-native-google-mobile-ads':{__esModule:true,default:()=>({
+   async setRequestConfiguration(config){calls.push(['configuration',config]);if(rejectConfiguration)throw Error('SDK rejected configuration');},
+   async initialize(){calls.push(['initialize']);},
+  }),AdEventType:{},RewardedAdEventType:{},RewardedAd:{},BannerAdSize:{}},
+ });
+ return {api,calls};
+}
+test('native SDK: normal release initialization never configures test devices',async()=>{
+ const h=nativeSdkHarness('');await h.api.initializeAdSdk();assert.deepEqual(h.calls,[['initialize']]);
+});
+test('native SDK: APK-only QA configures the specific device before initialization',async()=>{
+ const id='0123456789ABCDEF0123456789ABCDEF',h=nativeSdkHarness(id);await h.api.initializeAdSdk();
+ assert.equal(h.calls[0][0],'configuration');assert.equal(h.calls[0][1].testDeviceIdentifiers[0],id);assert.equal(h.calls[1][0],'initialize');
+});
+test('native SDK: invalid or rejected QA configuration never initializes',async()=>{
+ const invalid=nativeSdkHarness('invalid');await assert.rejects(invalid.api.initializeAdSdk());assert.equal(invalid.calls.length,0);
+ const rejected=nativeSdkHarness('0123456789ABCDEF0123456789ABCDEF',true);await assert.rejects(rejected.api.initializeAdSdk());assert.equal(rejected.calls.length,1);
 });

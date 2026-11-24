@@ -18,10 +18,10 @@ export type TextSectionLabelKey =
   | "color"
   /** 배경*/
   | "backgroundColor"
+  | "backgroundPhotoZoom"
+  | "backgroundPhotoRepeat"
   | "blur"
   | "cancel"
-  | "photoCropNotice"
-  | "photoCropNoticeHideToday"
   | "confirm"
   | "speed"
   | "size"
@@ -37,10 +37,10 @@ export type TextSectionLabelKey =
   | "tabEffects"
   /** 설정*/
   | "settingsTitle"
-  | "upgradeToPremium"
+  | "shop"
+  | "shopBuy"
   | "premiumProductTitle"
   | "premiumProductDescription"
-  | "premiumPrice"
   | "restorePreviousPurchase"
   | "sunnyGames"
   | "instagram"
@@ -48,8 +48,6 @@ export type TextSectionLabelKey =
   | "link"
   | "credits"
   | "openSourceInfo"
-  | "terms"
-  | "privacy"
   | "appVersion";
 
 const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
@@ -107,6 +105,24 @@ const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
     fr: "Couleur",
     es: "Color",
   },
+  backgroundPhotoZoom: {
+    ko: "확대",
+    en: "Zoom",
+    ja: "拡大",
+    zhTC: "放大",
+    zhSC: "放大",
+    fr: "Zoom",
+    es: "Ampliar",
+  },
+  backgroundPhotoRepeat: {
+    ko: "반복",
+    en: "Repeat",
+    ja: "繰り返し",
+    zhTC: "重複",
+    zhSC: "重复",
+    fr: "Répéter",
+    es: "Repetir",
+  },
   blur: {
     ko: "흐림",
     en: "Blur",
@@ -124,24 +140,6 @@ const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
     zhSC: "取消",
     fr: "Annuler",
     es: "Cancelar",
-  },
-  photoCropNotice: {
-    ko: "화면 비율에 맞춰 사진 일부가 잘릴 수 있습니다.",
-    en: "Parts of the photo may be cropped to fit the screen.",
-    ja: "画面比率に合わせて写真の一部が切り取られる場合があります。",
-    zhTC: "照片可能會依螢幕比例裁切部分內容。",
-    zhSC: "照片可能会按屏幕比例裁剪部分内容。",
-    fr: "Une partie de la photo peut être recadrée pour s'adapter à l'écran.",
-    es: "Parte de la foto puede recortarse para ajustarse a la pantalla.",
-  },
-  photoCropNoticeHideToday: {
-    ko: "오늘 하루 보지 않기",
-    en: "Don't show again today",
-    ja: "今日はこれ以上表示しない",
-    zhTC: "今天不再顯示",
-    zhSC: "今天不再显示",
-    fr: "Ne plus afficher aujourd'hui",
-    es: "No mostrar de nuevo hoy",
   },
   confirm: {
     ko: "확인",
@@ -270,23 +268,32 @@ const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
     fr: "Paramètres",
     es: "Ajustes",
   },
-  upgradeToPremium: {
-    ko: "Pro로 업그레이드",
-    en: "Upgrade to Pro",
-    ja: "Pro にアップグレード",
-    zhTC: "升級至 Pro",
-    zhSC: "升级到 Pro",
-    fr: "Passer à Pro",
-    es: "Actualizar a Pro",
+  shop: {
+    ko: "상점",
+    en: "Shop",
+    ja: "ショップ",
+    zhTC: "商店",
+    zhSC: "商店",
+    fr: "Boutique",
+    es: "Tienda",
+  },
+  shopBuy: {
+    ko: "구매",
+    en: "Buy",
+    ja: "購入",
+    zhTC: "購買",
+    zhSC: "购买",
+    fr: "Acheter",
+    es: "Comprar",
   },
   premiumProductTitle: {
-    ko: "LED POP Premium",
-    en: "LED POP Premium",
-    ja: "LED POP Premium",
-    zhTC: "LED POP Premium",
-    zhSC: "LED POP Premium",
-    fr: "LED POP Premium",
-    es: "LED POP Premium",
+    ko: "광고 영구 제거",
+    en: "Remove Ads Permanently",
+    ja: "広告を永久に削除",
+    zhTC: "永久移除廣告",
+    zhSC: "永久移除广告",
+    fr: "Supprimer définitivement les publicités",
+    es: "Eliminar anuncios para siempre",
   },
   premiumProductDescription: {
     ko: "광고 없이 LED POP 전체 버전을 즐기세요.",
@@ -296,15 +303,6 @@ const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
     zhSC: "享受没有广告的 LED POP 完整版。",
     fr: "Profitez de la version complète de LED POP sans publicités.",
     es: "Disfruta la versión completa de LED POP sin anuncios.",
-  },
-  premiumPrice: {
-    ko: "$6.99 CAD",
-    en: "$6.99 CAD",
-    ja: "$6.99 CAD",
-    zhTC: "$6.99 CAD",
-    zhSC: "$6.99 CAD",
-    fr: "$6.99 CAD",
-    es: "$6.99 CAD",
   },
   restorePreviousPurchase: {
     ko: "이전 구매 복원",
@@ -369,24 +367,6 @@ const LABELS: Record<TextSectionLabelKey, Record<AppLocaleKey, string>> = {
     fr: "Infos open source",
     es: "Información de código abierto",
   },
-  terms: {
-    ko: "이용약관",
-    en: "Terms",
-    ja: "利用規約",
-    zhTC: "服務條款",
-    zhSC: "服务条款",
-    fr: "Conditions",
-    es: "Términos",
-  },
-  privacy: {
-    ko: "개인정보처리방침",
-    en: "Privacy",
-    ja: "プライバシー",
-    zhTC: "隱私權",
-    zhSC: "隐私政策",
-    fr: "Confidentialité",
-    es: "Privacidad",
-  },
   appVersion: {
     ko: "앱 버전",
     en: "App Version",
@@ -419,8 +399,6 @@ const SETTINGS_SHEET_PICK: Partial<
   sunnyGames: { sheetRow: 43 },
   credits: { sheetRow: 57 },
   openSourceInfo: { sheetRow: 64 },
-  terms: { sheetRow: 67 },
-  privacy: { sheetRow: 68 },
   appVersion: { sheetRow: 65 },
 };
 

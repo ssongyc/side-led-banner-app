@@ -1,3 +1,4 @@
+import CoreMotion
 import ExpoModulesCore
 import UIKit
 
@@ -29,6 +30,8 @@ private final class RotationObserverController: UIViewController {
 }
 
 final class PlaybackTextLayerView: ExpoView {
+  private static let motionManager = CMMotionManager()
+
   private let observer = RotationObserverController()
   private var rotating = false
   private var revealLink: CADisplayLink?
@@ -36,6 +39,7 @@ final class PlaybackTextLayerView: ExpoView {
   let onDeviceRotation = EventDispatcher()
   private var observesDeviceRotation = false
   private var isObservingDevice = false
+  private var observationID = 0
   private var reportedRotation: Int?
 
   required init(appContext: AppContext? = nil) {
@@ -81,23 +85,39 @@ final class PlaybackTextLayerView: ExpoView {
     guard shouldObserve != isObservingDevice else { return }
     isObservingDevice = shouldObserve
     if shouldObserve {
-      NotificationCenter.default.addObserver(
-        self, selector: #selector(deviceOrientationChanged),
-        name: UIDevice.orientationDidChangeNotification, object: UIDevice.current
-      )
-      UIDevice.current.beginGeneratingDeviceOrientationNotifications()
-      // Let the view's event handler finish mounting before reporting the initial pose.
-      DispatchQueue.main.async { [weak self] in self?.deviceOrientationChanged() }
+      startDeviceObservation()
     } else {
       stopDeviceObservation()
     }
   }
 
+  private func startDeviceObservation() {
+    let motion = Self.motionManager
+    guard motion.isDeviceMotionAvailable else {
+      NSLog("[LED POP] Play device motion is unavailable")
+      return
+    }
+    observationID += 1
+    let id = observationID
+    // The Play window stays portrait on iPhone. Read physical gravity instead
+    // of relying on UIKit orientation events while Portrait Lock is on.
+    motion.deviceMotionUpdateInterval = 0.1
+    motion.startDeviceMotionUpdates(to: .main) { [weak self] sample, error in
+      guard let self, self.isObservingDevice, self.observationID == id else { return }
+      if let error {
+        NSLog("[LED POP] Play device motion stopped: %@", error.localizedDescription)
+        self.stopDeviceObservation()
+        return
+      }
+      if let gravity = sample?.gravity {
+        self.reportDeviceRotation(gravity)
+      }
+    }
+  }
+
   private func stopDeviceObservation() {
-    NotificationCenter.default.removeObserver(
-      self, name: UIDevice.orientationDidChangeNotification, object: UIDevice.current
-    )
-    UIDevice.current.endGeneratingDeviceOrientationNotifications()
+    observationID += 1
+    Self.motionManager.stopDeviceMotionUpdates()
     reportedRotation = nil
   }
 
@@ -105,16 +125,14 @@ final class PlaybackTextLayerView: ExpoView {
     if isObservingDevice { stopDeviceObservation() }
   }
 
-  @objc private func deviceOrientationChanged() {
-    guard isObservingDevice else { return }
-    let rotation: Int
-    switch UIDevice.current.orientation {
-    case .portrait: rotation = 0
-    case .landscapeLeft: rotation = 90
-    case .portraitUpsideDown: rotation = 180
-    case .landscapeRight: rotation = 270
-    default: return
-    }
+  private func reportDeviceRotation(_ gravity: CMAcceleration) {
+    // A nearly flat pose has no reliable screen-plane direction.
+    guard hypot(gravity.x, gravity.y) >= 0.45 else { return }
+    let degrees = atan2(-gravity.x, -gravity.y) * 180 / Double.pi
+    let quarterTurns = Int((degrees / 90).rounded())
+    // Hold the current orientation through diagonal movement.
+    guard abs(degrees - Double(quarterTurns) * 90) <= 25 else { return }
+    let rotation = ((quarterTurns + 4) % 4) * 90
     guard rotation != reportedRotation else { return }
     reportedRotation = rotation
     onDeviceRotation(["degrees": rotation])

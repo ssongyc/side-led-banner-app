@@ -2,9 +2,9 @@
   "expo": {
     "name": "Led Pop",
     "slug": "led-banner-app",
-    "version": "1.1.4",
+    "version": "1.1.6",
     "orientation": "default",
-    "icon": "./assets/images/Logo_IOS.png",
+    "icon": "./assets/images/LOGO_05_Final.png",
     "scheme": "sideledbannerapp",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -14,18 +14,31 @@
       "bundleIdentifier": "com.sunnyinnolab.ledpop",
       "buildNumber": "3",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSMotionUsageDescription": "LED POP uses motion sensors to rotate the Play screen as you turn your device."
+      }
+    },
+    "locales": {
+      "ko": {
+        "ios": {
+          "NSMotionUsageDescription": "Play 화면을 기기를 든 방향에 맞춰 회전하기 위해 모션 센서를 사용합니다."
+        }
       }
     },
     "android": {
       "icon": "./assets/images/LOGO_05_Final.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/android-adaptive-foreground.png",
+        "monochromeImage": "./assets/images/android-adaptive-foreground.png",
+        "backgroundColor": "#101010"
+      },
       "predictiveBackGestureEnabled": false,
       "package": "com.minkyokim.sideledbannerapp",
       "blockedPermissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "versionCode": 32
+      "versionCode": 35
     },
     "web": {
       "output": "static",
@@ -113,6 +126,7 @@
           ]
         }
       ],
+      "./plugins/withAndroidAdFullscreen",
       "expo-image",
       "expo-iap",
       "./plugins/withPremiumIap",

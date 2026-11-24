@@ -9,7 +9,17 @@ export const rewardedAdEvents = {
   loaded: RewardedAdEventType.LOADED, opened: AdEventType.OPENED,
   earnedReward: RewardedAdEventType.EARNED_REWARD, closed: AdEventType.CLOSED, error: AdEventType.ERROR,
 } as const;
-export const initializeAdSdk = () => mobileAds().initialize();
+export const initializeAdSdk = async () => {
+  const qaDevice = process.env.EXPO_PUBLIC_UMP_EEA_TEST_DEVICE;
+  if (qaDevice && qaDevice !== "disabled") {
+    if (Platform.OS !== "android" || !/^[A-Fa-f0-9]{32}$/.test(qaDevice)) {
+      throw new Error("Invalid Android device-scoped consent/ad QA configuration");
+    }
+    // The APK-only UMP QA device also receives official test ads from our real units.
+    await mobileAds().setRequestConfiguration({ testDeviceIdentifiers: [qaDevice] });
+  }
+  return mobileAds().initialize();
+};
 export const getNativeAdAppId = (): string => {
   const rewardedModule = TurboModuleRegistry.get<TurboModule & {
     rewardedDispose?: (requestId: number) => void;
@@ -28,6 +38,6 @@ export async function endRewardedPresentation(token: number) {
   if (Platform.OS === "android") await requireNativeModule("LedPopAdImmersive").end(token);
 }
 export const showRewardedAd = (ad: RewardedAdHandle) => ad.show({ immersiveModeEnabled: Platform.OS === "android" });
-export function AdaptiveBannerAd(props: Omit<BannerAdProps, "size"> & { width: number }) {
+export function AdaptiveBannerAd(props: Omit<BannerAdProps, "size"> & { width: number; onConsentRequestFinished: () => void }) {
   return <BannerAd {...props} size={BannerAdSize.LARGE_ANCHORED_ADAPTIVE_BANNER} />;
 }

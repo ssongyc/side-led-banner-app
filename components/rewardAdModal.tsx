@@ -21,6 +21,7 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
   type ViewProps,
 } from "react-native";
@@ -60,6 +61,7 @@ type Props = {
   adDelayed?: boolean;
   adExpired?: boolean;
   onWatchAd?: () => void;
+  onOpenShop?: () => void;
   canRetry?: boolean;
   onRetry?: () => void;
   isAdReady?: () => boolean;
@@ -75,12 +77,20 @@ export function RewardAdModal({
   adDelayed = false,
   adExpired = false,
   onWatchAd,
+  onOpenShop,
   canRetry = false,
   onRetry,
   isAdReady,
 }: Props) {
   const { rewardAdLabel, resolvedAppLocale } = useSettingsLocalizationContext();
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+  // The iOS editor already sits inside its safe area. Keep the remaining
+  // vertical margin smaller so the card can expand inside that editor.
+  const verticalInsetScale = Platform.OS === "ios" ? 0.6 : 1;
+  // Leave the extra space below the actions, where it can scroll on short screens.
+  const bottomPadding = 84 + Math.round(height * 0.04);
+  const canShowRetry = Boolean(canRetry && onRetry);
   const drag = useRef({ x: 0, y: 0, moved: false });
   const watchAdFontFamily =
     resolvedAppLocale === "ko" || resolvedAppLocale === "en"
@@ -89,6 +99,7 @@ export function RewardAdModal({
 
   const overlayOpacity = useSharedValue(0);
   const openingStarted = useRef(false);
+  const openingShop = useRef(false);
   const surfaceRef = useRef<View>(null);
   const pending = useRef<{
     controller: AbortController;
@@ -125,6 +136,7 @@ export function RewardAdModal({
   useLayoutEffect(() => {
     if (visible) return;
     openingStarted.current = false;
+    openingShop.current = false;
     cancelAnimation(overlayOpacity);
     overlayOpacity.value = 0;
   }, [visible, overlayOpacity]);
@@ -148,8 +160,16 @@ export function RewardAdModal({
 
   const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
 
+  const handleOpenShop = () => {
+    if (drag.current.moved || !visible || !onOpenShop || openingShop.current ||
+        pending.current || AppState.currentState !== "active") return;
+    openingShop.current = true;
+    onClose();
+    onOpenShop();
+  };
+
   const handleWatchAd = async () => {
-    if (drag.current.moved || !visible || !adReady || !onWatchAd || pending.current ||
+    if (drag.current.moved || !visible || !adReady || !onWatchAd || openingShop.current || pending.current ||
         AppState.currentState !== "active" || (isAdReady && !isAdReady())) return;
     const controller = new AbortController();
     const flow = {
@@ -206,7 +226,7 @@ export function RewardAdModal({
   return (
     <Animated.View
       onLayout={showAfterLayout}
-      style={[styles.root, { zIndex: 10000, paddingTop: 12 + insets.top, paddingBottom: 12 + insets.bottom, paddingLeft: 12 + insets.left, paddingRight: 12 + insets.right }, overlayStyle]}
+      style={[styles.root, { zIndex: 10000, paddingTop: 12 + insets.top * verticalInsetScale, paddingBottom: 12 + insets.bottom * verticalInsetScale, paddingLeft: 12 + insets.left, paddingRight: 12 + insets.right }, overlayStyle]}
       pointerEvents={visible ? "auto" : "none"}
       accessibilityViewIsModal={visible}
       importantForAccessibility={visible ? "yes" : "no-hide-descendants"}
@@ -223,7 +243,10 @@ export function RewardAdModal({
       <FireworksBurst visible={visible} />
 
       <View style={styles.card}>
-        <ScrollView style={styles.modalBody} contentContainerStyle={styles.modalBodyContent}
+        <ScrollView style={styles.modalBody}
+          contentContainerStyle={[styles.modalBodyContent, { paddingBottom: bottomPadding }]}
+          automaticallyAdjustContentInsets={false}
+          contentInsetAdjustmentBehavior="never"
           keyboardShouldPersistTaps="handled" canCancelContentTouches
           onTouchStart={event => {
             drag.current = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY, moved: false };
@@ -254,27 +277,12 @@ export function RewardAdModal({
             >
               {rewardAdLabel("rewardHeaderBadge")}
             </Text>
+            <Text style={styles.rewardDescription} allowFontScaling={false}>
+              {rewardAdLabel("rewardDescription")}
+            </Text>
 
           <RewardBenefits rewardAdLabel={rewardAdLabel} />
         </View>
-
-        <View style={styles.adStatusArea}>
-          <ReservedText
-            text={adUnavailableReason(resolvedAppLocale) ?? (adReady || adFailure === "consent" ? "" : rewardAdLabel(adFailure === "unavailable" ? "rewardAdUnavailable" : adFailure === "initialization" ? "rewardAdInitializationFailed" : adFailure === "configuration" ? "rewardAdConfigurationFailed" : adFailure === "open-timeout" ? "rewardAdOpenUnconfirmed" : adExpired ? "rewardAdExpired" : adShowFailed ? "rewardAdShowFailed" : adFailed ? "rewardAdLoadFailed" : adDelayed ? "rewardAdDelayed" : "rewardAdPreparing"))}
-            variants={REWARD_AD_STATUS_TEXTS}
-            textStyle={styles.adStatusText}
-          />
-        </View>
-
-        <View style={styles.modalActions}>
-          <View style={styles.adRetryArea}>
-            {canRetry && onRetry && (
-              <TouchableOpacity onPress={() => { if (!drag.current.moved && visible && canRetry) onRetry(); }}
-                accessibilityRole="button" style={styles.adRetryButton}>
-                <Text style={styles.adRetryText} allowFontScaling={false}>{rewardAdLabel("rewardAdRetry")}</Text>
-              </TouchableOpacity>
-            )}
-          </View>
 
         <TouchableOpacity
           activeOpacity={0.85}
@@ -302,13 +310,16 @@ export function RewardAdModal({
             />
           )}
           <View style={styles.ctaButtonContent}>
-            <Image
-              source={PLAY_BG}
-              style={styles.ctaPlayBg}
-              contentFit="contain"
-              accessibilityIgnoresInvertColors
-            />
+            <View pointerEvents="none" style={styles.ctaPlaySlot}>
+              <Image
+                source={PLAY_BG}
+                style={styles.ctaPlayBg}
+                contentFit="contain"
+                accessibilityIgnoresInvertColors
+              />
+            </View>
             <ReservedText
+              centerVertically
               text={rewardAdLabel(adReady ? "rewardWatchAd" : "rewardAdPreparingButton")}
               variants={REWARD_AD_BUTTON_TEXTS}
               textStyle={[
@@ -318,6 +329,36 @@ export function RewardAdModal({
             />
           </View>
         </TouchableOpacity>
+        {onOpenShop && (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handleOpenShop}
+            accessibilityRole="button"
+            style={styles.shopButton}
+          >
+            <Text style={styles.shopButtonText} allowFontScaling={false}>
+              {rewardAdLabel("rewardBuyPro")}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        <View style={styles.adStatusArea}>
+          <ReservedText
+            text={adUnavailableReason(resolvedAppLocale) ?? (adReady || adFailure === "consent" ? "" : rewardAdLabel(adFailure === "unavailable" ? "rewardAdUnavailable" : adFailure === "initialization" ? "rewardAdInitializationFailed" : adFailure === "configuration" ? "rewardAdConfigurationFailed" : adFailure === "open-timeout" ? "rewardAdOpenUnconfirmed" : adExpired ? "rewardAdExpired" : adShowFailed ? "rewardAdShowFailed" : adFailed ? "rewardAdLoadFailed" : adDelayed ? "rewardAdDelayed" : "rewardAdPreparing"))}
+            variants={REWARD_AD_STATUS_TEXTS}
+            textStyle={styles.adStatusText}
+          />
+          <TouchableOpacity
+            onPress={() => { if (!drag.current.moved && visible && canRetry) onRetry?.(); }}
+            disabled={!canShowRetry}
+            pointerEvents={canShowRetry ? "auto" : "none"}
+            accessibilityRole="button"
+            accessibilityElementsHidden={!canShowRetry}
+            importantForAccessibility={canShowRetry ? "auto" : "no-hide-descendants"}
+            style={[styles.adRetryButton, !canShowRetry && styles.adRetryHidden]}
+          >
+            <Text style={styles.adRetryText} allowFontScaling={false}>{rewardAdLabel("rewardAdRetry")}</Text>
+          </TouchableOpacity>
         </View>
         </ScrollView>
       </View>

@@ -2,6 +2,8 @@ import { uiThemeFontStyle } from "@/constants/appFonts";
 import { moderateScale } from "@/constants/scale";
 import { Platform, StyleSheet } from "react-native";
 
+const SETTINGS_ROW_INSET = 15;
+
 export const CONTENTS_INPUT_FONT_SIZE = moderateScale(18);
 const CONTENTS_INPUT_LINE_HEIGHT = Math.round(
   CONTENTS_INPUT_FONT_SIZE * 1.3,
@@ -113,7 +115,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: SETTINGS_ROW_INSET,
     marginBottom: 5,
     borderBottomWidth: 2,
     borderBottomColor: "#DDDDDD",
@@ -318,17 +320,26 @@ export const rewardAdModalStyles = StyleSheet.create({
     color: "#1A1A1A",
     textAlign: "center",
     lineHeight: moderateScale(26),
+    marginBottom: 8,
+    paddingHorizontal: 10,
+  },
+  rewardDescription: {
+    ...uiThemeFontStyle,
+    fontSize: moderateScale(14),
+    lineHeight: moderateScale(20),
+    textAlign: "center",
+    color: "#444444",
     marginBottom: 24,
     paddingHorizontal: 10,
   },
   benefitContainer: {
     width: "100%",
-    marginBottom: 24,
+    rowGap: 14,
+    marginBottom: 15,
   },
   benefitRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 14,
   },
   checkIcon: {
     width: 24,
@@ -343,30 +354,16 @@ export const rewardAdModalStyles = StyleSheet.create({
     color: "#333333",
     lineHeight: moderateScale(21),
   },
-  proActiveBadge: {
-    alignSelf: "center",
-    backgroundColor: "rgba(0,0,0,0.55)",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginBottom: 16,
-  },
-  proActiveBadgeText: {
-    fontSize: moderateScale(12),
-    fontWeight: "600",
-    color: "#fff",
-  },
   modalBody: {
     flexGrow: 0,
     flexShrink: 1,
     minHeight: 0,
+    borderRadius: 32,
+    overflow: "hidden",
   },
   modalBodyContent: {
-    padding: 16,
-  },
-  modalActions: {
-    flexShrink: 0,
-    paddingTop: 8,
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   reservedText: {
     width: "100%",
@@ -385,14 +382,13 @@ export const rewardAdModalStyles = StyleSheet.create({
     opacity: 0,
   },
   reservedTextVisible: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
+    ...StyleSheet.absoluteFill,
+  },
+  reservedTextCentered: {
+    justifyContent: "center",
   },
   adStatusArea: {
-    width: "100%",
-    marginBottom: 8,
+    marginTop: 8,
   },
   adStatusText: {
     ...uiThemeFontStyle,
@@ -401,23 +397,24 @@ export const rewardAdModalStyles = StyleSheet.create({
     color: "#555555",
     textAlign: "center",
   },
-  adRetryArea: {
-    minHeight: 44,
-    flexShrink: 0,
-    alignItems: "center",
-  },
   adRetryButton: {
     minHeight: 44,
-    minWidth: 88,
+    width: 100,
+    flexShrink: 0,
+    alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 12,
+    paddingHorizontal: 6,
+  },
+  adRetryHidden: {
+    opacity: 0,
   },
   adRetryText: {
     ...uiThemeFontStyle,
     fontSize: 14,
     fontWeight: "700",
     color: "#7156B3",
+    textAlign: "center",
   },
   ctaButton: {
     width: "100%",
@@ -427,6 +424,25 @@ export const rewardAdModalStyles = StyleSheet.create({
     borderRadius: 28,
     overflow: "hidden",
   },
+  shopButton: {
+    minHeight: 48,
+    marginTop: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#222222",
+    borderRadius: 24,
+  },
+  shopButtonText: {
+    ...uiThemeFontStyle,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "700",
+    textAlign: "center",
+    color: "#222222",
+  },
   ctaButtonBg: {
     ...StyleSheet.absoluteFill,
     width: "100%",
@@ -435,17 +451,21 @@ export const rewardAdModalStyles = StyleSheet.create({
   },
   ctaButtonContent: {
     minHeight: 56,
-    paddingHorizontal: 16,
+    paddingHorizontal: 56,
     paddingVertical: 12,
     flexDirection: "row",
     alignItems: "center",
+  },
+  ctaPlaySlot: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 16,
     justifyContent: "center",
-    gap: 8,
   },
   ctaPlayBg: {
     width: 32,
     height: 32,
-    flexShrink: 0,
   },
   ctaButtonText: {
     fontSize: 15,
@@ -694,12 +714,13 @@ export const settingsFooterStyles = StyleSheet.create({
     justifyContent: "space-between",
     paddingTop: 8,
     paddingBottom: 24,
-    paddingHorizontal: 20,
+    paddingLeft: SETTINGS_ROW_INSET,
+    paddingRight: 20,
     gap: 12,
     backgroundColor: "#F9F9F9",
   },
   logo: {
-    width: 130,
+    width: 108,
     height: 36,
   },
   linksRow: {
@@ -716,26 +737,6 @@ export const settingsFooterStyles = StyleSheet.create({
   separator: {
     fontSize: moderateScale(11),
     color: "#CCCCCC",
-  },
-  containerDark: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 14,
-    paddingBottom: 14,
-    paddingHorizontal: 20,
-    gap: 12,
-    backgroundColor: "#3F3F3F",
-  },
-  linkTextDark: {
-    fontSize: moderateScale(12),
-    color: "#E8E3EC",
-    fontWeight: "500",
-  },
-  separatorDark: {
-    fontSize: moderateScale(11),
-    color: "#AFA9B8",
   },
 });
 

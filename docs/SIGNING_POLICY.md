@@ -175,6 +175,32 @@ Results and same-build symbols are retained under the run's release-verification
 Optional Configuration Cache, Daemon reuse and Gradle worker 1/2 comparisons are opt-in; defaults retain one worker and no reusable daemon. Configuration-cache errors fail the run. Signing credentials and cached signing configuration must remain local. See the 5 → 3 → 4 sequence in the optimization document; these options and 1.1.0(28) are not yet build-verified.
 
 
+## TestFlight 1.1.7 (7) — 2026-11-23
+
+- iOS 빌드 복사본에 소스 `98f42d5`, 버전 1.1.7, 빌드 7을 적용했습니다. EAS 빌드 `fe583bd0-f56a-4f8f-87e8-f97f5ed47fe3`에서 기존 서명, 원본 Xcode 아카이브와 일치하는 dSYM, 운영 AdMob·일반 UMP를 검증했습니다. 기록과 IPA는 `artifacts/testflight-117-7/`에 보관합니다.
+- EAS 제출 `d8d1f762-6150-45cc-af26-14d9e749625b` 이후 Apple에서 빌드 `2cb350b2-cd98-46e1-82b2-92523a8dc0f3`의 `VALID`, `IN_BETA_TESTING`과 기존 내부 그룹 LPT를 확인했습니다.
+- iPhone 세로 잠금 회전 수정은 이 빌드 이후 소스에 반영했습니다. 수정본의 실기기 회전과 Sandbox 구매·복원 검증이 남아 있습니다.
+
+## TestFlight 1.1.6 (6) — 2026-11-23
+
+- App Store Connect showed iOS 1.1.5 as ready for distribution. The isolated iOS build copy used `6ff4d94` with marketing version 1.1.6 and build 6. It includes the Play pixelated-photo rotation fix. The main and Android version settings were preserved.
+- EAS build `78a862a3-0842-42bc-adf4-f03042d97595` passed the macOS signature, archive, matching dSYM, production AdMob and normal UMP checks. The IPA and verification records are retained in `artifacts/testflight-116-6/`.
+- EAS submission `8c354ca7-6911-4408-b72d-9414775aa715` uploaded the verified build. Apple reported `VALID` for build `2482bc4c-67ba-4938-b804-09664c3517fa` and `IN_BETA_TESTING` for internal testing with group LPT. The pixel background fix and Sandbox purchases and restoration have no iPhone runtime verification. This upload did not initiate App Review.
+
+## TestFlight 1.1.5 (5) — 2026-11-19
+
+- EAS built iOS 1.1.5 (5) from `879f8e9`. Apple reported build `cd3175bf-bac6-4691-860e-f8387ff09aab` as `VALID` and available in the internal TestFlight group LPT. The IPA and Apple status record are in `artifacts/testflight-115-5/`.
+- The US English product page uses the final v4 header and search-result images, with the full iPhone frame visible in both. The listing description, release notes, and keywords were updated for all seven existing locales. Six non-English subtitles were localized, and the official Sunny Innovation Lab site is the marketing URL.
+- The US app download is free and the non-consumable LED POP Pro is US$4.99. The iPhone Shop screenshot and review notes completed the product metadata. The Paid Apps Agreement was active in the supplied Business screenshot. The copyright text was retained at the user's request, and promotional text and app data collection declarations were outside the final review scope.
+- The user submitted build 5 and the permanent ad removal product together. App Store Connect reported both as `WAITING_FOR_REVIEW` on receipt. The supplied iPhone Shop screenshot shows the localized price and Buy and Restore controls. Sandbox purchase completion and restoration remain unverified.
+
+## TestFlight 1.1.5 (4) — 2026-11-19
+
+- The user approved iOS 1.1.5 after App Store Connect showed 1.1.4 was already distributed. The isolated iOS build copy used `6c60018` with marketing version 1.1.5 and local build 4. The existing macOS-compatible signing adapter and provisioning profile were reused. Android and main kept their existing version configuration.
+- EAS build `096616fe-375b-45d9-9b5f-f651596870fa` passed macOS IPA and archive signature, framework and entitlement checks, original archive and dSYM UUID matching, and production AdMob and normal UMP verification. The downloaded IPA SHA-256 was `34D0A91AC6339C92F71453A0548BD4E0787545D253681A5D20CE83F04AE17CC1`.
+- EAS submission `61174fa0-22cc-4f17-89de-6d05bd836f33` uploaded that build. Apple reported `VALID` for build `79930eb8-928a-4bc0-ba70-6f2941d9a9f1` and `IN_BETA_TESTING` in the existing internal LPT group. iPhone runtime and Sandbox purchases and restoration remain unverified. External beta review and public App Review were never submitted.
+- The build-only version settings for `app.json`, `eas.json`, `package.json` and `package-lock.json` are recorded in `artifacts/testflight-115-4/source-overrides.diff`.
+
 ## TestFlight upload request — 2026-10-21
 
 - Follow-up after user login: EAS CLI browser authorization changed the account to `ssongyc`; the existing `@led-banner-app/led-banner-app` project is readable. Production environment lists the required Amplitude variable (value not logged). Historical failed IPA-only build `aa515c1f-aa8c-4d5e-bf28-872308b7d1dc` used profile `LedPopApp` for `com.sunnyinnolab.ledpop` against the old source identifier, causing the confirmed signing mismatch.

@@ -14,11 +14,19 @@ import { getBannerPlacement } from "@/ads/bannerState";
 
 type Props = { style?: StyleProp<ViewStyle>; unavailableLabel: string };
 type Placement = { owner: symbol; label: string };
+type Insets = ReturnType<typeof useSafeAreaInsets>;
+type BannerViewport = { width: number; height: number; insets: Insets };
+const RESIZE_SETTLE_MS = 250;
 const PlacementContext = createContext<{
   height: number;
+  viewport: BannerViewport;
   attach: (owner: symbol, label: string) => void;
   detach: (owner: symbol) => void;
 } | null>(null);
+
+export function useSettingsBannerViewport() {
+  return useContext(PlacementContext)?.viewport;
+}
 
 // Settings reserves layout only. The native ad stays under the app-root provider.
 export default function BannerAdComponent({ style, unavailableLabel }: Props) {
@@ -33,17 +41,7 @@ export default function BannerAdComponent({ style, unavailableLabel }: Props) {
     attach(token, unavailableLabel);
     return () => detach(token);
   }, [focused, attach, detach, unavailableLabel]);
-  const { privacyOpen } = useAdConsent();
-  const { width } = useWindowDimensions();
-  const height = placement?.height ?? 50;
-  const preserveHeight = Platform.OS === "android" && privacyOpen;
-  const [lastLayout, setLastLayout] = useState({ width, height });
-  if ((!preserveHeight || lastLayout.width !== width) &&
-      (lastLayout.width !== width || lastLayout.height !== height)) {
-    setLastLayout({ width, height });
-  }
-  const reservedHeight = preserveHeight && lastLayout.width === width ? lastLayout.height : height;
-  return <View style={[{ height: reservedHeight, flexShrink: 0 }, style]} />;
+  return <View style={[{ height: placement?.height ?? 50, flexShrink: 0 }, style]} />;
 }
 
 export function BannerPlacementProvider({ children }: { children: React.ReactNode }) {
@@ -53,15 +51,71 @@ export function BannerPlacementProvider({ children }: { children: React.ReactNod
   const { rewardAdLabel } = useSettingsLocalizationContext();
   const pathname = usePathname();
   const { adsAllowed } = usePremium();
-  const insets = useSafeAreaInsets();
-  const viewport = useWindowDimensions();
+  const liveInsets = useSafeAreaInsets();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const { privacyOpen } = useAdConsent();
+  const isSettings = pathname === "/settings";
+  const visible = !!placement && isSettings && adsAllowed;
+  const [windowState, setWindowState] = useState({
+    active: AppState.currentState !== "background" && AppState.currentState !== "inactive",
+    focused: true,
+    overlayOwner: null as symbol | null,
+    settling: false,
+  });
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const state = AppState.addEventListener("change", value => setWindowState(current => {
+      const active = value === "active";
+      return {
+        ...current, active, settling: true,
+        overlayOwner: active && !current.active && current.focused ? null : current.overlayOwner,
+      };
+    }));
+    const blur = AppState.addEventListener("blur", () => setWindowState(current => ({
+      ...current, focused: false, settling: true,
+    })));
+    const focus = AppState.addEventListener("focus", () => setWindowState(current => ({
+      ...current, focused: true, overlayOwner: null, settling: true,
+    })));
+    return () => { state.remove(); blur.remove(); focus.remove(); };
+  }, []);
+  const onAdOverlayChange = useCallback((owner: symbol, open: boolean) => {
+    if (Platform.OS !== "android") return;
+    setWindowState(current => {
+      if (!open && current.overlayOwner !== owner) return current;
+      return { ...current, overlayOwner: open ? owner : null, settling: true };
+    });
+  }, []);
+  const { active, focused, overlayOwner, settling } = windowState;
+  const { top, bottom, left, right } = liveInsets;
+  useLayoutEffect(() => {
+    if (!settling || !active || !focused || overlayOwner || privacyOpen) return;
+    // Wait for the returning Android window and its safe area to stop resizing.
+    const timer = setTimeout(() => setWindowState(current =>
+      current.active && current.focused && !current.overlayOwner
+        ? { ...current, settling: false } : current), RESIZE_SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [settling, active, focused, overlayOwner, privacyOpen, windowWidth, windowHeight, top, bottom, left, right]);
+
+  const frozen = Platform.OS === "android" && isSettings && (privacyOpen || (visible && settling));
+  const [stableViewport, setStableViewport] = useState<BannerViewport>({
+    width: windowWidth, height: windowHeight, insets: liveInsets,
+  });
+  const liveViewport = { width: windowWidth, height: windowHeight, insets: liveInsets };
+  if (!frozen && (stableViewport.width !== windowWidth || stableViewport.height !== windowHeight ||
+      stableViewport.insets.top !== top || stableViewport.insets.bottom !== bottom ||
+      stableViewport.insets.left !== left || stableViewport.insets.right !== right)) {
+    setStableViewport(liveViewport);
+  }
+  const viewport = frozen ? stableViewport : liveViewport;
+  const { insets } = viewport;
   const width = Math.floor(viewport.width - insets.left - insets.right);
-  const visible = !!placement && pathname === "/settings" && adsAllowed;
+  const [hostHeight, setHostHeight] = useState(0);
   // Settle resize events without creating a placement/budget for every pixel.
   const [settledWidth, setSettledWidth] = useState(width);
   useEffect(() => {
     if (width <= 0) return;
-    const timer = setTimeout(() => setSettledWidth(width), 250);
+    const timer = setTimeout(() => setSettledWidth(width), RESIZE_SETTLE_MS);
     return () => clearTimeout(timer);
   }, [width]);
   const orientation = viewport.width > viewport.height ? "landscape" : "portrait";
@@ -73,33 +127,42 @@ export function BannerPlacementProvider({ children }: { children: React.ReactNod
       : [...slots, { id: orientation, width, height: 50 }]);
   }
   const height = currentSlot?.height ?? 50;
-  return <PlacementContext.Provider value={{ height, attach, detach }}>
-    <View style={{ flex: 1 }}>
+  return <PlacementContext.Provider value={{ height, viewport, attach, detach }}>
+    <View style={frozen && hostHeight > 0 ? { height: hostHeight } : { flex: 1 }}
+      onLayout={event => {
+        if (Platform.OS === "android" && isSettings && !frozen) setHostHeight(event.nativeEvent.layout.height);
+      }}>
       {children}
       {slots.map(slot => <PersistentBanner key={slot.id} placementId={`settings-${slot.id}`} adsAllowed={adsAllowed}
         adaptiveWidth={slot.width} availableWidth={slot.id === orientation ? width : slot.width}
         visible={visible && slot.id === orientation}
         resizeSettled={width === settledWidth && slot.width === width}
         delayedLabel={rewardAdLabel("rewardAdDelayed")}
-        unavailableLabel={placement?.label ?? ""} onHeight={height => setSlots(current =>
-          current.map(value => value.id === slot.id && value.height !== height ? { ...value, height } : value))}
+        unavailableLabel={placement?.label ?? ""} onHeight={height => {
+          if (!frozen) setSlots(current => current.map(value =>
+            value.id === slot.id && value.height !== height ? { ...value, height } : value));
+        }}
+        frozenHeight={frozen ? slot.height : undefined} onAdOverlayChange={onAdOverlayChange}
         bottom={insets.bottom + 12} left={insets.left} right={insets.right} />)}
 
     </View>
   </PlacementContext.Provider>;
 }
 
-function PersistentBanner({ placementId, adaptiveWidth, availableWidth, resizeSettled, adsAllowed, visible, delayedLabel, unavailableLabel, onHeight, bottom, left, right }: {
+function PersistentBanner({ placementId, adaptiveWidth, availableWidth, resizeSettled, adsAllowed, visible, delayedLabel, unavailableLabel, onHeight, frozenHeight, onAdOverlayChange, bottom, left, right }: {
   placementId: string; adaptiveWidth: number; availableWidth: number; resizeSettled: boolean; adsAllowed: boolean;
   visible: boolean; delayedLabel: string; unavailableLabel: string; onHeight: (height: number) => void;
+  frozenHeight?: number;
+  onAdOverlayChange: (owner: symbol, open: boolean) => void;
   bottom: number; left: number; right: number;
 }) {
-  const { invalidateConsent, resumeConsent, discardLoadedBanner, initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, releaseBanner, requestBanner, bannerLoaded, bannerFailed } = getBannerPlacement(placementId);
+  const { invalidateConsent, consentRequestFinished, resumeConsent, discardLoadedBanner, initializationFailed, beginInitializationRecovery, getBannerState, subscribeBannerState, claimBanner, releaseBanner, requestBanner, bannerLoaded, bannerFailed } = getBannerPlacement(placementId);
   const sdkState = useMobileAdsState();
   const sdkDelayed = useMobileAdsLoadDelayed();
   const [foreground, setForeground] = useState(AppState.currentState === "active");
   const consent = useAdConsent();
-  const eligible = visible && foreground && consent.allowed && !consent.busy;
+  const canDisplay = visible && consent.allowed && !consent.busy;
+  const eligible = canDisplay && foreground;
   const canRequest = useRef(false);
   useLayoutEffect(() => {
     canRequest.current = eligible;
@@ -121,13 +184,13 @@ function PersistentBanner({ placementId, adaptiveWidth, availableWidth, resizeSe
   const sizeChanged = width > adaptiveWidth;
   const fitsViewport = width <= availableWidth;
   // Retire loaded inventory first; synchronize width once that external store is idle.
-  if (sizeChanged && state.phase !== "loading" && state.phase !== "loaded" &&
+  if (sizeChanged && state.phase !== "loading" && state.phase !== "retiring" && state.phase !== "loaded" &&
       (!adsAllowed || (visible && resizeSettled))) setWidth(adaptiveWidth);
   const traceBanner = useCallback((stage: string, detail: Record<string, unknown> = {}, error?: unknown) => {
     recordAdEvent("banner", stage, { ...detail, placementId, requestId: state.requestId, state: state.phase }, error);
   }, [placementId, state.requestId, state.phase]);
   useEffect(() => {
-    if (state.phase === "loading") return;
+    if (state.phase === "loading" || state.phase === "retiring") return;
     if (adsAllowed && (!visible || !resizeSettled)) return;
     if (!adsAllowed || sizeChanged) {
       if (state.phase === "loaded") recordAdEvent("banner", "inventory_retired", {
@@ -155,7 +218,7 @@ function PersistentBanner({ placementId, adaptiveWidth, availableWidth, resizeSe
   useEffect(() => registerConsentLifecycle(() => true, () => invalidateConsent(token.current)), [invalidateConsent]);
   useEffect(() => {
     if (owned && consent.allowed && !consent.busy) resumeConsent(token.current);
-  }, [owned, consent.allowed, consent.busy, resumeConsent]);
+  }, [owned, consent.allowed, consent.busy, state.phase, resumeConsent]);
   useEffect(() => {
     if (owned && sdkState === "failed") initializationFailed(token.current);
   }, [owned, sdkState, state.phase, initializationFailed]);
@@ -220,6 +283,16 @@ function PersistentBanner({ placementId, adaptiveWidth, availableWidth, resizeSe
   if (state.phase === "loading" && requestSize.requestId !== requestId) {
     setRequestSize({ requestId, width });
   }
+  const retainDisplayedBanner = Platform.OS === "android" && canDisplay && state.phase === "loaded";
+  const showBanner = (eligible || retainDisplayedBanner) && fitsViewport;
+  const hasNativeAd = owned && config && requestSize.width > 0 &&
+    (state.phase === "loading" || state.phase === "retiring" || (adsAllowed && !sizeChanged && state.phase === "loaded"));
+  // A retired request no longer owns the overlay, even if the SDK has no close event.
+  useEffect(() => {
+    if (!visible || !hasNativeAd) return;
+    const owner = token.current;
+    return () => onAdOverlayChange(owner, false);
+  }, [visible, hasNativeAd, requestId, onAdOverlayChange]);
   // Do not use display:none or conditionally remove the ad on blur: Fabric can
   // tear down that native view. Park this one view outside the viewport instead.
   return <>
@@ -229,14 +302,21 @@ function PersistentBanner({ placementId, adaptiveWidth, availableWidth, resizeSe
       </View> : null}
     <View collapsable={false} removeClippedSubviews={false} pointerEvents={eligible && fitsViewport ? "auto" : "none"}
     accessibilityElementsHidden={!eligible || !fitsViewport} importantForAccessibility={eligible && fitsViewport ? "auto" : "no-hide-descendants"}
-    style={{ position: "absolute", left: left + Math.max(0, availableWidth - width) / 2, width, bottom: eligible && fitsViewport ? bottom : -10000,
-      opacity: eligible && fitsViewport ? 1 : 0, alignItems: "center", justifyContent: "center", minHeight: 50 }}
+    style={{ position: "absolute", left: left + Math.max(0, availableWidth - width) / 2, width, bottom: showBanner ? bottom : -10000,
+      opacity: showBanner ? 1 : 0, alignItems: "center", justifyContent: "center", minHeight: 50, height: frozenHeight }}
     onLayout={event => {
       onHeight(Math.max(50, event.nativeEvent.layout.height));
     }}>
-    {owned && config && requestSize.width > 0 && (state.phase === "loading" || (adsAllowed && !sizeChanged && state.phase === "loaded")) ?
+    {hasNativeAd && config ?
       <AdaptiveBannerAd key={requestId} unitId={config.banner} width={requestSize.width}
+        onConsentRequestFinished={() => consentRequestFinished(token.current, requestId)}
         onSizeChange={size => traceBanner("size_changed", { ...size, attempt: state.attempt })}
+        onAdOpened={() => {
+          if (visible && getBannerState().requestId === requestId) onAdOverlayChange(token.current, true);
+        }}
+        onAdClosed={() => {
+          if (getBannerState().requestId === requestId) onAdOverlayChange(token.current, false);
+        }}
         onAdImpression={() => {
           if (getBannerState().requestId !== requestId) return;
           traceBanner("impression", { requestId, attempt: state.attempt,

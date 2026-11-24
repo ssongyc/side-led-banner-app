@@ -1,8 +1,9 @@
-import { AdPrivacyOptions, useAdConsent } from '@/ads/adConsent';
+import { AdPrivacyOptions } from '@/ads/adConsent';
 import { usePremium } from "@/contexts/premiumContext";
-import BannerAdComponent from "@/components/admob/bannerAd";
+import BannerAdComponent, { useSettingsBannerViewport } from "@/components/admob/bannerAd";
 import type { AppLocaleKey } from "@/constants/language";
 import { settingsStyles } from "@/constants/settingsStyles";
+import { SUNNY_LINKS } from "@/constants/sunnyLinks";
 import {
   styles as base,
   resolveDropdownMaxHeight,
@@ -19,6 +20,7 @@ import * as ScreenOrientation from "expo-screen-orientation";
 import { loadRewardedAd } from "@/hooks/useRewardedAd";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  BackHandler,
   Image,
   Linking,
   Platform,
@@ -31,37 +33,14 @@ import {
 import { Dropdown } from "react-native-element-dropdown";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const SUNNY_LINKS = {
-  homepage: "https://sunnyinnolab.com",
-  instagram: "https://www.instagram.com/sunnyinnolab/",
-  twitter: "https://x.com/Sunnyinnolab",
-  terms:
-    "https://marmalade-neptune-dbe.notion.site/Terms-Conditions-c18656ce6c6045e590f652bf8291f28b?pvs=74",
-  privacy:
-    "https://marmalade-neptune-dbe.notion.site/Privacy-Policy-ced8ead72ced4d8791ca4a71a289dd6b",
-} as const;
-
 export default function SettingsScreen() {
   const { adsAllowed } = usePremium();
   const router = useRouter();
   const liveInsets = useSafeAreaInsets();
-  const { width: windowW, height: liveWindowH } = useWindowDimensions();
-  const { privacyOpen } = useAdConsent();
-  const preserveLayout = Platform.OS === "android" && privacyOpen;
-  const [stableLayout, setStableLayout] = useState({
-    width: windowW, height: liveWindowH, insets: liveInsets,
-  });
-  if ((!preserveLayout || stableLayout.width !== windowW) &&
-      (stableLayout.width !== windowW || stableLayout.height !== liveWindowH ||
-       stableLayout.insets.top !== liveInsets.top ||
-       stableLayout.insets.bottom !== liveInsets.bottom ||
-       stableLayout.insets.left !== liveInsets.left ||
-       stableLayout.insets.right !== liveInsets.right)) {
-    setStableLayout({ width: windowW, height: liveWindowH, insets: liveInsets });
-  }
-  const frozenLayout = preserveLayout && stableLayout.width === windowW ? stableLayout : null;
-  const insets = frozenLayout?.insets ?? liveInsets;
-  const windowH = frozenLayout?.height ?? liveWindowH;
+  const { height: liveWindowH } = useWindowDimensions();
+  const bannerViewport = useSettingsBannerViewport();
+  const insets = bannerViewport?.insets ?? liveInsets;
+  const windowH = bannerViewport?.height ?? liveWindowH;
   const [languageDropdownContentHeight, setLanguageDropdownContentHeight] =
     useState(0);
   const [languageDropdownWidth, setLanguageDropdownWidth] = useState(0);
@@ -131,6 +110,22 @@ export default function SettingsScreen() {
     if (adsAllowed) loadRewardedAd({ restartFailed: true });
   }, [adsAllowed]));
 
+  const goBack = useCallback(() => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/");
+  }, [router]);
+
+  useFocusEffect(useCallback(() => {
+    if (Platform.OS !== "android") return;
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      // Leave normal stack/modal back handling intact; anchor a standalone Settings entry.
+      if (router.canGoBack()) return false;
+      goBack();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [router, goBack]));
+
   const openUrl = (url: string) => {
     void Linking.openURL(url).catch((error) => {
       if (__DEV__) console.error("External link open failed", error);
@@ -140,8 +135,6 @@ export default function SettingsScreen() {
   const footer = (
     <SettingsFooter
         onLogoPress={() => openUrl(SUNNY_LINKS.homepage)}
-        termsLabel={textSectionLabel("terms")}
-        privacyLabel={textSectionLabel("privacy")}
         onTermsPress={() => openUrl(SUNNY_LINKS.terms)}
         onPrivacyPress={() => openUrl(SUNNY_LINKS.privacy)}
       />
@@ -151,7 +144,7 @@ export default function SettingsScreen() {
     <View style={[base.container, { backgroundColor: "#FFFFFF", paddingTop: rootPaddingTop, paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right }]}>
       <View style={settingsStyles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={goBack}
           style={settingsStyles.backButton}
           accessibilityLabel="Back"
           hitSlop={10}
@@ -240,6 +233,10 @@ export default function SettingsScreen() {
             />
           </View>
         </View>
+
+        {(Platform.OS === "android" || Platform.OS === "ios") && (
+          <NavigationRow label={textSectionLabel("shop")} onPress={() => router.push("/shop" as Href)} />
+        )}
 
         <NavigationRow
           label={textSectionLabel("sunnyGames")}
@@ -332,16 +329,12 @@ function LinkRow({
 
 interface SettingsFooterProps {
   onLogoPress: () => void;
-  termsLabel: string;
-  privacyLabel: string;
   onTermsPress: () => void;
   onPrivacyPress: () => void;
 }
 
 function SettingsFooter({
   onLogoPress,
-  termsLabel,
-  privacyLabel,
   onTermsPress,
   onPrivacyPress,
 }: SettingsFooterProps) {
@@ -357,8 +350,8 @@ function SettingsFooter({
 
       <View style={settingsFooterStyles.linksRow}>
         <TouchableOpacity onPress={onTermsPress}>
-          <Text style={settingsFooterStyles.linkText} allowFontScaling={false}>
-            {termsLabel}
+          <Text style={settingsFooterStyles.linkText} allowFontScaling={false} numberOfLines={1}>
+            Terms
           </Text>
         </TouchableOpacity>
 
@@ -367,8 +360,8 @@ function SettingsFooter({
         </Text>
 
         <TouchableOpacity onPress={onPrivacyPress}>
-          <Text style={settingsFooterStyles.linkText} allowFontScaling={false}>
-            {privacyLabel}
+          <Text style={settingsFooterStyles.linkText} allowFontScaling={false} numberOfLines={1}>
+            Privacy
           </Text>
         </TouchableOpacity>
       </View>

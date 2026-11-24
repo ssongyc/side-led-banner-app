@@ -4,7 +4,7 @@ import type { ViewProps } from "react-native";
 
 type PlaybackTextLayerProps = PropsWithChildren<ViewProps & {
   layoutRevision: string;
-  rotationMode: "device" | "paused" | "window";
+  rotationMode: "device" | "paused";
   onDeviceRotation?: (event: { nativeEvent: { degrees: number } }) => void;
 }>;
 

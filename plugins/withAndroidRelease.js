@@ -1,11 +1,32 @@
 const fs = require("node:fs");
 const path = require("node:path");
-const { withAppBuildGradle, withDangerousMod, withGradleProperties, withSettingsGradle } = require("expo/config-plugins");
+const {
+  withAndroidManifest,
+  withAppBuildGradle,
+  withDangerousMod,
+  withGradleProperties,
+  withSettingsGradle,
+} = require("expo/config-plugins");
 
 // Expected bundled optimizer in AGP 9.2.1; verified from its builder JAR.
 const R8_VERSION = "9.2.14";
 
 module.exports = function withAndroidRelease(config) {
+  config = withAndroidManifest(config, (mod) => {
+    const { manifest } = mod.modResults;
+    // Network permissions and dependency activities can imply Play hardware requirements.
+    let features = manifest["uses-feature"] ?? [];
+    for (const name of ["android.hardware.wifi", "android.hardware.screen.portrait"]) {
+      const current = features.find((feature) => feature.$["android:name"] === name);
+      features = features.filter((feature) => feature.$["android:name"] !== name);
+      features.push({
+        ...current,
+        $: { ...current?.$, "android:name": name, "android:required": "false" },
+      });
+    }
+    manifest["uses-feature"] = features;
+    return mod;
+  });
   config = withDangerousMod(config, ["android", (mod) => {
     const rulesPath = path.join(mod.modRequest.platformProjectRoot, "app", "proguard-rules.pro");
     const rules = fs.readFileSync(rulesPath, "utf8");

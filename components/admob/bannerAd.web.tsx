@@ -10,6 +10,10 @@ export default function BannerAdComponent({ style }: { style?: StyleProp<ViewSty
   </View>;
 }
 
+export function useSettingsBannerViewport() {
+  return undefined;
+}
+
 // Web keeps its existing inline diagnostic placement; no native host is loaded.
 export function BannerPlacementProvider({ children }: { children: React.ReactNode }) {
   return <>{children}</>;

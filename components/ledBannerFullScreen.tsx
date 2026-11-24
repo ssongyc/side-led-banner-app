@@ -1,3 +1,4 @@
+import { BackgroundPhotoLayer } from "@/components/animation/BackgroundPhotoLayer";
 import { BackgroundEffectLayer } from "@/components/animation/BackgroundEffectLayer";
 import { MarqueeCanvas } from "@/components/animation/MarqueeCanvas";
 import { GradientBackdrop } from "@/components/skia/GradientBackdrop";
@@ -26,13 +27,11 @@ import {
 } from "@/utils/SystemChrome";
 import { getSizingPolicy } from "@/utils/textSizing";
 import { Canvas } from "@shopify/react-native-skia";
-import { Image, type ImageLoadEventData } from "expo-image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
   Modal,
-  PixelRatio,
   Platform,
   Pressable,
   StatusBar,
@@ -62,8 +61,7 @@ export const LedBannerFullScreen = ({
   const { appearance } = useSettingsAppearance();
   const { background } = useSettingsBackground();
   const { textSelectedColor, gradientBackgroundPreset, dropShadow } = appearance;
-  const { backgroundColor, backgroundImageUri, backgroundBlur } = background;
-  const hasBgPhoto = backgroundImageUri != null && backgroundImageUri.length > 0;
+  const { backgroundColor, backgroundImageUri, backgroundBlur, backgroundPhotoViewMode } = background;
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -80,48 +78,18 @@ export const LedBannerFullScreen = ({
     },
     [visible],
   );
-  // A window already laid out in landscape needs no extra quarter turn.
-  const rotatesContent = usesSensorRotation && viewportHeight >= viewportWidth;
+  // iPhone uses a portrait Play window. Android reports display-relative angles.
   const {
     rotation: contentRotation,
-    opacity: rotationOpacity,
+    textOpacity,
+    backgroundRotate,
+    backgroundScale,
     onLayout: onRotatedLayout,
-  } = usePlayRotation(visible && rotatesContent, deviceRotation, viewportWidth, viewportHeight);
+  } = usePlayRotation(visible && usesSensorRotation, deviceRotation, viewportWidth, viewportHeight);
   const swapsAxes = contentRotation === 90 || contentRotation === 270;
   const stageWidth = swapsAxes ? viewportHeight : viewportWidth;
   const stageHeight = swapsAxes ? viewportWidth : viewportHeight;
   const isPortrait = stageHeight >= stageWidth;
-  const [photoSize, setPhotoSize] = useState<{ uri: string; width: number; height: number } | null>(null);
-  const onPhotoLoad = useCallback((event: ImageLoadEventData) => {
-    if (!backgroundImageUri) return;
-    const { width, height } = event.source;
-    setPhotoSize({ uri: backgroundImageUri, width, height });
-  }, [backgroundImageUri]);
-  const photoTiles = useMemo(() => {
-    if (!photoSize || photoSize.width <= 0 || photoSize.height <= 0) return null;
-    const scale = Math.min(stageWidth / photoSize.width, stageHeight / photoSize.height);
-    const tileWidth = photoSize.width * scale;
-    const tileHeight = photoSize.height * scale;
-    const originX = (stageWidth - tileWidth) / 2;
-    const originY = (stageHeight - tileHeight) / 2;
-    const countX = Math.ceil(originX / tileWidth);
-    const countY = Math.ceil(originY / tileHeight);
-    const tiles: { key: string; left: number; top: number; width: number; height: number }[] = [];
-    for (let ix = -countX; ix <= countX; ix += 1) {
-      for (let iy = -countY; iy <= countY; iy += 1) {
-        const left = PixelRatio.roundToNearestPixel(originX + ix * tileWidth);
-        const top = PixelRatio.roundToNearestPixel(originY + iy * tileHeight);
-        tiles.push({
-          key: `${ix}:${iy}`,
-          left,
-          top,
-          width: PixelRatio.roundToNearestPixel(originX + (ix + 1) * tileWidth) - left,
-          height: PixelRatio.roundToNearestPixel(originY + (iy + 1) * tileHeight) - top,
-        });
-      }
-    }
-    return tiles;
-  }, [photoSize, stageWidth, stageHeight]);
   const readySent = useRef(false);
   useEffect(() => {
     if (!visible) readySent.current = false;
@@ -250,7 +218,7 @@ export const LedBannerFullScreen = ({
     appearanceFontOverride: effects.pixelSkiaFontOverride,
     lineSpacingPx: effectiveLineSpacing,
     fallbackLayout: canvasFallback,
-    fixedLayout: rotatesContent ? canvasFallback : undefined,
+    fixedLayout: usesSensorRotation ? canvasFallback : undefined,
     lineHeightRatio: fullscreenLineHeightRatio,
     isPixelMode: effects.isPixelEffect,
     speechBubbleLayout: speechBubbleCanvasLayout,
@@ -272,9 +240,9 @@ export const LedBannerFullScreen = ({
         width: stageWidth,
         height: stageHeight,
         effects,
-        hasBgPhoto,
         backgroundColor,
         backgroundImageUri: backgroundImageUri ?? null,
+        backgroundPhotoViewMode,
         gradientBackgroundPreset,
         backgroundEffect: backgroundEdgeEffectAnim,
         translateX: backgroundTranslateX,
@@ -285,9 +253,9 @@ export const LedBannerFullScreen = ({
       stageWidth,
       stageHeight,
       effects,
-      hasBgPhoto,
       backgroundColor,
       backgroundImageUri,
+      backgroundPhotoViewMode,
       gradientBackgroundPreset,
       backgroundEdgeEffectAnim,
       backgroundTranslateX,
@@ -303,16 +271,15 @@ export const LedBannerFullScreen = ({
         onLayout={onStageLayout}
         onTouchStart={hideAndroidNavigationBar}
       >
-        <Animated.View
-          onLayout={rotatesContent ? onRotatedLayout : undefined}
-          style={rotatesContent
+        <View
+          onLayout={usesSensorRotation ? onRotatedLayout : undefined}
+          style={usesSensorRotation
             ? {
                 position: "absolute",
                 left: (viewportWidth - stageWidth) / 2,
                 top: (viewportHeight - stageHeight) / 2,
                 width: stageWidth,
                 height: stageHeight,
-                opacity: rotationOpacity,
                 transform: [{ rotate: `${contentRotation}deg` }],
               }
             : styles.layerPassThrough}
@@ -331,103 +298,99 @@ export const LedBannerFullScreen = ({
             ]}
             pointerEvents="box-none"
           >
-            {hasBgPhoto && !effects.isPixelEffect ? (
-              photoTiles && photoSize?.uri === backgroundImageUri ? (
-                photoTiles.map(tile => (
-                  <Image
-                    key={tile.key}
-                    source={{ uri: backgroundImageUri }}
-                    style={{
-                      position: "absolute",
-                      left: tile.left,
-                      top: tile.top,
-                      width: tile.width,
-                      height: tile.height,
-                    }}
-                    contentFit="cover"
-                    blurRadius={backgroundBlur / 8}
-                  />
-                ))
-              ) : (
-                <Image
-                  source={{ uri: backgroundImageUri }}
-                  style={StyleSheet.absoluteFill}
-                  contentFit="contain"
-                  blurRadius={backgroundBlur / 8}
-                  onLoad={onPhotoLoad}
-                />
-              )
-            ) : null}
-            {effects.isPixelEffect ? (
-              <PixelBackgroundCanvas {...pixelBackgroundProps} isActive={isAnimationActive} />
-            ) : null}
-            {!effects.isPixelEffect && effects.showGradientBackdrop && stageWidth > 0 && stageHeight > 0 ? (
-              <View style={StyleSheet.absoluteFill} pointerEvents="none">
-                <Canvas style={{ flex: 1 }} opaque={false}>
-                  <GradientBackdrop
-                    isActive={isAnimationActive}
-                    key={`gradient-${gradientBackgroundPreset}`}
-                    preset={gradientBackgroundPreset as GradientBackdropId}
-                    width={stageWidth}
-                    height={stageHeight}
-                    blur={backgroundBlur / 8}
-                  />
-                </Canvas>
-              </View>
-            ) : null}
-            <BackgroundEffectLayer
-              effect={backgroundEdgeEffectAnim}
-              translateX={backgroundTranslateX}
-              isPortrait={isPortrait}
-              mode="fullscreen"
-              suppressPixelManagedBackgrounds={effects.isPixelEffect}
-              blurRadius={backgroundBlur / 8}
-            />
-            <PlaybackTextLayer
-              style={StyleSheet.absoluteFill}
+            <Animated.View
               pointerEvents="none"
-              layoutRevision={`${stageWidth}:${stageHeight}:${canvas.skiaCanvasLayout.width}:${canvas.skiaCanvasLayout.height}`}
-              rotationMode={usesSensorRotation
-                ? (isAnimationActive ? "device" : "paused")
-                : "window"}
-              onDeviceRotation={usesSensorRotation ? onDeviceRotation : undefined}
+              style={[
+                StyleSheet.absoluteFill,
+                usesSensorRotation && {
+                  transform: [{ rotate: backgroundRotate }, { scale: backgroundScale }],
+                },
+              ]}
             >
-              {speechBubble.isActive ? (
-                <View
-                  style={{
-                    ...StyleSheet.absoluteFill,
-                    alignItems: "center",
-                    ...(speechBubble.speechTextTop == null
-                      ? { justifyContent: "center" }
-                      : null),
-                  }}
-                  pointerEvents="none"
-                >
+              {backgroundImageUri && !effects.isPixelEffect ? (
+                <BackgroundPhotoLayer
+                  key={backgroundImageUri}
+                  uri={backgroundImageUri}
+                  width={stageWidth}
+                  height={stageHeight}
+                  blurRadius={backgroundBlur / 8}
+                  viewMode={backgroundPhotoViewMode}
+                />
+              ) : null}
+              {effects.isPixelEffect ? (
+                <PixelBackgroundCanvas {...pixelBackgroundProps} isActive={isAnimationActive} />
+              ) : null}
+              {!effects.isPixelEffect && effects.showGradientBackdrop && stageWidth > 0 && stageHeight > 0 ? (
+                <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                  <Canvas style={{ flex: 1 }} opaque={false}>
+                    <GradientBackdrop
+                      isActive={isAnimationActive}
+                      key={`gradient-${gradientBackgroundPreset}`}
+                      preset={gradientBackgroundPreset as GradientBackdropId}
+                      width={stageWidth}
+                      height={stageHeight}
+                      blur={backgroundBlur / 8}
+                    />
+                  </Canvas>
+                </View>
+              ) : null}
+              <BackgroundEffectLayer
+                effect={backgroundEdgeEffectAnim}
+                translateX={backgroundTranslateX}
+                isPortrait={isPortrait}
+                mode="fullscreen"
+                suppressPixelManagedBackgrounds={effects.isPixelEffect}
+                blurRadius={backgroundBlur / 8}
+              />
+            </Animated.View>
+            <Animated.View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, usesSensorRotation && { opacity: textOpacity }]}
+            >
+              <PlaybackTextLayer
+                style={StyleSheet.absoluteFill}
+                pointerEvents="none"
+                layoutRevision={`${stageWidth}:${stageHeight}:${canvas.skiaCanvasLayout.width}:${canvas.skiaCanvasLayout.height}`}
+                rotationMode={usesSensorRotation && isAnimationActive ? "device" : "paused"}
+                onDeviceRotation={usesSensorRotation ? onDeviceRotation : undefined}
+              >
+                {speechBubble.isActive ? (
                   <View
-                    style={speechBubble.textContainerStyle!}
+                    style={{
+                      ...StyleSheet.absoluteFill,
+                      alignItems: "center",
+                      ...(speechBubble.speechTextTop == null
+                        ? { justifyContent: "center" }
+                        : null),
+                    }}
+                    pointerEvents="none"
+                  >
+                    <View
+                      style={speechBubble.textContainerStyle!}
+                      onLayout={canvas.onSkiaCanvasLayout}
+                    >
+                      <MarqueeCanvas
+                        {...marqueeCanvasProps}
+                      />
+                    </View>
+                  </View>
+                ) : (
+                  <View
+                    style={[
+                      StyleSheet.absoluteFill,
+                      { transform: [{ translateX: textShiftX }] },
+                    ]}
                     onLayout={canvas.onSkiaCanvasLayout}
                   >
                     <MarqueeCanvas
                       {...marqueeCanvasProps}
                     />
                   </View>
-                </View>
-              ) : (
-                <View
-                  style={[
-                    StyleSheet.absoluteFill,
-                    { transform: [{ translateX: textShiftX }] },
-                  ]}
-                  onLayout={canvas.onSkiaCanvasLayout}
-                >
-                  <MarqueeCanvas
-                    {...marqueeCanvasProps}
-                  />
-                </View>
-              )}
-            </PlaybackTextLayer>
+                )}
+              </PlaybackTextLayer>
+            </Animated.View>
           </View>
-        </Animated.View>
+        </View>
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={onClose}
@@ -447,7 +410,7 @@ export const LedBannerFullScreen = ({
       animationType="none"
       presentationStyle="fullScreen"
       backdropColor={backgroundColor}
-      supportedOrientations={["portrait", "landscape"]}
+      supportedOrientations={usesSensorRotation ? ["portrait"] : ["portrait", "landscape"]}
       onRequestClose={onClose}
     >
       {content}

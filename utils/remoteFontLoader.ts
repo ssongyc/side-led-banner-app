@@ -33,7 +33,7 @@ function isUsableFontFile(file: File): boolean {
   }
 }
 
-export function isRemoteFontDownloaded(source: RemoteFontSource): boolean {
+function isRemoteFontDownloaded(source: RemoteFontSource): boolean {
   return isUsableFontFile(new File(remoteFontsDir, source.fileName));
 }
 

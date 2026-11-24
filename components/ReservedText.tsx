@@ -1,10 +1,11 @@
 import { rewardAdModalStyles as styles } from "@/constants/styles";
 import { type StyleProp, type TextStyle, Text, View } from "react-native";
 
-export function ReservedText({ text, variants, textStyle }: {
+export function ReservedText({ text, variants, textStyle, centerVertically }: {
   text: string;
   variants: readonly string[];
   textStyle: StyleProp<TextStyle>;
+  centerVertically?: boolean;
 }) {
   return (
     <View style={styles.reservedText}>
@@ -16,8 +17,11 @@ export function ReservedText({ text, variants, textStyle }: {
             style={[textStyle, styles.reservedTextCopy]}>{variant}</Text>
         ))}
       </View>
-      <Text style={[textStyle, styles.reservedTextVisible]} allowFontScaling={false}
-        accessibilityLiveRegion="polite">{text}</Text>
+      <View style={[styles.reservedTextVisible, centerVertically && styles.reservedTextCentered]}>
+        <Text style={textStyle} allowFontScaling={false} accessibilityLiveRegion="polite">
+          {text}
+        </Text>
+      </View>
     </View>
   );
 }

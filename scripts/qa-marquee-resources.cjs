@@ -28,7 +28,7 @@ function harness() {
     },
   });
   const hook = load('components/animation/useMarqueeCanvasProps.ts', { '@/hooks/useTilePicture': tile });
-  return { render: p => { cursor = 0; return hook.useMarqueeCanvasProps(p); }, counts: () => ({ recordings, paints }) };
+  return { load, render: p => { cursor = 0; return hook.useMarqueeCanvasProps(p); }, counts: () => ({ recordings, paints }) };
 }
 function props() {
   return { canvas: { skiaTextBlob: {}, skiaTextBlobs: [{}], skiaTextWidth: 400, skiaCanvasLayout: { width: 360, height: 700 }, skiaGlyphPositions: [], skiaFont: {} },
@@ -71,4 +71,14 @@ test('shadow is off at zero and reverses blur across the enabled range', () => {
 test('preview and fullscreen own independent resources', () => {
   const preview = harness(), fullscreen = harness(), p = props();
   assert.notEqual(preview.render(p).tilePaints.stripPaint, fullscreen.render(p).tilePaints.stripPaint);
+});
+
+test('zoom crops the middle 80 percent along the viewport axis only when orientations differ', () => {
+  const { getBackgroundPhotoZoomFrame } = harness().load('utils/backgroundPhotoLayout.ts', {});
+  const landscape = getBackgroundPhotoZoomFrame(1000, 500, 300, 600);
+  assert.deepEqual({ ...landscape }, { x: 100, y: 0, width: 800, height: 500 });
+  const portrait = getBackgroundPhotoZoomFrame(500, 1000, 600, 300);
+  assert.deepEqual({ ...portrait }, { x: 0, y: 100, width: 500, height: 800 });
+  assert.equal(getBackgroundPhotoZoomFrame(1000, 500, 600, 300), null);
+  assert.equal(getBackgroundPhotoZoomFrame(500, 1000, 300, 600), null);
 });

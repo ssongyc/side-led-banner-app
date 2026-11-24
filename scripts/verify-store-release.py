@@ -144,11 +144,29 @@ def verify(args, out, report):
           and "sdkVersion:'24'" in badging
           and re.search(r"compileSdkVersion[^\n]*=\(type 0x10\)0x" + format(compile_sdk, "x") + r"\b", manifest))
     app = tree.find("application")
+    ad_activity = app.find(f"activity[@{a}name='com.google.android.gms.ads.AdActivity']")
+    check("aabAdActivityFullscreen", ad_activity is not None
+          and ad_activity.get(a+"theme") == "@android:style/Theme.Translucent.NoTitleBar.Fullscreen")
     check("notDebuggable", app.get(a+"debuggable", "false") == "false"
           and "application-debuggable" not in badging
           and not re.search(r"android:debuggable[^\n]*0xffffffff", manifest))
+    wifi_feature = "android.hardware.wifi"
+    wifi_entries = [feature for feature in tree.findall("uses-feature")
+                    if feature.get(a+"name") == wifi_feature]
+    check("aabWifiOptional", len(wifi_entries) == 1 and wifi_entries[0].get(a+"required") == "false")
+    check("apkWifiOptional", f"uses-feature-not-required: name='{wifi_feature}'" in badging
+          and f"uses-feature: name='{wifi_feature}'" not in badging
+          and f"uses-implied-feature: name='{wifi_feature}'" not in badging)
     permissions = {x.get(a+"name") for x in tree.findall("uses-permission")}
     forbidden = {"android.permission.CAMERA", "android.permission.RECORD_AUDIO"}
+    portrait_feature = "android.hardware.screen.portrait"
+    portrait_entries = [feature for feature in tree.findall("uses-feature")
+                        if feature.get(a+"name") == portrait_feature]
+    check("aabPortraitOptional", len(portrait_entries) == 1
+          and portrait_entries[0].get(a+"required") == "false")
+    check("apkPortraitOptional", f"uses-feature-not-required: name='{portrait_feature}'" in badging
+          and f"uses-feature: name='{portrait_feature}'" not in badging
+          and f"uses-implied-feature: name='{portrait_feature}'" not in badging)
     check("permissions", not permissions & forbidden and not any(x in manifest for x in forbidden))
     md = {x.get(a+"name"): x.get(a+"value") for x in app.findall("meta-data")}
     profile = read_json(root / "advertising.config.json")["production"]
