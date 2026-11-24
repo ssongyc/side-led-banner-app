@@ -4,6 +4,12 @@
 
 The initial review inspected the local release wrapper and retained build logs without running a build. A later user-authorized production build measured the applied changes; its result is recorded below. No lint, test, upload, deployment, or Play Console change was run as part of the documentation update.
 
+## Production rebuild with Android Play rotation — 2026-11-23
+
+- 소스 `f01adba`, Android 1.1.5 (34), 실행 `20261123-065503-c5aa1726`. Android 폰·태블릿 센서 회전과 배경 전환을 포함합니다. Gradle 18분 25초, 전체 24분 32초. 작업 1,279개 중 91개 실행, 1,188개 최신 상태. 기존 의존성과 G: 캐시를 사용했습니다.
+- 출시 파일 검사 482개 통과. 운영 AdMob·일반 Google UMP, Billing 9.1.0, Pro 상품·공개키·구매·복원 구성, 서명과 매핑을 확인했습니다. 기록은 `artifacts/apk-runs/20261123-065503-c5aa1726/release-file-audit.json`에 보관합니다.
+- 이 빌드는 후속 `98f42d5`의 세로 하드웨어 선택 선언 전 산출물입니다. 실기기 회전·구매·복원과 Play 업로드는 수행하지 않았습니다.
+
 ## Production build V1.1.5 (34) — 2026-11-23
 
 - 실행: `20261123-021801-09d42ee5`, 소스 `73f8f07`. G: Gradle과 의존성 캐시를 재사용했습니다. 의존성 재설치는 생략했고 적응형 아이콘 변경을 반영하기 위해 네이티브 설정을 다시 생성했습니다.

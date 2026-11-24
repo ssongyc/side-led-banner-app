@@ -175,6 +175,12 @@ Results and same-build symbols are retained under the run's release-verification
 Optional Configuration Cache, Daemon reuse and Gradle worker 1/2 comparisons are opt-in; defaults retain one worker and no reusable daemon. Configuration-cache errors fail the run. Signing credentials and cached signing configuration must remain local. See the 5 → 3 → 4 sequence in the optimization document; these options and 1.1.0(28) are not yet build-verified.
 
 
+## TestFlight 1.1.7 (7) — 2026-11-23
+
+- iOS 빌드 복사본에 소스 `98f42d5`, 버전 1.1.7, 빌드 7을 적용했습니다. EAS 빌드 `fe583bd0-f56a-4f8f-87e8-f97f5ed47fe3`에서 기존 서명, 원본 Xcode 아카이브와 일치하는 dSYM, 운영 AdMob·일반 UMP를 검증했습니다. 기록과 IPA는 `artifacts/testflight-117-7/`에 보관합니다.
+- EAS 제출 `d8d1f762-6150-45cc-af26-14d9e749625b` 이후 Apple에서 빌드 `2cb350b2-cd98-46e1-82b2-92523a8dc0f3`의 `VALID`, `IN_BETA_TESTING`과 기존 내부 그룹 LPT를 확인했습니다.
+- iPhone 세로 잠금 회전 수정은 이 빌드 이후 소스에 반영했습니다. 수정본의 실기기 회전과 Sandbox 구매·복원 검증이 남아 있습니다.
+
 ## TestFlight 1.1.6 (6) — 2026-11-23
 
 - App Store Connect showed iOS 1.1.5 as ready for distribution. The isolated iOS build copy used `6ff4d94` with marketing version 1.1.6 and build 6. It includes the Play pixelated-photo rotation fix. The main and Android version settings were preserved.

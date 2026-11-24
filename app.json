@@ -14,7 +14,15 @@
       "bundleIdentifier": "com.sunnyinnolab.ledpop",
       "buildNumber": "3",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSMotionUsageDescription": "LED POP uses motion sensors to rotate the Play screen as you turn your device."
+      }
+    },
+    "locales": {
+      "ko": {
+        "ios": {
+          "NSMotionUsageDescription": "Play 화면을 기기를 든 방향에 맞춰 회전하기 위해 모션 센서를 사용합니다."
+        }
       }
     },
     "android": {

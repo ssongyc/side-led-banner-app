@@ -78,16 +78,14 @@ export const LedBannerFullScreen = ({
     },
     [visible],
   );
-  // Android reports the sensor angle relative to the current display rotation.
-  const rotatesContent =
-    usesSensorRotation && (Platform.OS === "android" || viewportHeight >= viewportWidth);
+  // iPhone uses a portrait Play window. Android reports display-relative angles.
   const {
     rotation: contentRotation,
     textOpacity,
     backgroundRotate,
     backgroundScale,
     onLayout: onRotatedLayout,
-  } = usePlayRotation(visible && rotatesContent, deviceRotation, viewportWidth, viewportHeight);
+  } = usePlayRotation(visible && usesSensorRotation, deviceRotation, viewportWidth, viewportHeight);
   const swapsAxes = contentRotation === 90 || contentRotation === 270;
   const stageWidth = swapsAxes ? viewportHeight : viewportWidth;
   const stageHeight = swapsAxes ? viewportWidth : viewportHeight;
@@ -220,7 +218,7 @@ export const LedBannerFullScreen = ({
     appearanceFontOverride: effects.pixelSkiaFontOverride,
     lineSpacingPx: effectiveLineSpacing,
     fallbackLayout: canvasFallback,
-    fixedLayout: rotatesContent ? canvasFallback : undefined,
+    fixedLayout: usesSensorRotation ? canvasFallback : undefined,
     lineHeightRatio: fullscreenLineHeightRatio,
     isPixelMode: effects.isPixelEffect,
     speechBubbleLayout: speechBubbleCanvasLayout,
@@ -274,8 +272,8 @@ export const LedBannerFullScreen = ({
         onTouchStart={hideAndroidNavigationBar}
       >
         <View
-          onLayout={rotatesContent ? onRotatedLayout : undefined}
-          style={rotatesContent
+          onLayout={usesSensorRotation ? onRotatedLayout : undefined}
+          style={usesSensorRotation
             ? {
                 position: "absolute",
                 left: (viewportWidth - stageWidth) / 2,
@@ -304,7 +302,7 @@ export const LedBannerFullScreen = ({
               pointerEvents="none"
               style={[
                 StyleSheet.absoluteFill,
-                rotatesContent && {
+                usesSensorRotation && {
                   transform: [{ rotate: backgroundRotate }, { scale: backgroundScale }],
                 },
               ]}
@@ -347,7 +345,7 @@ export const LedBannerFullScreen = ({
             </Animated.View>
             <Animated.View
               pointerEvents="none"
-              style={[StyleSheet.absoluteFill, rotatesContent && { opacity: textOpacity }]}
+              style={[StyleSheet.absoluteFill, usesSensorRotation && { opacity: textOpacity }]}
             >
               <PlaybackTextLayer
                 style={StyleSheet.absoluteFill}
@@ -412,7 +410,7 @@ export const LedBannerFullScreen = ({
       animationType="none"
       presentationStyle="fullScreen"
       backdropColor={backgroundColor}
-      supportedOrientations={["portrait", "landscape"]}
+      supportedOrientations={usesSensorRotation ? ["portrait"] : ["portrait", "landscape"]}
       onRequestClose={onClose}
     >
       {content}

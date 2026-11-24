@@ -11,7 +11,9 @@
 
 - **시작 오류 복구 — 현재 소스:** 로딩 이미지가 실패해도 저장 설정·폰트·첫 화면이 준비되면 편집 화면으로 전환합니다. 갤럭시에서 기존 출시 APK를 재시작했을 때는 오류가 재현되지 않았습니다. 수정본의 Android·iOS 실기기 동작은 미검증입니다.
 
-- **최신 로컬 출시 APK/AAB — 2026-11-23:** Android 1.1.5 (34), 실행 `20261123-021801-09d42ee5`, 소스 `73f8f07`. Android 적응형 아이콘과 Play 픽셀 사진 배경 수정을 포함합니다. G: 캐시를 재사용해 파일 검증까지 21분 48초가 걸렸고, 출시 파일 검사 482개를 통과했습니다. Play 업로드와 실기기 구매·복원은 이번 실행 범위 밖입니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-v115-34--2026-11-23)
+- **최신 로컬 출시 APK/AAB — 2026-11-23:** Android 1.1.5 (34), 실행 `20261123-065503-c5aa1726`, 소스 `f01adba`. Android 태블릿 Play 방향·배경 전환 수정을 포함합니다. 기존 G: 캐시를 재사용해 24분 32초 만에 482개 출시 파일 검사를 통과했습니다. 이후 Android 세로 하드웨어를 선택 항목으로 선언했습니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-rebuild-with-android-play-rotation--2026-11-23)
+
+- **이전 로컬 출시 APK/AAB — 2026-11-23:** Android 1.1.5 (34), 실행 `20261123-021801-09d42ee5`, 소스 `73f8f07`. Android 적응형 아이콘과 Play 픽셀 사진 배경 수정을 포함합니다. G: 캐시를 재사용해 파일 검증까지 21분 48초가 걸렸고, 출시 파일 검사 482개를 통과했습니다. Play 업로드와 실기기 구매·복원은 이번 실행 범위 밖입니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-v115-34--2026-11-23)
 
 - **이전 로컬 출시 APK/AAB — 2026-11-22:** Android 1.1.5 (34), 실행 `20261122-205130-7cf299a7`, 소스 `382873d`. 서명된 두 파일에서 운영 AdMob·Google UMP·Play Billing 및 Pro 구매 설정을 확인했고, 출시 파일 검사 482개를 통과했습니다. 실기기 구매·복원과 Play Console 상태는 이 실행에서 검증하지 않았습니다. [빌드 기록](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-v115-34--2026-11-22)
 
@@ -31,7 +33,9 @@
 
 - **Android 광고 창 수정 출시 APK/AAB — 2026-11-19:** Android 1.1.4 (33), 실행 `20261119-001934-7ed6fc53`, 소스 `6c60018`. 운영 AdMob·일반 Google UMP·2시간 보상과 Android 광고 화면 수정을 포함합니다. 출시 파일 검사 480개를 통과했고, 갤럭시에서 ₩7,500 가격, 무청구 구매, 앱 재실행 후 Pro 유지와 구매 복원을 확인했습니다. 새 APK의 EEA 동의창, 과금 실광고 및 광고 복귀 화면은 미검증입니다. [출시 검증](docs/ANDROID_BUILD_OPTIMIZATION.md#production-build-with-android-ad-window-fixes--2026-11-19)
 
-- **최신 TestFlight — 2026-11-23:** iOS 1.1.6 (6), 소스 `6ff4d94`. Play에서 사진 배경에 픽셀레이션을 적용할 때 발생하던 회전 문제 수정이 포함됩니다. Apple 처리 상태는 `VALID`이며 내부 그룹 LPT에서 사용할 수 있습니다. iPhone의 수정 화면과 Sandbox 구매·복원은 실기기 미검증입니다. [TestFlight 기록](docs/SIGNING_POLICY.md#testflight-116-6--2026-11-23)
+- **최신 TestFlight — 2026-11-23:** iOS 1.1.7 (7), 소스 `98f42d5`. Apple 처리 `VALID`, 기존 내부 테스트 그룹 LPT에서 설치할 수 있습니다. iPhone 세로 잠금 회전 수정은 이 빌드 이후 소스에 반영했습니다. Sandbox 구매·복원은 미검증입니다. [TestFlight 기록](docs/SIGNING_POLICY.md#testflight-117-7--2026-11-23)
+
+- **이전 TestFlight — 2026-11-23:** iOS 1.1.6 (6), 소스 `6ff4d94`. Play에서 사진 배경에 픽셀레이션을 적용할 때 발생하던 회전 문제 수정이 포함됩니다. Apple 처리 상태는 `VALID`이며 내부 그룹 LPT에서 사용할 수 있습니다. iPhone의 수정 화면과 Sandbox 구매·복원은 실기기 미검증입니다. [TestFlight 기록](docs/SIGNING_POLICY.md#testflight-116-6--2026-11-23)
 
 - **이전 TestFlight와 App Review 접수 — 2026-11-19:** iOS 1.1.5 (5), 소스 `879f8e9`. Apple이 빌드를 `VALID`로 처리했고 내부 그룹 LPT에 배포됐습니다. 사용자가 빌드 5와 Pro 영구 광고 제거 상품을 같은 App Review 건에 제출했으며 접수 당시 두 항목은 심사 대기 상태였습니다. iPhone Shop 가격 표시는 확인했고 Sandbox 구매 완료와 복원은 미검증입니다. [TestFlight 및 심사 기록](docs/SIGNING_POLICY.md#testflight-115-5--2026-11-19)
 
@@ -63,7 +67,7 @@
 
 - **설정 Back 수정 APK:** 복귀 이력 없이 설정을 직접 열어도 상단·Android 시스템 Back으로 편집 화면에 돌아갑니다. Galaxy에서 직접/일반 진입, 언어 목록 닫기와 메인 Back을 검증했습니다. 실행 `20261117-174321-5d67f966`, V1.1.4 (33) APK에 포함되며 11월 18일 출시 APK/AAB에도 포함됩니다. [검증 결과](docs/UI_INTERACTION_1.0.9_27.md#설정-단독-진입-후-뒤로-가기--2026-11-17)
 
-- **Play 방향 전환:** iPhone과 Android 폰·태블릿의 Play 콘텐츠가 기기를 든 방향을 따라 자동 회전합니다. OS 자동 회전이 꺼져 있어도 적용됩니다. 전환 중에는 배경을 화면에 유지하고, 새 방향의 배치가 안정되면 글자를 다시 표시합니다. S3 기존 APK에서 가로 고정을 재현했으며 이 수정은 소스에 반영했습니다. [현재 방향 정책](docs/EDITOR_LAYOUT_ORIENTATION_20260911.md#현재-play-방향-정책)
+- **Play 방향 전환:** iPhone은 Play 창을 세로로 유지하고 Core Motion으로 콘텐츠를 회전하도록 수정했습니다. 세로 방향 잠금 켜짐·꺼짐 동작은 새 TestFlight 빌드의 실기기 확인 전입니다. Android 폰·태블릿의 Play 콘텐츠는 기기를 든 방향을 따라 회전합니다. 전환 중에는 배경을 화면에 유지하고, 새 방향의 배치가 안정되면 글자를 다시 표시합니다. S3 기존 APK에서 가로 고정을 재현했으며 이 수정은 소스에 반영했습니다. [현재 방향 정책](docs/EDITOR_LAYOUT_ORIENTATION_20260911.md#현재-play-방향-정책)
 - **Drop Shadow:** 0은 끄기, 1은 가장 부드러운 그림자, 100은 가장 선명한 그림자입니다. 미리보기와 Play에 같은 계산을 적용합니다.
 - **광고와 Shop:** 보상 팝업은 배치 후 표시되고, 닫힌 뒤 광고가 준비된 경우에만 재생합니다. Android 개인정보 설정 양식을 열 때 설정 화면의 여백과 배너 자리를 유지합니다. 보상 광고는 네트워크가 바뀌면 연결을 재확인한 뒤 보류된 요청을 이어갑니다. 설정의 Shop에서 광고를 영구 제거하고 구매를 복원할 수 있습니다. 구매 흐름은 결제 대기를 저장하고 결제 직전에 가격과 구매 옵션을 다시 확인합니다. [광고 동작](docs/ADVERTISING.md), [구매 설정](IAP_SETUP.md)
 
@@ -89,7 +93,7 @@
 
 > **TestFlight 1.1.3 (1) 시작 충돌 확인:** 사용자 제공 iPhone 로그는 `ExpoModulesWorklets`가 참조하는 `React.framework` 누락으로 앱 코드 실행 전에 종료됨을 보여줍니다. Apple 경고에는 `ReactNativeDependencies.framework`도 포함됩니다. 이후 제공된 Mac 설정에서는 소스 방식 React Native와 사전 컴파일 Expo 프레임워크의 혼합이 확인되어, package.json에서 iOS autolinking 모듈의 소스 빌드를 명시했습니다. Mac에서 pod install·새 Archive·실기기 실행 확인은 아직 필요합니다. Mac용 읽기 전용 검사와 개발자 전달 사항은 [충돌 기록](docs/SIGNING_POLICY.md#ios-launch-crash--2026-09-22)을 참고하세요.
 
-메인 소스 기준 버전은 **1.1.5 (Android 버전 코드 34, 소스의 iOS 빌드 번호 3)**이며 Settings의 App Version은 **V1.1.5**를 표시합니다. 최신 로컬 Android 출시 파일은 **1.1.5 (34)**입니다. 최신 TestFlight **1.1.6 (6)**은 별도의 iOS 빌드 복사본에서 생성했으며, 해당 빌드의 Settings에는 **V1.1.6**이 표시되도록 구성했습니다.
+메인 소스 기준 버전은 **1.1.5 (Android 버전 코드 34, 소스의 iOS 빌드 번호 3)**이며 Settings의 App Version은 **V1.1.5**를 표시합니다. 최신 로컬 Android 출시 파일은 **1.1.5 (34)**입니다. 최신 TestFlight **1.1.7 (7)**은 별도의 iOS 빌드 복사본에서 생성했으며, 해당 빌드의 Settings에는 **V1.1.7**이 표시되도록 구성했습니다.
 
 **2026-10-20 도구 체인 업그레이드:** Expo 58.0.16 / React Native 0.88.0 / AGP 9.2.1, compileSdk 37 / targetSdk 36, AGP 내장 R8 9.2.14를 적용했습니다. Windows CMake 경로 길이 오류와 R8이 Room 생성자를 제거해 발생한 시작 충돌을 수정했습니다. 수정 QA APK는 `compile-ok`이며 Galaxy에서 재시작, 테스트 UMP 거부·동의·개인정보 재변경, 테스트 배너·보상 광고 및 보상 후 잠금 해제를 확인했습니다. 당시 수정 QA 재빌드는 Gradle 6분 50초(72 executed / 1138 up-to-date)였습니다. 최신 production 빌드 기록은 아래에서 구분합니다. 당시 구매 화면은 비활성 상태였으며 결제·복원과 iOS는 검증 범위 밖이었습니다. 이 APK는 테스트 광고·EEA QA 설정이 포함되어 스토어 제출용이 아닙니다. [빌드 기록](docs/SIGNING_POLICY.md#combined-exporn-upgrade-assessment--2026-10-20)과 [광고 QA 범위](docs/ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20)를 참고하세요.
 
@@ -302,6 +306,8 @@ pwsh -NoProfile -File scripts/android-build-observability.test.ps1
 node scripts/check-reward-expiry.cjs
 node scripts/check-rewarded-lifecycle.cjs
 ```
+
+iPhone Play 회전 정리에서 중복 변수와 이전 방향 알림 구독을 제거했습니다. ESLint 오류·경고 0개, Node 테스트 87개, PowerShell 검사 20개와 광고 검사 2개가 통과했습니다. Expo가 한국어 모션 안내를 iOS 설정으로 해석하는 것을 확인했습니다. iOS 네이티브 빌드와 실기기 회전 확인은 남아 있습니다.
 
 2026-11-23 Play 방향 전환 정리에서 센서 방식으로 전환한 Android 태블릿의 기존 창 회전 분기와 미사용 모드 값을 제거했습니다. npm run lint는 오류·경고 없이 통과했고, Node 테스트 87개, PowerShell 검사 20개, 광고 검사 2개가 통과했습니다. 기존 테스트는 S3에서 새 APK의 센서 전환과 배경 표시를 검증하지 않습니다.
 
