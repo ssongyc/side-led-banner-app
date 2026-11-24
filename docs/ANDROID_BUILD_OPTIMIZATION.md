@@ -4,6 +4,11 @@
 
 The initial review inspected the local release wrapper and retained build logs without running a build. A later user-authorized production build measured the applied changes; its result is recorded below. No lint, test, upload, deployment, or Play Console change was run as part of the documentation update.
 
+## 다음 Android 빌드 버전 1.1.6 (35)
+
+- Expo 설정, 루트 패키지 및 잠금 파일의 앱 버전을 1.1.6으로 맞췄습니다. Android 버전 코드는 35이며 Settings는 Expo 버전을 읽어 V1.1.6을 표시합니다.
+- 세로 하드웨어 선택 선언을 검증하기 시작한 실행 20261123-213751-ea6fe5c3의 준비 계획은 1.1.5 (34)입니다. 새 버전은 다음 APK/AAB 빌드에서 적용합니다.
+
 ## Production rebuild with Android Play rotation — 2026-11-23
 
 - 소스 `f01adba`, Android 1.1.5 (34), 실행 `20261123-065503-c5aa1726`. Android 폰·태블릿 센서 회전과 배경 전환을 포함합니다. Gradle 18분 25초, 전체 24분 32초. 작업 1,279개 중 91개 실행, 1,188개 최신 상태. 기존 의존성과 G: 캐시를 사용했습니다.

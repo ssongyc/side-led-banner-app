@@ -2,7 +2,7 @@
   "expo": {
     "name": "Led Pop",
     "slug": "led-banner-app",
-    "version": "1.1.5",
+    "version": "1.1.6",
     "orientation": "default",
     "icon": "./assets/images/LOGO_05_Final.png",
     "scheme": "sideledbannerapp",
@@ -38,7 +38,7 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "versionCode": 34
+      "versionCode": 35
     },
     "web": {
       "output": "static",

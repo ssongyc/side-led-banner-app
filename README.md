@@ -93,7 +93,7 @@
 
 > **TestFlight 1.1.3 (1) 시작 충돌 확인:** 사용자 제공 iPhone 로그는 `ExpoModulesWorklets`가 참조하는 `React.framework` 누락으로 앱 코드 실행 전에 종료됨을 보여줍니다. Apple 경고에는 `ReactNativeDependencies.framework`도 포함됩니다. 이후 제공된 Mac 설정에서는 소스 방식 React Native와 사전 컴파일 Expo 프레임워크의 혼합이 확인되어, package.json에서 iOS autolinking 모듈의 소스 빌드를 명시했습니다. Mac에서 pod install·새 Archive·실기기 실행 확인은 아직 필요합니다. Mac용 읽기 전용 검사와 개발자 전달 사항은 [충돌 기록](docs/SIGNING_POLICY.md#ios-launch-crash--2026-09-22)을 참고하세요.
 
-메인 소스 기준 버전은 **1.1.5 (Android 버전 코드 34, 소스의 iOS 빌드 번호 3)**이며 Settings의 App Version은 **V1.1.5**를 표시합니다. 최신 로컬 Android 출시 파일은 **1.1.5 (34)**입니다. 최신 TestFlight **1.1.7 (7)**은 별도의 iOS 빌드 복사본에서 생성했으며, 해당 빌드의 Settings에는 **V1.1.7**이 표시되도록 구성했습니다.
+메인 소스의 다음 Android 빌드 버전은 **1.1.6 (버전 코드 35)**입니다. Settings의 App Version은 Expo 설정을 읽어 **V1.1.6**으로 표시합니다. 소스의 iOS 빌드 번호는 **3**입니다. 최신 로컬 Android 출시 파일은 **1.1.5 (34)**입니다. 최신 TestFlight **1.1.7 (7)**은 별도의 iOS 빌드 복사본에서 생성했으며, 해당 빌드의 Settings에는 **V1.1.7**이 표시되도록 구성했습니다.
 
 **2026-10-20 도구 체인 업그레이드:** Expo 58.0.16 / React Native 0.88.0 / AGP 9.2.1, compileSdk 37 / targetSdk 36, AGP 내장 R8 9.2.14를 적용했습니다. Windows CMake 경로 길이 오류와 R8이 Room 생성자를 제거해 발생한 시작 충돌을 수정했습니다. 수정 QA APK는 `compile-ok`이며 Galaxy에서 재시작, 테스트 UMP 거부·동의·개인정보 재변경, 테스트 배너·보상 광고 및 보상 후 잠금 해제를 확인했습니다. 당시 수정 QA 재빌드는 Gradle 6분 50초(72 executed / 1138 up-to-date)였습니다. 최신 production 빌드 기록은 아래에서 구분합니다. 당시 구매 화면은 비활성 상태였으며 결제·복원과 iOS는 검증 범위 밖이었습니다. 이 APK는 테스트 광고·EEA QA 설정이 포함되어 스토어 제출용이 아닙니다. [빌드 기록](docs/SIGNING_POLICY.md#combined-exporn-upgrade-assessment--2026-10-20)과 [광고 QA 범위](docs/ADVERTISING.md#sdk-58-upgrade-device-qa--2026-10-20)를 참고하세요.
 
